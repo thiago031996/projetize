@@ -4,7 +4,7 @@ import json
 import base64
 import hashlib
 import shutil
-from flask import Flask, render_template_string, request, jsonify, send_file, session, url_for
+from flask import Flask, render_template_string, request, jsonify, send_file, send_from_directory, session, url_for
 from werkzeug.utils import secure_filename
 from functools import wraps
 import uuid
@@ -21,12 +21,13 @@ app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 app.config['SECRET_KEY'] = 'projetize-super-secret-key-2026'
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BBASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 ICONS_FOLDER = os.path.join(UPLOAD_FOLDER, 'icons')
 DEFAULT_ICONS_FOLDER = os.path.join(UPLOAD_FOLDER, 'default_icons')
 BACKGROUNDS_FOLDER = os.path.join(UPLOAD_FOLDER, 'backgrounds')
 STATIC_FOLDER = os.path.join(BASE_DIR, 'static')
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(ICONS_FOLDER, exist_ok=True)
 os.makedirs(DEFAULT_ICONS_FOLDER, exist_ok=True)
@@ -485,15 +486,19 @@ def upload_dev_image():
 
 @app.route('/uploads/icons/<filename>')
 def serve_icon(filename):
-    return send_file(os.path.join(ICONS_FOLDER, filename))
+    return send_from_directory(ICONS_FOLDER, filename)
 
 @app.route('/uploads/default_icons/<filename>')
 def serve_default_icon(filename):
-    return send_file(os.path.join(DEFAULT_ICONS_FOLDER, filename))
+    return send_from_directory(DEFAULT_ICONS_FOLDER, filename)
+
+@app.route('/uploads/backgrounds/<filename>')
+def serve_background(filename):
+    return send_from_directory(BACKGROUNDS_FOLDER, filename)
 
 @app.route('/static/<path:filename>')
 def serve_static(filename):
-    return send_file(os.path.join(STATIC_FOLDER, filename))
+    return send_from_directory(STATIC_FOLDER, filename)
 
 @app.route('/api/default_config', methods=['GET'])
 def get_default_config():
