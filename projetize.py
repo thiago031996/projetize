@@ -227,6 +227,7 @@ DEFAULT_CONNECTIONS_CONFIG = {
 }
 
 DEFAULT_CONNECTIONS_FILE = os.path.join(UPLOAD_FOLDER, 'default_connections.json')
+CUSTOM_DEVICES_FILE = os.path.join(UPLOAD_FOLDER, 'custom_devices.json')
 
 def load_default_connections():
     if os.path.exists(DEFAULT_CONNECTIONS_FILE):
@@ -241,6 +242,23 @@ def save_default_connections(config):
     try:
         with open(DEFAULT_CONNECTIONS_FILE, 'w', encoding='utf-8') as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
+        return True
+    except:
+        return False
+
+def load_custom_devices():
+    if os.path.exists(CUSTOM_DEVICES_FILE):
+        try:
+            with open(CUSTOM_DEVICES_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            pass
+    return []
+
+def save_custom_devices(devices):
+    try:
+        with open(CUSTOM_DEVICES_FILE, 'w', encoding='utf-8') as f:
+            json.dump(devices, f, ensure_ascii=False, indent=2)
         return True
     except:
         return False
@@ -357,7 +375,7 @@ def upload_icon():
     data = request.json
     image_data = data.get('image', '')
     is_default = data.get('is_default', False)
-    target_type = data.get('type', 'equipment')  # equipment, category, connection
+    target_type = data.get('type', 'equipment')
     
     if not image_data or not image_data.startswith('data:image'):
         return jsonify({'success': False, 'error': 'Imagem inválida'}), 400
@@ -397,6 +415,40 @@ def upload_icon():
     except Exception as e:
         print(f"Erro ao salvar imagem: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/save_global_categories', methods=['POST'])
+@admin_required
+def save_global_categories():
+    data = request.json
+    categories_data = data.get('categories')
+    if categories_data:
+        save_default_config(categories_data)
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'error': 'Dados inválidos'}), 400
+
+@app.route('/api/save_global_connections', methods=['POST'])
+@admin_required
+def save_global_connections():
+    data = request.json
+    connections_data = data.get('connections')
+    if connections_data:
+        save_default_connections(connections_data)
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'error': 'Dados inválidos'}), 400
+
+@app.route('/api/save_global_custom_devices', methods=['POST'])
+@admin_required
+def save_global_custom_devices():
+    data = request.json
+    devices = data.get('devices')
+    if devices is not None:
+        save_custom_devices(devices)
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'error': 'Dados inválidos'}), 400
+
+@app.route('/api/load_custom_devices', methods=['GET'])
+def get_custom_devices():
+    return jsonify({'success': True, 'devices': load_custom_devices()})
 
 @app.route('/api/upload_background', methods=['POST'])
 @login_required
@@ -1112,18 +1164,12 @@ HTML_TEMPLATE = """
         
         // ==================== STORAGE KEYS ====================
         const STORAGE_KEYS = {
-            CATEGORIES: 'projetize_categories',
-            CUSTOM_DEVICES: 'projetize_custom_devices',
-            CONNECTIONS: 'projetize_connections_config',
-            CUSTOM_CONNECTIONS: 'projetize_custom_connections',
-            CATEGORY_ICONS: 'projetize_category_icons',
-            CONNECTION_ICONS: 'projetize_connection_icons',
+            ICON_SIZE: 'projetize_icon_size',
+            CANVAS_ZOOM: 'projetize_canvas_zoom',
             COMPONENTS: (user) => `projetize_${user}_components`,
             CONNECTIONS_DATA: (user) => `projetize_${user}_connections`,
             SHAPES: (user) => `projetize_${user}_shapes`,
-            BACKGROUND: (user) => `projetize_${user}_background`,
-            ICON_SIZE: 'projetize_icon_size',
-            CANVAS_ZOOM: 'projetize_canvas_zoom'
+            BACKGROUND: (user) => `projetize_${user}_background`
         };
         
         // ==================== CATEGORIAS E DISPOSITIVOS ====================
@@ -1166,47 +1212,26 @@ HTML_TEMPLATE = """
             } catch(e) { console.error(e); }
         }
         
-        function loadUserData() {
+        async function loadUserData() {
             const savedIconSize = localStorage.getItem(STORAGE_KEYS.ICON_SIZE);
             if(savedIconSize) iconSize = parseInt(savedIconSize);
             
             const savedZoom = localStorage.getItem(STORAGE_KEYS.CANVAS_ZOOM);
             if(savedZoom) zoom = parseFloat(savedZoom);
             
-            const savedCategories = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
-            if (savedCategories) {
-                try { categories = JSON.parse(savedCategories); } catch(e) {}
-            } else {
-                categories = JSON.parse(JSON.stringify(defaultCategories));
-            }
+            // As categorias e conexões agora SEMPRE vêm do servidor.
+            // O defaultCategories e connectionCategories já foram preenchidos em doLogin()
+            categories = JSON.parse(JSON.stringify(defaultCategories));
             
-            const savedCustom = localStorage.getItem(STORAGE_KEYS.CUSTOM_DEVICES);
-            if (savedCustom) { try { customDevices = JSON.parse(savedCustom); } catch(e) {} }
+            // Carregar dispositivos customizados do servidor
+            try {
+                const devicesRes = await fetch('/api/load_custom_devices');
+                const devicesData = await devicesRes.json();
+                if (devicesData.success) customDevices = devicesData.devices;
+            } catch(e) { console.error("Erro ao carregar custom devices:", e); }
             
-            const savedConnections = localStorage.getItem(STORAGE_KEYS.CONNECTIONS);
-            if (savedConnections) {
-                try {
-                    const connData = JSON.parse(savedConnections);
-                    connectionCategories = connData;
-                } catch(e) {}
-            }
-            
-            const savedCustomConn = localStorage.getItem(STORAGE_KEYS.CUSTOM_CONNECTIONS);
-            if (savedCustomConn) {
-                try { customConnections = JSON.parse(savedCustomConn); } catch(e) {}
-            }
-            
-            // Carregar ícones personalizados de categorias
-            const savedCatIcons = localStorage.getItem(STORAGE_KEYS.CATEGORY_ICONS);
-            if (savedCatIcons) {
-                try { customCategoryIcons = JSON.parse(savedCatIcons); } catch(e) {}
-            }
-            
-            // Carregar ícones personalizados de conexões
-            const savedConnIcons = localStorage.getItem(STORAGE_KEYS.CONNECTION_ICONS);
-            if (savedConnIcons) {
-                try { customConnectionIcons = JSON.parse(savedConnIcons); } catch(e) {}
-            }
+            // Não carregar categorias, customDevices e conexões do localStorage
+            // para evitar que dados antigos sobrescrevam a configuração global.
             
             if (currentUser) {
                 const savedComponents = localStorage.getItem(STORAGE_KEYS.COMPONENTS(currentUser));
@@ -1247,12 +1272,7 @@ HTML_TEMPLATE = """
         }
         
         function saveUserData() {
-            localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
-            localStorage.setItem(STORAGE_KEYS.CUSTOM_DEVICES, JSON.stringify(customDevices));
-            localStorage.setItem(STORAGE_KEYS.CONNECTIONS, JSON.stringify(connectionCategories));
-            localStorage.setItem(STORAGE_KEYS.CUSTOM_CONNECTIONS, JSON.stringify(customConnections));
-            localStorage.setItem(STORAGE_KEYS.CATEGORY_ICONS, JSON.stringify(customCategoryIcons));
-            localStorage.setItem(STORAGE_KEYS.CONNECTION_ICONS, JSON.stringify(customConnectionIcons));
+            // O localStorage agora é usado APENAS para dados do projeto do usuário.
             localStorage.setItem(STORAGE_KEYS.ICON_SIZE, iconSize);
             localStorage.setItem(STORAGE_KEYS.CANVAS_ZOOM, zoom);
             
@@ -1268,6 +1288,32 @@ HTML_TEMPLATE = """
                     x: backgroundX,
                     y: backgroundY
                 }));
+            }
+        }
+        
+        // ==================== FUNÇÃO PARA SALVAR NO SERVIDOR ====================
+        async function saveGlobalLibrary() {
+            if (userRole !== 'admin' && userRole !== 'master') return;
+            try {
+                await fetch('/api/save_global_categories', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ categories: categories })
+                });
+                await fetch('/api/save_global_connections', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ connections: connectionCategories })
+                });
+                await fetch('/api/save_global_custom_devices', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ devices: customDevices })
+                });
+                console.log("✅ Biblioteca global salva com sucesso.");
+            } catch(e) {
+                console.error("Erro ao salvar biblioteca global:", e);
+                showToast('❌ Erro ao salvar alterações globais.');
             }
         }
         
@@ -1307,6 +1353,7 @@ HTML_TEMPLATE = """
             };
             
             saveUserData();
+            saveGlobalLibrary(); // Adicionado
             renderConnectionsPalette();
             showToast(`✅ Conexão "${connData.name}" adicionada!`);
         }
@@ -1328,6 +1375,7 @@ HTML_TEMPLATE = """
                 }
                 
                 saveUserData();
+                saveGlobalLibrary(); // Adicionado
                 renderConnectionsPalette();
                 showToast(`🗑 Conexão removida!`);
             }
@@ -1440,6 +1488,7 @@ HTML_TEMPLATE = """
             
             window.tempConnectionIconFile = null;
             saveUserData();
+            saveGlobalLibrary(); // Adicionado
             closeModal();
             renderConnectionsPalette();
             showToast(`✅ Conexão atualizada!`);
@@ -1503,7 +1552,7 @@ HTML_TEMPLATE = """
             }
         }
         
-        window.applyCategoryIcon = (catName) => {
+        window.applyCategoryIcon = async (catName) => {
             const emoji = document.getElementById('catEmoji').value;
             const iconFile = window.tempCategoryIconFile || categories[catName]?.iconFile || null;
             
@@ -1517,6 +1566,7 @@ HTML_TEMPLATE = """
             
             window.tempCategoryIconFile = null;
             saveUserData();
+            await saveGlobalLibrary(); // Adicionado
             closeModal();
             renderPalette();
             showToast(`✅ Ícone da categoria "${catName}" atualizado!`);
@@ -1582,7 +1632,7 @@ HTML_TEMPLATE = """
             }
         }
         
-        window.applyConnectionIcon = (category, idx) => {
+        window.applyConnectionIcon = async (category, idx) => {
             const emoji = document.getElementById('connEmoji').value;
             const iconFile = window.tempConnectionIconFile || connectionCategories[category].connections[idx].iconFile || null;
             const conn = connectionCategories[category].connections[idx];
@@ -1604,6 +1654,7 @@ HTML_TEMPLATE = """
             
             window.tempConnectionIconFile = null;
             saveUserData();
+            await saveGlobalLibrary(); // Adicionado
             closeModal();
             renderConnectionsPalette();
             showToast(`✅ Ícone da conexão "${conn.name}" atualizado!`);
@@ -1715,7 +1766,6 @@ HTML_TEMPLATE = """
                         deviceEl.setAttribute('data-device-color', device.color);
                         deviceEl.setAttribute('data-device-iconfile', device.iconFile || '');
                         
-                        // Gerar um ID temporário para o dispositivo se não tiver
                         if (!device.id) device.id = Date.now() + idx;
                         
                         deviceEl.innerHTML = `
@@ -1833,7 +1883,6 @@ HTML_TEMPLATE = """
             window.currentDeviceCat = catName;
             window.currentDeviceIdx = idx;
             
-            // Upload de imagem para ícone do dispositivo
             const imageInput = document.getElementById('devIconImage');
             if (imageInput) {
                 imageInput.onchange = async (e) => {
@@ -1857,7 +1906,7 @@ HTML_TEMPLATE = """
             }
         }
         
-        window.applyDeviceIcon = (catName, idx) => {
+        window.applyDeviceIcon = async (catName, idx) => {
             const emoji = document.getElementById('devEmoji').value;
             const iconFile = window.tempDeviceIconFile || categories[catName].devices[idx].iconFile || null;
             const device = categories[catName].devices[idx];
@@ -1872,6 +1921,7 @@ HTML_TEMPLATE = """
             
             window.tempDeviceIconFile = null;
             saveUserData();
+            await saveGlobalLibrary(); // Adicionado
             closeModal();
             renderPalette();
             showToast(`✅ Ícone do dispositivo "${device.name}" atualizado!`);
@@ -1911,7 +1961,6 @@ HTML_TEMPLATE = """
             window.currentModal = modal;
             window.currentCustomDeviceIdx = idx;
             
-            // Upload de imagem para ícone do dispositivo
             const imageInput = document.getElementById('devIconImage');
             if (imageInput) {
                 imageInput.onchange = async (e) => {
@@ -1935,7 +1984,7 @@ HTML_TEMPLATE = """
             }
         }
         
-        window.applyCustomDeviceIcon = (idx) => {
+        window.applyCustomDeviceIcon = async (idx) => {
             const emoji = document.getElementById('devEmoji').value;
             const iconFile = window.tempDeviceIconFile || customDevices[idx].iconFile || null;
             const device = customDevices[idx];
@@ -1950,6 +1999,7 @@ HTML_TEMPLATE = """
             
             window.tempDeviceIconFile = null;
             saveUserData();
+            await saveGlobalLibrary(); // Adicionado
             closeModal();
             renderPalette();
             showToast(`✅ Ícone do dispositivo "${device.name}" atualizado!`);
@@ -3778,6 +3828,7 @@ HTML_TEMPLATE = """
             }
             categories[name] = { icon: icon || '📁', devices: [] };
             saveUserData();
+            saveGlobalLibrary(); // Adicionado
             closeModal();
             renderPalette();
             showToast(`✅ Categoria "${name}" adicionada!`);
@@ -3814,6 +3865,7 @@ HTML_TEMPLATE = """
             delete categories[oldName];
             categories[newName] = { ...catData, icon: icon };
             saveUserData();
+            saveGlobalLibrary(); // Adicionado
             closeModal();
             renderPalette();
             showToast(`✅ Categoria atualizada!`);
@@ -3827,6 +3879,7 @@ HTML_TEMPLATE = """
             if (confirm(`Deseja excluir a categoria "${catName}" e todos os seus dispositivos?`)) {
                 delete categories[catName];
                 saveUserData();
+                saveGlobalLibrary(); // Adicionado
                 renderPalette();
                 showToast(`🗑 Categoria "${catName}" removida!`);
             }
@@ -3911,6 +3964,7 @@ HTML_TEMPLATE = """
             window.tempImageData = null;
             window.tempImageFile = null;
             saveUserData();
+            await saveGlobalLibrary(); // Adicionado
             closeModal();
             renderPalette();
             showToast(`✅ Dispositivo "${name}" adicionado!`);
@@ -3996,6 +4050,7 @@ HTML_TEMPLATE = """
             window.tempImageData = null;
             window.tempImageFile = null;
             saveUserData();
+            await saveGlobalLibrary(); // Adicionado
             closeModal();
             renderPalette();
             showToast(`✅ Dispositivo atualizado!`);
@@ -4009,6 +4064,7 @@ HTML_TEMPLATE = """
             if (confirm('Deseja excluir este dispositivo?')) {
                 categories[catName].devices.splice(idx, 1);
                 saveUserData();
+                saveGlobalLibrary(); // Adicionado
                 renderPalette();
                 showToast(`🗑 Dispositivo removido!`);
             }
@@ -4094,6 +4150,7 @@ HTML_TEMPLATE = """
             window.tempImageData = null;
             window.tempImageFile = null;
             saveUserData();
+            await saveGlobalLibrary(); // Adicionado
             closeModal();
             renderPalette();
             showToast(`✅ Equipamento "${name}" adicionado!`);
@@ -4179,6 +4236,7 @@ HTML_TEMPLATE = """
             window.tempImageData = null;
             window.tempImageFile = null;
             saveUserData();
+            await saveGlobalLibrary(); // Adicionado
             closeModal();
             renderPalette();
             showToast(`✅ Equipamento atualizado!`);
@@ -4192,6 +4250,7 @@ HTML_TEMPLATE = """
             if (confirm('Deseja excluir este equipamento?')) {
                 customDevices.splice(idx, 1);
                 saveUserData();
+                saveGlobalLibrary(); // Adicionado
                 renderPalette();
                 showToast(`🗑 Equipamento removido!`);
             }
@@ -4414,6 +4473,7 @@ HTML_TEMPLATE = """
                 
                 window.tempConnIconFile = null;
                 saveUserData();
+                saveGlobalLibrary(); // Adicionado
                 closeModal();
                 renderConnectionsPalette();
                 showToast(`✅ Conexão "${name}" adicionada!`);
@@ -4892,7 +4952,7 @@ HTML_TEMPLATE = """
                 
                 await loadDefaultConfig();
                 await loadDefaultConnections();
-                loadUserData();
+                await loadUserData();
                 showToast(`Bem-vindo, ${username}!`);
             } else {
                 document.getElementById('loginError').style.display = 'block';
@@ -4997,6 +5057,7 @@ HTML_TEMPLATE = """
                         categories = JSON.parse(JSON.stringify(defaultCategories));
                         customDevices = [];
                         saveUserData();
+                        saveGlobalLibrary(); // Adicionado
                         renderPalette();
                         showToast('✅ Configurações restauradas para o padrão!');
                     }
