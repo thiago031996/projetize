@@ -676,11 +676,18 @@ HTML_TEMPLATE = """
             --palette-width: 280px;
             --properties-width: 320px;
         }
+        @media (max-width: 1024px) {
+            :root {
+                --palette-width: 240px;
+                --properties-width: 280px;
+            }
+        }
         @media (max-width: 768px) {
             :root {
                 --palette-width: 220px;
                 --properties-width: 260px;
             }
+            body { overflow: auto; position: relative; height: auto; min-height: 100vh; }
         }
         @media (max-width: 576px) {
             :root {
@@ -767,9 +774,9 @@ HTML_TEMPLATE = """
         .dev-badge-name { color: var(--text-accent); font-weight: bold; }
         
         .toolbar { background: var(--bg-secondary); padding: 8px 15px; display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 2px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.1); z-index: 100; position: relative; margin-left: 60px; }
-        @media (max-width: 768px) { .toolbar { margin-left: 50px; } }
+        @media (max-width: 768px) { .toolbar { margin-left: 50px; padding: 5px 10px; gap: 5px; } }
         .btn { padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s ease; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-        @media (max-width: 768px) { .btn { padding: 4px 8px; font-size: 10px; } .toolbar { padding: 5px 10px; gap: 5px; } }
+        @media (max-width: 768px) { .btn { padding: 4px 8px; font-size: 10px; } }
         @media (max-width: 576px) { .btn { padding: 3px 6px; font-size: 9px; } .btn span { display: none; } .btn { font-size: 14px; } }
         .btn-primary { background: var(--button-primary); color: #fff; }
         .btn-primary:hover { background: var(--button-primary-hover); transform: scale(1.02); }
@@ -784,9 +791,9 @@ HTML_TEMPLATE = """
         .user-role { background: var(--text-accent); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 10px; }
         
         .main-container { display: flex; height: calc(100vh - 52px); position: relative; overflow: hidden; }
-        @media (max-width: 768px) { .main-container { height: calc(100vh - 48px); } }
+        @media (max-width: 768px) { .main-container { height: calc(100vh - 48px); flex-direction: column; } }
         
-        .palette { width: var(--palette-width); background: var(--bg-tertiary); color: var(--text-primary); overflow-y: auto; padding: 10px; border-right: 2px solid var(--border-color); transition: width 0.3s ease, min-width 0.3s ease; position: relative; flex-shrink: 0; }
+        .palette { width: var(--palette-width); background: var(--bg-tertiary); color: var(--text-primary); overflow-y: auto; padding: 10px; border-right: 2px solid var(--border-color); transition: width 0.3s ease, min-width 0.3s ease, transform 0.3s ease; position: relative; flex-shrink: 0; }
         .palette.collapsed { width: 50px; min-width: 50px; }
         .palette.collapsed .category h3, .palette.collapsed .component-info, .palette.collapsed .category-actions, .palette.collapsed .component-actions { display: none; }
         .palette.collapsed .component { justify-content: center; padding: 6px; }
@@ -1219,19 +1226,13 @@ HTML_TEMPLATE = """
             const savedZoom = localStorage.getItem(STORAGE_KEYS.CANVAS_ZOOM);
             if(savedZoom) zoom = parseFloat(savedZoom);
             
-            // As categorias e conexões agora SEMPRE vêm do servidor.
-            // O defaultCategories e connectionCategories já foram preenchidos em doLogin()
             categories = JSON.parse(JSON.stringify(defaultCategories));
             
-            // Carregar dispositivos customizados do servidor
             try {
                 const devicesRes = await fetch('/api/load_custom_devices');
                 const devicesData = await devicesRes.json();
                 if (devicesData.success) customDevices = devicesData.devices;
             } catch(e) { console.error("Erro ao carregar custom devices:", e); }
-            
-            // Não carregar categorias, customDevices e conexões do localStorage
-            // para evitar que dados antigos sobrescrevam a configuração global.
             
             if (currentUser) {
                 const savedComponents = localStorage.getItem(STORAGE_KEYS.COMPONENTS(currentUser));
@@ -1272,7 +1273,6 @@ HTML_TEMPLATE = """
         }
         
         function saveUserData() {
-            // O localStorage agora é usado APENAS para dados do projeto do usuário.
             localStorage.setItem(STORAGE_KEYS.ICON_SIZE, iconSize);
             localStorage.setItem(STORAGE_KEYS.CANVAS_ZOOM, zoom);
             
@@ -1353,7 +1353,7 @@ HTML_TEMPLATE = """
             };
             
             saveUserData();
-            saveGlobalLibrary(); // Adicionado
+            saveGlobalLibrary();
             renderConnectionsPalette();
             showToast(`✅ Conexão "${connData.name}" adicionada!`);
         }
@@ -1375,7 +1375,7 @@ HTML_TEMPLATE = """
                 }
                 
                 saveUserData();
-                saveGlobalLibrary(); // Adicionado
+                saveGlobalLibrary();
                 renderConnectionsPalette();
                 showToast(`🗑 Conexão removida!`);
             }
@@ -1423,7 +1423,6 @@ HTML_TEMPLATE = """
             document.body.appendChild(modal);
             window.currentModal = modal;
             
-            // Upload de imagem para ícone da conexão
             const imageInput = document.getElementById('connIconImage');
             if (imageInput) {
                 imageInput.onchange = async (e) => {
@@ -1488,7 +1487,7 @@ HTML_TEMPLATE = """
             
             window.tempConnectionIconFile = null;
             saveUserData();
-            saveGlobalLibrary(); // Adicionado
+            saveGlobalLibrary();
             closeModal();
             renderConnectionsPalette();
             showToast(`✅ Conexão atualizada!`);
@@ -1528,7 +1527,6 @@ HTML_TEMPLATE = """
             window.currentModal = modal;
             window.currentCategory = catName;
             
-            // Upload de imagem para ícone da categoria
             const imageInput = document.getElementById('catIconImage');
             if (imageInput) {
                 imageInput.onchange = async (e) => {
@@ -1566,7 +1564,7 @@ HTML_TEMPLATE = """
             
             window.tempCategoryIconFile = null;
             saveUserData();
-            await saveGlobalLibrary(); // Adicionado
+            await saveGlobalLibrary();
             closeModal();
             renderPalette();
             showToast(`✅ Ícone da categoria "${catName}" atualizado!`);
@@ -1608,7 +1606,6 @@ HTML_TEMPLATE = """
             window.currentConnCategory = category;
             window.currentConnIdx = idx;
             
-            // Upload de imagem para ícone da conexão
             const imageInput = document.getElementById('connIconImage');
             if (imageInput) {
                 imageInput.onchange = async (e) => {
@@ -1645,7 +1642,6 @@ HTML_TEMPLATE = """
                 conn.icon = null;
             }
             
-            // Atualizar cableColors também
             const key = getConnectionKey(conn.name);
             if (cableColors[key]) {
                 cableColors[key].icon = conn.icon || '🔌';
@@ -1654,7 +1650,7 @@ HTML_TEMPLATE = """
             
             window.tempConnectionIconFile = null;
             saveUserData();
-            await saveGlobalLibrary(); // Adicionado
+            await saveGlobalLibrary();
             closeModal();
             renderConnectionsPalette();
             showToast(`✅ Ícone da conexão "${conn.name}" atualizado!`);
@@ -1921,7 +1917,7 @@ HTML_TEMPLATE = """
             
             window.tempDeviceIconFile = null;
             saveUserData();
-            await saveGlobalLibrary(); // Adicionado
+            await saveGlobalLibrary();
             closeModal();
             renderPalette();
             showToast(`✅ Ícone do dispositivo "${device.name}" atualizado!`);
@@ -1999,7 +1995,7 @@ HTML_TEMPLATE = """
             
             window.tempDeviceIconFile = null;
             saveUserData();
-            await saveGlobalLibrary(); // Adicionado
+            await saveGlobalLibrary();
             closeModal();
             renderPalette();
             showToast(`✅ Ícone do dispositivo "${device.name}" atualizado!`);
@@ -2542,7 +2538,6 @@ HTML_TEMPLATE = """
                 return;
             }
             
-            // Verificar clique em equipamento
             let clickedComp = null;
             for(let i=components.length-1; i>=0; i--) {
                 const comp = components[i];
@@ -2576,7 +2571,6 @@ HTML_TEMPLATE = """
                 return;
             }
             
-            // Verificar clique em forma
             let clickedShape = null;
             for(let i=shapes.length-1; i>=0; i--) {
                 const shape = shapes[i];
@@ -2612,7 +2606,6 @@ HTML_TEMPLATE = """
                 return;
             }
             
-            // Verificar clique em conexão
             let clickedConnection = null;
             for(let i = 0; i < connections.length; i++) {
                 const conn = connections[i];
@@ -2651,7 +2644,6 @@ HTML_TEMPLATE = """
                 return;
             }
             
-            // Verificar imagem de fundo
             if(backgroundWidth > 0 && backgroundHeight > 0) {
                 const handleSize = 12;
                 const isOnNW = (x >= backgroundX - handleSize && x <= backgroundX + handleSize && y >= backgroundY - handleSize && y <= backgroundY + handleSize);
@@ -2690,7 +2682,6 @@ HTML_TEMPLATE = """
                 }
             }
             
-            // Botão de rotação do equipamento
             for(let comp of components) {
                 if(selectedComponents.includes(comp)) {
                     const handleX = comp.x + (iconSize/2) + 8;
@@ -2703,7 +2694,6 @@ HTML_TEMPLATE = """
                 }
             }
             
-            // Handle de ângulo da câmera
             for(let comp of components) {
                 if(comp.type === 'camera') {
                     const angleRad = comp.angle * Math.PI / 180;
@@ -2880,7 +2870,6 @@ HTML_TEMPLATE = """
             e.preventDefault();
             const {x, y} = getMousePos(e);
             
-            // Menu para imagem de fundo
             if(isBackgroundSelected && backgroundWidth > 0 && backgroundHeight > 0 && x >= backgroundX && x <= backgroundX + backgroundWidth && y >= backgroundY && y <= backgroundY + backgroundHeight) {
                 const menu = document.getElementById('contextMenu');
                 menu.innerHTML = `
@@ -2895,7 +2884,6 @@ HTML_TEMPLATE = """
                 return;
             }
             
-            // Menu para equipamentos
             for(let comp of components) {
                 if(Math.hypot(x - comp.x, y - comp.y) < iconSize/2) {
                     showContextMenu(e, comp);
@@ -2903,7 +2891,6 @@ HTML_TEMPLATE = """
                 }
             }
             
-            // Menu para formas
             for(let shape of shapes) {
                 if(isPointOnShape(x, y, shape)) {
                     showShapeContextMenu(e, shape);
@@ -2911,7 +2898,6 @@ HTML_TEMPLATE = """
                 }
             }
             
-            // Menu para conexões
             for(let i = 0; i < connections.length; i++) {
                 const conn = connections[i];
                 const fromComp = components.find(c => c.id === conn.from);
@@ -3828,7 +3814,7 @@ HTML_TEMPLATE = """
             }
             categories[name] = { icon: icon || '📁', devices: [] };
             saveUserData();
-            saveGlobalLibrary(); // Adicionado
+            saveGlobalLibrary();
             closeModal();
             renderPalette();
             showToast(`✅ Categoria "${name}" adicionada!`);
@@ -3865,7 +3851,7 @@ HTML_TEMPLATE = """
             delete categories[oldName];
             categories[newName] = { ...catData, icon: icon };
             saveUserData();
-            saveGlobalLibrary(); // Adicionado
+            saveGlobalLibrary();
             closeModal();
             renderPalette();
             showToast(`✅ Categoria atualizada!`);
@@ -3879,7 +3865,7 @@ HTML_TEMPLATE = """
             if (confirm(`Deseja excluir a categoria "${catName}" e todos os seus dispositivos?`)) {
                 delete categories[catName];
                 saveUserData();
-                saveGlobalLibrary(); // Adicionado
+                saveGlobalLibrary();
                 renderPalette();
                 showToast(`🗑 Categoria "${catName}" removida!`);
             }
@@ -3964,7 +3950,7 @@ HTML_TEMPLATE = """
             window.tempImageData = null;
             window.tempImageFile = null;
             saveUserData();
-            await saveGlobalLibrary(); // Adicionado
+            await saveGlobalLibrary();
             closeModal();
             renderPalette();
             showToast(`✅ Dispositivo "${name}" adicionado!`);
@@ -4050,7 +4036,7 @@ HTML_TEMPLATE = """
             window.tempImageData = null;
             window.tempImageFile = null;
             saveUserData();
-            await saveGlobalLibrary(); // Adicionado
+            await saveGlobalLibrary();
             closeModal();
             renderPalette();
             showToast(`✅ Dispositivo atualizado!`);
@@ -4064,7 +4050,7 @@ HTML_TEMPLATE = """
             if (confirm('Deseja excluir este dispositivo?')) {
                 categories[catName].devices.splice(idx, 1);
                 saveUserData();
-                saveGlobalLibrary(); // Adicionado
+                saveGlobalLibrary();
                 renderPalette();
                 showToast(`🗑 Dispositivo removido!`);
             }
@@ -4150,7 +4136,7 @@ HTML_TEMPLATE = """
             window.tempImageData = null;
             window.tempImageFile = null;
             saveUserData();
-            await saveGlobalLibrary(); // Adicionado
+            await saveGlobalLibrary();
             closeModal();
             renderPalette();
             showToast(`✅ Equipamento "${name}" adicionado!`);
@@ -4236,7 +4222,7 @@ HTML_TEMPLATE = """
             window.tempImageData = null;
             window.tempImageFile = null;
             saveUserData();
-            await saveGlobalLibrary(); // Adicionado
+            await saveGlobalLibrary();
             closeModal();
             renderPalette();
             showToast(`✅ Equipamento atualizado!`);
@@ -4250,7 +4236,7 @@ HTML_TEMPLATE = """
             if (confirm('Deseja excluir este equipamento?')) {
                 customDevices.splice(idx, 1);
                 saveUserData();
-                saveGlobalLibrary(); // Adicionado
+                saveGlobalLibrary();
                 renderPalette();
                 showToast(`🗑 Equipamento removido!`);
             }
@@ -4301,7 +4287,6 @@ HTML_TEMPLATE = """
             document.body.appendChild(modal);
             window.currentModal = modal;
             
-            // Upload de imagem para ícone da conexão
             const imageInput = document.getElementById('connIconImage');
             if (imageInput) {
                 imageInput.onchange = async (e) => {
@@ -4473,7 +4458,7 @@ HTML_TEMPLATE = """
                 
                 window.tempConnIconFile = null;
                 saveUserData();
-                saveGlobalLibrary(); // Adicionado
+                saveGlobalLibrary();
                 closeModal();
                 renderConnectionsPalette();
                 showToast(`✅ Conexão "${name}" adicionada!`);
@@ -5057,7 +5042,7 @@ HTML_TEMPLATE = """
                         categories = JSON.parse(JSON.stringify(defaultCategories));
                         customDevices = [];
                         saveUserData();
-                        saveGlobalLibrary(); // Adicionado
+                        saveGlobalLibrary();
                         renderPalette();
                         showToast('✅ Configurações restauradas para o padrão!');
                     }
@@ -5159,7 +5144,6 @@ HTML_TEMPLATE = """
         }
         
         // ==================== INICIALIZAÇÃO ====================
-        // Event listeners do canvas
         canvas.addEventListener('dragover', (e) => e.preventDefault());
         canvas.addEventListener('drop', (e) => {
             e.preventDefault();
@@ -5203,7 +5187,6 @@ HTML_TEMPLATE = """
         canvas.addEventListener('click', handleClick);
         canvas.addEventListener('contextmenu', handleContextMenu);
         
-        // Inicialização
         loadDevImages();
         createMatrixAnimation('introMatrixBg');
         closeProperties();
@@ -5213,7 +5196,6 @@ HTML_TEMPLATE = """
             if (splash) splash.style.display = 'none';
         }, 3000);
         
-        // Expor funções globalmente
         window.newProject = newProject;
         window.saveProjectToFile = saveProjectToFile;
         window.loadProjectFromFile = loadProjectFromFile;
@@ -5299,4 +5281,3 @@ HTML_TEMPLATE = """
 """
 
 # O bloco if __name__ == '__main__': app.run() FOI REMOVIDO INTENCIONALMENTE.
-# O PythonAnywhere utiliza o próprio servidor WSGI. Deixar o app.run() causa erro 502.
