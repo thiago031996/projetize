@@ -29,7 +29,6 @@ DEFAULT_ICONS_FOLDER = os.path.join(UPLOAD_FOLDER, 'default_icons')
 BACKGROUNDS_FOLDER = os.path.join(UPLOAD_FOLDER, 'backgrounds')
 STATIC_FOLDER = os.path.join(BASE_DIR, 'static')
 
-
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(ICONS_FOLDER, exist_ok=True)
 os.makedirs(DEFAULT_ICONS_FOLDER, exist_ok=True)
@@ -415,9 +414,21 @@ def upload_background():
     
     return jsonify({'success': False, 'error': 'Erro ao salvar imagem'}), 500
 
+@app.route('/uploads/icons/<filename>')
+def serve_icon(filename):
+    return send_from_directory(ICONS_FOLDER, filename)
+
+@app.route('/uploads/default_icons/<filename>')
+def serve_default_icon(filename):
+    return send_from_directory(DEFAULT_ICONS_FOLDER, filename)
+
 @app.route('/uploads/backgrounds/<filename>')
 def serve_background(filename):
-    return send_file(os.path.join(BACKGROUNDS_FOLDER, filename))
+    return send_from_directory(BACKGROUNDS_FOLDER, filename)
+
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    return send_from_directory(STATIC_FOLDER, filename)
 
 @app.route('/api/backgrounds', methods=['GET'])
 @login_required
@@ -485,22 +496,6 @@ def upload_dev_image():
         return jsonify({'success': True, 'url': f'/static/{filename}'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/uploads/icons/<filename>')
-def serve_icon(filename):
-    return send_from_directory(ICONS_FOLDER, filename)
-
-@app.route('/uploads/default_icons/<filename>')
-def serve_default_icon(filename):
-    return send_from_directory(DEFAULT_ICONS_FOLDER, filename)
-
-@app.route('/uploads/backgrounds/<filename>')
-def serve_background(filename):
-    return send_from_directory(BACKGROUNDS_FOLDER, filename)
-
-@app.route('/static/<path:filename>')
-def serve_static(filename):
-    return send_from_directory(STATIC_FOLDER, filename)
 
 @app.route('/api/default_config', methods=['GET'])
 def get_default_config():
@@ -5242,31 +5237,5 @@ HTML_TEMPLATE = """
 </html>
 """
 
-if __name__ == '__main__':
-    print("""
-    ╔══════════════════════════════════════════════════════════════════════════════════════════╗
-    ║                                                                                          ║
-    ║                    🎥 PROJETIZE - Sistema Para CFTV, Redes e muito mais...              ║
-    ║                                                                                          ║
-    ║     🌐 Servidor: http://localhost:9000                                                   ║
-    ║                                                                                          ║
-    ║     ✅ SISTEMA COMPLETO COM TODAS AS FUNCIONALIDADES CORRIGIDAS:                        ║
-    ║     • Adicionar dispositivos (botão 🔧 + Equip) - FUNCIONANDO                          ║
-    ║     • Adicionar categorias (botão 📁 + Cat) - FUNCIONANDO                             ║
-    ║     • Adicionar conexões (botão 🔌 + Conexão) - FUNCIONANDO                          ║
-    ║     • Alterar ícones de dispositivos - FUNCIONANDO                                     ║
-    ║     • Alterar ícones de categorias - FUNCIONANDO                                       ║
-    ║     • Alterar ícones de conexões - FUNCIONANDO                                         ║
-    ║     • Todos os ícones são salvos no servidor e visíveis para todos os usuários          ║
-    ║     • Todas as opções da barra superior funcionam                                      ║
-    ║                                                                                          ║
-    ║     📌 ACESSO:                                                                          ║
-    ║     • Usuário master: thiago03 / Senha: Thiago@000333                                   ║
-    ║                                                                                          ║
-    ║     Desenvolvido por Thiago Souza                                                       ║
-    ║     Analista da Unidade 2 - São José do Rio Preto                                       ║
-    ║     Todos os direitos reservados © 2026                                                 ║
-    ║                                                                                          ║
-    ╚══════════════════════════════════════════════════════════════════════════════════════════╝
-    """)
-    #app.run(debug=True, host='0.0.0.0', port=1090)
+# O bloco if __name__ == '__main__': app.run() FOI REMOVIDO INTENCIONALMENTE.
+# O PythonAnywhere utiliza o próprio servidor WSGI. Deixar o app.run() causa erro 502.
