@@ -21,11 +21,12 @@ app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 app.config['SECRET_KEY'] = 'projetize-super-secret-key-2026'
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
-UPLOAD_FOLDER = 'uploads'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 ICONS_FOLDER = os.path.join(UPLOAD_FOLDER, 'icons')
 DEFAULT_ICONS_FOLDER = os.path.join(UPLOAD_FOLDER, 'default_icons')
 BACKGROUNDS_FOLDER = os.path.join(UPLOAD_FOLDER, 'backgrounds')
-STATIC_FOLDER = 'static'
+STATIC_FOLDER = os.path.join(BASE_DIR, 'static')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(ICONS_FOLDER, exist_ok=True)
 os.makedirs(DEFAULT_ICONS_FOLDER, exist_ok=True)
