@@ -1849,11 +1849,3 @@
 </html>
 """
 
-if __name__ == '__main__':
-    print("=" * 60)
-    print("  PROJETIZE - Sistema para CFTV, Redes e Datacenter")
-    print("=" * 60)
-    print(f"  Rodando em: http://localhost:5000")
-    print(f"  Pasta: {BASE_DIR}")
-    print("=" * 60)
-    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
