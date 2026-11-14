@@ -19,7 +19,7 @@ import math
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 app.config['SECRET_KEY'] = 'projetize-super-secret-key-2026'
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000 # Otimização: Cache de 1 ano para arquivos estáticos
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000 # Cache de 1 ano para arquivos estáticos
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -2055,7 +2055,7 @@ HTML_TEMPLATE = """
         function closeProperties() { document.getElementById('propertiesPanel').classList.remove('open'); }
         function readImageAsBase64(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.readAsDataURL(file); }); }
         
-        // OTIMIZAÇÃO NO LOGIN (Promessas em paralelo)
+        // OTIMIZAÇÃO NO LOGIN (Promessas em paralelo e carregamento inicial)
         async function doLogin() {
             const username = document.getElementById('loginUsername').value;
             const password = document.getElementById('loginPassword').value;
@@ -2144,7 +2144,7 @@ HTML_TEMPLATE = """
                 if (devImageBase64) { const dataUrl = 'data:image/png;base64,' + devImageBase64; if (loginImg) { loginImg.src = dataUrl; loginImg.style.display = 'block'; } if (badgeImg) badgeImg.src = dataUrl; if (devSlideImg) { devSlideImg.src = dataUrl; devSlideImg.style.display = 'block'; } if (devSlideContainer) devSlideContainer.style.background = 'transparent'; if (loginContainer) loginContainer.style.background = 'transparent'; }
                 else { if (loginImg) loginImg.style.display = 'none'; if (devSlideImg) devSlideImg.style.display = 'none'; if (loginContainer) { loginContainer.style.background = '#005f99'; loginContainer.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:40px;font-weight:bold;">TS</div>'; } if (devSlideContainer) { devSlideContainer.style.background = '#005f99'; devSlideContainer.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:40px;font-weight:bold;">TS</div>'; } if (badgeImg) { badgeImg.style.display = 'none'; badgeImg.parentElement.style.background = '#005f99'; badgeImg.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:16px;font-weight:bold;">TS</div>'; } }
             };
-            img.src = '/static/dev.png?' + Date.now();
+            img.src = '/static/dev.png?v=2'; // Força o recarregamento da imagem
         }
         
         canvas.addEventListener('dragover', (e) => e.preventDefault());
@@ -2157,6 +2157,15 @@ HTML_TEMPLATE = """
         canvas.addEventListener('touchstart', handleStart, { passive: false }); canvas.addEventListener('touchmove', handleMove, { passive: false }); canvas.addEventListener('touchend', handleEnd); canvas.addEventListener('touchcancel', handleEnd);
         canvas.addEventListener('mousedown', handleStart); canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mouseup', handleEnd); canvas.addEventListener('click', handleClick); canvas.addEventListener('contextmenu', handleContextMenu);
         
+        // CARREGAMENTO INICIAL (Antes do login, para a paleta já aparecer preenchida)
+        (async function init() {
+            await loadDefaultConfig();
+            await loadDefaultConnections();
+            categories = JSON.parse(JSON.stringify(defaultCategories));
+            renderPalette();
+            renderConnectionsPalette();
+        })();
+
         loadDevImages(); createMatrixAnimation('introMatrixBg'); closeProperties();
         setTimeout(() => { const splash = document.getElementById('splashScreen'); if (splash) splash.style.display = 'none'; }, 3000);
         
