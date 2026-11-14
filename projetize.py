@@ -403,18 +403,16 @@ def upload_dev_image():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-# ==================== NOVAS ROTAS: FUNDO DA TELA DE LOGIN ====================
 @app.route('/api/upload_login_bg', methods=['POST'])
 @admin_required
 def upload_login_bg():
     data = request.json
     media_data = data.get('media', '')
-    media_type = data.get('type', 'image')  # 'image' or 'video'
+    media_type = data.get('type', 'image')
     
     if not media_data:
         return jsonify({'success': False, 'error': 'Mídia inválida'}), 400
     
-    # Aceita data URLs de imagem e vídeo
     if media_data.startswith('data:'):
         try:
             header, encoded = media_data.split(',', 1)
@@ -431,7 +429,6 @@ def upload_login_bg():
     else:
         return jsonify({'success': False, 'error': 'Formato de mídia inválido'}), 400
     
-    # Remove fundo anterior
     old_config = load_login_bg_config()
     if old_config.get('filename'):
         old_path = os.path.join(LOGIN_BG_FOLDER, old_config['filename'])
@@ -471,7 +468,6 @@ def set_login_bg_config_route():
             config['opacity'] = max(0.05, min(1.0, float(data['opacity'])))
         except: pass
     if 'type' in data and data['type'] in ['matrix', 'image', 'video']:
-        # Se voltar para matrix, remove mídia
         if data['type'] == 'matrix':
             if config.get('filename'):
                 old_path = os.path.join(LOGIN_BG_FOLDER, config['filename'])
@@ -500,7 +496,6 @@ def reset_login_bg():
 @app.route('/uploads/login_bg/<filename>')
 def serve_login_bg(filename):
     return send_from_directory(LOGIN_BG_FOLDER, filename)
-# ===========================================================================
 
 @app.route('/api/save_global_categories', methods=['POST'])
 @admin_required
@@ -716,27 +711,23 @@ HTML_TEMPLATE = """
         @keyframes btnPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); } 50% { box-shadow: 0 0 0 12px rgba(255, 255, 255, 0); } }
         .intro-footer-note { text-align: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); font-size: 11px; color: rgba(255,255,255,0.6); }
         
-        /* ==================== LOGIN ELEGANTE ==================== */
         .login-modal { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: #000814;
             display: none; justify-content: center; align-items: center; 
             z-index: 20000; overflow: hidden; padding: 20px; 
         }
-        /* Mídia de fundo da tela de login (imagem ou vídeo) */
         #loginBgMedia { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             object-fit: cover; z-index: 0; opacity: 0.35; pointer-events: none; 
             display: none;
         }
         #loginBgVideo { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; opacity: 0.35; pointer-events: none; display: none; }
-        /* Overlay gradiente sobre a mídia */
         .login-overlay-gradient { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; 
             background: linear-gradient(135deg, rgba(0,26,46,0.92) 0%, rgba(0,38,77,0.75) 50%, rgba(0,26,46,0.92) 100%);
             pointer-events: none;
         }
-        /* Elementos decorativos */
         .login-orb {
             position: absolute; border-radius: 50%; filter: blur(80px); z-index: 0; pointer-events: none;
             animation: orbFloat 12s ease-in-out infinite;
@@ -757,7 +748,6 @@ HTML_TEMPLATE = """
         }
         @keyframes fadeInScale { from { opacity: 0; transform: scale(0.92) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         
-        /* Botão admin para trocar fundo - aparece no canto superior direito */
         .login-bg-toggle {
             position: absolute; top: 20px; right: 20px; z-index: 5;
             background: rgba(10, 25, 45, 0.75); backdrop-filter: blur(10px);
@@ -817,10 +807,8 @@ HTML_TEMPLATE = """
         .login-footer a { color: #00ccff; text-decoration: none; transition: all 0.3s; font-weight: 600; }
         .login-footer a:hover { text-shadow: 0 0 12px #00ccff; }
         
-        /* Spinner do botão */
         .login-btn .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(0,26,46,0.3); border-top-color: #001a2e; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        /* ===================================================== */
         
         .splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #001a2e, #00264d); display: flex; justify-content: center; align-items: center; z-index: 15000; animation: fadeOut 3s ease-in-out forwards; pointer-events: none; }
         @keyframes fadeOut { 0% { opacity: 1; visibility: visible; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
@@ -992,7 +980,215 @@ HTML_TEMPLATE = """
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .loading-text { font-size: 18px; font-weight: bold; animation: pulseText 1.5s infinite; }
         @keyframes pulseText { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        
+        /* ==================== 3D SIMULATOR STYLES ==================== */
+        #sim3d-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 15000; background: #080b13; display: none;
+            overflow: hidden;
+        }
+        #sim3d-overlay.active { display: block; }
+        #sim3d-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        .sim3d-glass {
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .sim3d-header {
+            position: absolute; top: 0; left: 0; width: 100%; padding: 12px 16px;
+            z-index: 20; display: flex; flex-wrap: wrap; justify-content: space-between;
+            align-items: center; gap: 10px; pointer-events: none;
+        }
+        .sim3d-header > * { pointer-events: auto; }
+        .sim3d-brand {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 14px; border-radius: 14px; color: #e2e8f0;
+        }
+        .sim3d-brand-icon {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: linear-gradient(135deg, #06b6d4, #3b82f6, #6366f1);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 20px;
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+        }
+        .sim3d-brand h1 {
+            font-size: 14px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+            background: linear-gradient(90deg, #67e8f9, #bae6fd, #c7d2fe);
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .sim3d-brand p { font-size: 10px; color: #94a3b8; display: flex; align-items: center; gap: 5px; }
+        .sim3d-brand p::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #34d399; box-shadow: 0 0 8px #34d399; }
+        
+        .sim3d-btn {
+            padding: 8px 14px; border-radius: 10px; font-size: 11px; font-weight: 700;
+            display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+            border: 1px solid rgba(56, 189, 248, 0.4); color: #67e8f9;
+            background: rgba(15, 23, 42, 0.6); transition: all 0.2s;
+        }
+        .sim3d-btn:hover { color: white; background: rgba(6, 182, 212, 0.3); border-color: #22d3ee; }
+        .sim3d-btn-primary {
+            background: linear-gradient(90deg, #059669, #0d9488); color: white;
+            border: none; box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
+        }
+        .sim3d-btn-primary:hover { background: linear-gradient(90deg, #10b981, #14b8a6); }
+        .sim3d-btn-close {
+            width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.4);
+            background: rgba(15, 23, 42, 0.6); color: #f87171; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 16px;
+            transition: all 0.2s;
+        }
+        .sim3d-btn-close:hover { background: rgba(239, 68, 68, 0.2); color: #fecaca; }
+        
+        .sim3d-drawer {
+            position: absolute; left: 16px; top: 80px; bottom: 16px; width: 300px;
+            max-width: calc(100vw - 32px); z-index: 15; border-radius: 16px;
+            padding: 14px; display: flex; flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+        .sim3d-drawer.closed { transform: translateX(calc(-100% - 30px)); }
+        .sim3d-drawer-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-bottom: 10px; border-bottom: 1px solid #1e293b;
+        }
+        .sim3d-drawer-header h2 {
+            font-size: 11px; font-weight: 800; color: #67e8f9;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .sim3d-drawer-close {
+            width: 26px; height: 26px; border-radius: 7px; border: none;
+            background: #1e293b; color: #cbd5e1; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 12px;
+        }
+        .sim3d-drawer-close:hover { background: #334155; color: white; }
+        .sim3d-drawer-list { flex: 1; overflow-y: auto; padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .sim3d-drawer-hint { font-size: 10px; color: #64748b; padding: 4px 0 8px; }
+        .sim3d-drawer-list::-webkit-scrollbar { width: 4px; }
+        .sim3d-drawer-list::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+        .sim3d-drawer-list::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.5); border-radius: 4px; }
+        
+        .sim3d-eq-item {
+            padding: 10px; border-radius: 10px; border: 1px solid #1e293b;
+            background: rgba(15, 23, 42, 0.5); display: flex; justify-content: space-between;
+            align-items: center; gap: 8px; transition: all 0.2s;
+        }
+        .sim3d-eq-item.mounted { border-color: rgba(6, 182, 212, 0.5); background: rgba(15, 23, 42, 0.9); box-shadow: 0 4px 15px rgba(6, 182, 212, 0.15); }
+        .sim3d-eq-item:hover { border-color: rgba(56, 189, 248, 0.5); }
+        .sim3d-eq-info { flex: 1; min-width: 0; cursor: pointer; }
+        .sim3d-eq-name { font-size: 11px; font-weight: 700; color: #f1f5f9; display: flex; align-items: center; gap: 5px; }
+        .sim3d-eq-unit { font-size: 9px; padding: 1px 5px; border-radius: 4px; background: #083344; color: #67e8f9; border: 1px solid #0e7490; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+        .sim3d-eq-desc { font-size: 9px; color: #64748b; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sim3d-eq-actions { display: flex; gap: 4px; flex-shrink: 0; }
+        .sim3d-eq-btn {
+            padding: 4px 8px; border-radius: 6px; border: none; font-size: 10px;
+            font-weight: 700; cursor: pointer; transition: all 0.2s;
+            background: #06b6d4; color: white;
+        }
+        .sim3d-eq-btn:hover { background: #22d3ee; }
+        .sim3d-eq-btn-small {
+            width: 22px; height: 22px; padding: 0; display: flex; align-items: center; justify-content: center;
+            background: #1e293b; color: #cbd5e1; font-size: 10px;
+        }
+        .sim3d-eq-btn-small:hover { background: #334155; }
+        .sim3d-eq-btn-remove {
+            width: 22px; height: 22px; padding: 0; display: flex; align-items: center; justify-content: center;
+            background: rgba(239, 68, 68, 0.2); color: #f87171; font-size: 11px;
+        }
+        .sim3d-eq-btn-remove:hover { background: #ef4444; color: white; }
+        
+        .sim3d-connections-panel {
+            position: absolute; left: 16px; bottom: 16px; width: 300px;
+            max-width: calc(100vw - 32px); border-radius: 12px; padding: 12px;
+            max-height: 200px; display: flex; flex-direction: column; z-index: 10;
+        }
+        .sim3d-connections-title { font-size: 10px; font-weight: 800; color: #67e8f9; text-transform: uppercase; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .sim3d-connections-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+        .sim3d-connections-list::-webkit-scrollbar { width: 3px; }
+        .sim3d-connections-list::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.5); border-radius: 3px; }
+        .sim3d-connection-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 5px 7px; background: rgba(15, 23, 42, 0.6); border: 1px solid #1e293b; border-radius: 6px; font-size: 9px; color: #cbd5e1; }
+        .sim3d-connection-row .tag { font-family: monospace; font-weight: 700; color: #67e8f9; }
+        .sim3d-connection-remove { padding: 2px 6px; border-radius: 4px; border: none; background: rgba(239, 68, 68, 0.2); color: #f87171; cursor: pointer; font-size: 9px; font-weight: 700; }
+        .sim3d-connection-remove:hover { background: #ef4444; color: white; }
+        
+        .sim3d-patch-modal {
+            position: fixed; inset: 0; z-index: 60; background: rgba(2, 6, 23, 0.85);
+            backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 16px;
+        }
+        .sim3d-patch-modal.open { display: flex; }
+        .sim3d-patch-content {
+            width: 100%; max-width: 440px; border-radius: 16px; padding: 18px;
+            border: 1px solid rgba(6, 182, 212, 0.4); position: relative;
+        }
+        .sim3d-patch-title { font-size: 13px; font-weight: 800; color: white; }
+        .sim3d-patch-sub { font-size: 10px; color: #22d3ee; margin-bottom: 12px; }
+        .sim3d-patch-section-label { font-size: 10px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .sim3d-cable-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px; }
+        .sim3d-cable-btn {
+            padding: 8px; border-radius: 10px; border: 2px solid #334155; background: #0f172a;
+            color: #cbd5e1; font-size: 10px; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+        }
+        .sim3d-cable-btn:hover { border-color: #64748b; }
+        .sim3d-cable-btn.active { border-color: #22d3ee; color: white; }
+        .sim3d-cable-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .sim3d-dest-list {
+            max-height: 140px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
+            padding: 6px; background: rgba(2, 6, 23, 0.6); border-radius: 10px; border: 1px solid #1e293b;
+            margin-bottom: 12px;
+        }
+        .sim3d-dest-list::-webkit-scrollbar { width: 3px; }
+        .sim3d-dest-list::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.5); border-radius: 3px; }
+        .sim3d-dest-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 6px 8px; border-radius: 6px; background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #1e293b; cursor: pointer; font-size: 10px; color: #cbd5e1;
+        }
+        .sim3d-dest-item:hover { background: rgba(30, 41, 59, 0.6); }
+        .sim3d-dest-item input { accent-color: #06b6d4; width: 14px; height: 14px; cursor: pointer; }
+        .sim3d-patch-confirm {
+            width: 100%; padding: 10px; border-radius: 10px; border: none;
+            background: linear-gradient(90deg, #0891b2, #2563eb); color: white;
+            font-weight: 800; font-size: 11px; cursor: pointer;
+            box-shadow: 0 6px 20px rgba(8, 145, 178, 0.4); transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .sim3d-patch-confirm:hover { background: linear-gradient(90deg, #06b6d4, #3b82f6); }
+        
+        .sim3d-terminal {
+            position: fixed; inset: 0; z-index: 60; background: rgba(2, 6, 23, 0.9);
+            backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 16px;
+        }
+        .sim3d-terminal.open { display: flex; }
+        .sim3d-terminal-content {
+            width: 100%; max-width: 560px; border-radius: 16px; padding: 16px;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+        .sim3d-terminal-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #1e293b; margin-bottom: 10px; }
+        .sim3d-terminal-title { font-size: 12px; font-weight: 800; color: white; font-family: 'JetBrains Mono', monospace; display: flex; align-items: center; gap: 8px; }
+        .sim3d-terminal-output {
+            background: #020617; padding: 12px; border-radius: 10px;
+            font-family: 'JetBrains Mono', monospace; font-size: 11px;
+            color: #34d399; height: 240px; overflow-y: auto; border: 1px solid #0f172a;
+            line-height: 1.6;
+        }
+        .sim3d-terminal-output::-webkit-scrollbar { width: 4px; }
+        .sim3d-terminal-output::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.5); border-radius: 4px; }
+        
+        .sim3d-toast {
+            position: fixed; bottom: 24px; right: 24px; z-index: 70;
+            padding: 12px 18px; border-radius: 12px;
+            border: 1px solid rgba(16, 185, 129, 0.5);
+            color: white; font-size: 11px; font-weight: 700;
+            display: flex; align-items: center; gap: 8px;
+            transform: translateY(80px); opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+        .sim3d-toast.show { transform: translateY(0); opacity: 1; }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
     <video id="bgVideo" class="dynamic-background" autoplay loop muted playsinline></video>
@@ -1024,6 +1220,7 @@ HTML_TEMPLATE = """
                         <li>✅ Desenhe formas, portas, janelas e textos no canvas</li>
                         <li>✅ Exporte projetos em PDF com lista de equipamentos</li>
                         <li>✅ Gere orçamento automático</li>
+                        <li>✅ <strong>NOVO:</strong> Simulador 3D de Rack Datacenter</li>
                     </ul>
                 </div>
             </div>
@@ -1037,14 +1234,9 @@ HTML_TEMPLATE = """
                         <li><strong>🖼️ Planta:</strong> Importe uma imagem para usar como planta baixa (PNG, JPG)</li>
                         <li><strong>📦 Equipamentos:</strong> Arraste os ícones da barra lateral para o canvas</li>
                         <li><strong>🔌 Conexões:</strong> Shift + clique em dois equipamentos para conectá-los</li>
+                        <li><strong>🏢 3D Rack:</strong> Abra o simulador 3D para montar o rack datacenter</li>
                         <li><strong>📐 Formas:</strong> Ative o modo de desenho para adicionar formas geométricas</li>
                         <li><strong>🔍 Zoom:</strong> Use os botões de zoom para ampliar o canvas ou aumentar ícones</li>
-                        <li><strong>✏️ Edição:</strong> Clique em qualquer equipamento para editar suas propriedades</li>
-                        <li><strong>🗑 Excluir:</strong> Selecione itens e use o botão "Excluir Selecionados"</li>
-                        <li><strong>🔌 Editar Conexão:</strong> Clique no cabo para selecionar e editar</li>
-                        <li><strong>🖼️ Mover Planta:</strong> Selecione a planta e arraste para mover</li>
-                        <li><strong>📐 Formas:</strong> Clique na forma para mover, editar ou excluir</li>
-                        <li><strong>🎨 Ícones Personalizados:</strong> Clique com botão direito em qualquer item para alterar seu ícone permanentemente</li>
                     </ul>
                 </div>
             </div>
@@ -1075,7 +1267,7 @@ HTML_TEMPLATE = """
                 <button class="access-btn" onclick="closeIntroAndShowLogin()">🔓 Acessar Sistema</button>
             </div>
             <div class="intro-footer-note">
-                <span>Versão 2.1 | Desenvolvido com 💙 por Thiago Souza</span>
+                <span>Versão 2.2 | Desenvolvido com 💙 por Thiago Souza</span>
             </div>
         </div>
     </div>
@@ -1088,24 +1280,14 @@ HTML_TEMPLATE = """
         </div>
     </div>
     
-    <!-- ==================== TELA DE LOGIN ELEGANTE ==================== -->
     <div class="login-modal" id="loginModal">
-        <!-- Mídia de fundo (imagem/vídeo) -->
         <img id="loginBgMedia" alt="">
         <video id="loginBgVideo" autoplay loop muted playsinline></video>
-        
-        <!-- Overlay gradiente -->
         <div class="login-overlay-gradient"></div>
-        
-        <!-- Orbs decorativos -->
         <div class="login-orb login-orb-1"></div>
         <div class="login-orb login-orb-2"></div>
         <div class="login-orb login-orb-3"></div>
-        
-        <!-- Matrix fallback (mantém matriz quando não há mídia) -->
         <div class="matrix-bg" id="matrixBg"></div>
-        
-        <!-- Botão admin para trocar fundo -->
         <button class="login-bg-toggle" id="loginBgToggle" onclick="openLoginBgModal()" title="Trocar fundo da tela de login (Admin)" style="display:none;">🎬</button>
         
         <div class="login-dev-container">
@@ -1134,7 +1316,6 @@ HTML_TEMPLATE = """
             </div>
         </div>
     </div>
-    <!-- ============================================================ -->
     
     <div class="dev-badge" id="devBadge">
         <img class="dev-badge-img" id="badgeDevImage" src="" alt="TS">
@@ -1157,6 +1338,7 @@ HTML_TEMPLATE = """
         <button class="btn btn-primary" onclick="exportPDF()">📄 Mapa</button>
         <button class="btn btn-warning" onclick="generateBudget()">💰 Orçamento</button>
         <button class="btn btn-danger" onclick="deleteSelectedItems()">🗑 Excluir Selecionados</button>
+        <button id="sim3dBtn" class="btn" onclick="openSim3D()" style="background:linear-gradient(135deg,#06b6d4,#3b82f6);color:white;font-weight:700;">🏢 3D Rack</button>
         <button id="adminUsersBtn" class="btn btn-info" onclick="openUserManagement()" style="display: none;">👥 Usuários</button>
         <button id="adminShapesBtn" class="btn btn-info" onclick="toggleShapesToolbar()" style="display: none;">📐 Formas</button>
         <button id="adminCategoriesBtn" class="btn btn-info" onclick="openAddCategoryModal()" style="display: none;">📁 + Cat</button>
@@ -1218,6 +1400,110 @@ HTML_TEMPLATE = """
     </div>
     <div id="deleteShapeBtn" class="delete-shape-btn" onclick="deleteSelectedShape()">🗑 Excluir Forma</div>
     
+    <!-- ==================== SIMULADOR 3D OVERLAY ==================== -->
+    <div id="sim3d-overlay">
+        <div id="sim3d-container"></div>
+        
+        <!-- Header -->
+        <div class="sim3d-header">
+            <div class="sim3d-brand sim3d-glass">
+                <div class="sim3d-brand-icon">🖥️</div>
+                <div>
+                    <h1>Simulador Datacenter 3D</h1>
+                    <p>Montagem • Cabeamento • Automação</p>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <button id="sim3d-toggle-drawer" class="sim3d-btn">
+                    📦 Gerenciar Rack (<span id="sim3d-mounted-count">0</span>/11)
+                </button>
+                <button id="sim3d-run-script" class="sim3d-btn sim3d-btn-primary">
+                    ⚡ Executar Script
+                </button>
+                <button id="sim3d-close-btn" class="sim3d-btn-close" title="Fechar Simulador 3D">✕</button>
+            </div>
+        </div>
+        
+        <!-- Equipment Drawer -->
+        <div id="sim3d-equipment-drawer" class="sim3d-drawer sim3d-glass closed">
+            <div class="sim3d-drawer-header">
+                <h2>🔧 Equipamentos do Datacenter</h2>
+                <button id="sim3d-close-drawer" class="sim3d-drawer-close">✕</button>
+            </div>
+            <p class="sim3d-drawer-hint">Clique para montar/desmontar no Rack 3D. Use ▲▼ para reordenar.</p>
+            <div id="sim3d-equipment-list" class="sim3d-drawer-list"></div>
+            <div style="padding-top:10px;border-top:1px solid #1e293b;margin-top:10px;text-align:center;">
+                <button id="sim3d-reset-btn" class="sim3d-btn" style="font-size:10px;background:none;border:none;color:#94a3b8;">
+                    🔄 Resetar Datacenter
+                </button>
+            </div>
+        </div>
+        
+        <!-- Connections Panel -->
+        <div id="sim3d-connections-panel" class="sim3d-connections-panel sim3d-glass" style="display:none;">
+            <div class="sim3d-connections-title">
+                <span>🔗 Conexões Ativas (<span id="sim3d-connections-count">0</span>)</span>
+            </div>
+            <div id="sim3d-connections-list" class="sim3d-connections-list"></div>
+        </div>
+        
+        <!-- Patch Modal -->
+        <div id="sim3d-patch-modal" class="sim3d-patch-modal">
+            <div class="sim3d-patch-content sim3d-glass">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+                    <div>
+                        <div id="sim3d-patch-title" class="sim3d-patch-title">Conectar Equipamento</div>
+                        <div class="sim3d-patch-sub">Selecione tipo de cabo e destinos</div>
+                    </div>
+                    <button id="sim3d-patch-close" class="sim3d-btn-close" style="width:30px;height:30px;font-size:13px;">✕</button>
+                </div>
+                <div class="sim3d-patch-section-label">Tipo de Cabo</div>
+                <div class="sim3d-cable-grid" id="sim3d-cable-grid">
+                    <button class="sim3d-cable-btn active" data-cable="cat6">
+                        <span class="sim3d-cable-dot" style="background:#22d3ee;"></span> Cat6 UTP
+                    </button>
+                    <button class="sim3d-cable-btn" data-cable="fiber-sfp">
+                        <span class="sim3d-cable-dot" style="background:#f59e0b;"></span> Fibra SFP+
+                    </button>
+                    <button class="sim3d-cable-btn" data-cable="power-ac">
+                        <span class="sim3d-cable-dot" style="background:#ef4444;"></span> Energia AC
+                    </button>
+                    <button class="sim3d-cable-btn" data-cable="coax-bnc">
+                        <span class="sim3d-cable-dot" style="background:#a855f7;"></span> Coaxial BNC
+                    </button>
+                </div>
+                <div class="sim3d-patch-section-label">Conectar a (múltiplos destinos)</div>
+                <div id="sim3d-dest-list" class="sim3d-dest-list"></div>
+                <button id="sim3d-confirm-patch" class="sim3d-patch-confirm">
+                    ✅ Estabelecer Conexão(ões)
+                </button>
+            </div>
+        </div>
+        
+        <!-- Terminal Modal -->
+        <div id="sim3d-terminal" class="sim3d-terminal">
+            <div class="sim3d-terminal-content sim3d-glass">
+                <div class="sim3d-terminal-header">
+                    <div class="sim3d-terminal-title">
+                        <span style="width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 8px #34d399;"></span>
+                        CLI Terminal // Datacenter Automation
+                    </div>
+                    <button id="sim3d-terminal-close" class="sim3d-btn-close" style="width:28px;height:28px;font-size:12px;">✕</button>
+                </div>
+                <div id="sim3d-terminal-output" class="sim3d-terminal-output">
+                    <p style="color:#64748b;">[SYSTEM] Inicializando diagnóstico...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Toast -->
+        <div id="sim3d-toast" class="sim3d-toast sim3d-glass">
+            <span style="color:#34d399;">✅</span>
+            <span id="sim3d-toast-message">Notificação</span>
+        </div>
+    </div>
+    <!-- ============================================================ -->
+    
     <script>
         // ==================== CONFIGURAÇÕES INICIAIS ====================
         const canvas = document.getElementById('canvas');
@@ -1241,8 +1527,6 @@ HTML_TEMPLATE = """
         let contextMenuComponent = null;
         let contextMenuShape = null;
         let contextMenuConnection = null;
-        let contextMenuCategory = null;
-        let contextMenuConnectionType = null;
         let shapeMode = null;
         let shapeStart = null;
         let drawingPreview = null;
@@ -1317,7 +1601,9 @@ HTML_TEMPLATE = """
             COMPONENTS: (user) => `projetize_${user}_components`,
             CONNECTIONS_DATA: (user) => `projetize_${user}_connections`,
             SHAPES: (user) => `projetize_${user}_shapes`,
-            BACKGROUND: (user) => `projetize_${user}_background`
+            BACKGROUND: (user) => `projetize_${user}_background`,
+            SIM3D_MOUNTED: (user) => `projetize_${user}_sim3d_mounted`,
+            SIM3D_CONNECTIONS: (user) => `projetize_${user}_sim3d_connections`
         };
         
         let categories = {};
@@ -1362,6 +1648,10 @@ HTML_TEMPLATE = """
                         url: backgroundImage, opacity: backgroundOpacity, width: backgroundWidth,
                         height: backgroundHeight, x: backgroundX, y: backgroundY
                     }));
+                    // Salva estado do simulador 3D
+                    if (typeof window.saveSim3DState === 'function') {
+                        window.saveSim3DState();
+                    }
                 }
             }, 300);
         }
@@ -2309,7 +2599,7 @@ HTML_TEMPLATE = """
         function newProject() { if (confirm('Novo projeto? Todos os dados não salvos serão perdidos.')) { components = []; connections = []; shapes = []; selectedComponents = []; selectedShapes = []; selectedConnectionIndex = null; backgroundImage = null; backgroundImageObj = null; backgroundOpacity = 0.8; backgroundWidth = 0; backgroundHeight = 0; backgroundX = 0; backgroundY = 0; isBackgroundSelected = false; closeProperties(); saveUserData(); showToast('📁 Novo projeto criado!'); } }
         
         function saveProjectToFile() {
-            const projectData = { components: components.map(c => ({ ...c, customImage: c.customImage || null, imageData: c.imageData || null, iconFile: c.iconFile || null, customIconTemp: c.customIconTemp || null, customImageTemp: c.customImageTemp || null })), connections: connections, shapes: shapes, background: backgroundImage, backgroundOpacity: backgroundOpacity, backgroundWidth: backgroundWidth, backgroundHeight: backgroundHeight, backgroundX: backgroundX, backgroundY: backgroundY, version: '2.1', date: new Date().toISOString() };
+            const projectData = { components: components.map(c => ({ ...c, customImage: c.customImage || null, imageData: c.imageData || null, iconFile: c.iconFile || null, customIconTemp: c.customIconTemp || null, customImageTemp: c.customImageTemp || null })), connections: connections, shapes: shapes, background: backgroundImage, backgroundOpacity: backgroundOpacity, backgroundWidth: backgroundWidth, backgroundHeight: backgroundHeight, backgroundX: backgroundX, backgroundY: backgroundY, version: '2.2', date: new Date().toISOString() };
             const dataStr = JSON.stringify(projectData, null, 2); const blob = new Blob([dataStr], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `projeto_${Date.now()}.projetize`; a.click(); URL.revokeObjectURL(url); showToast('✅ Projeto salvo com sucesso!');
         }
         
@@ -2374,7 +2664,6 @@ HTML_TEMPLATE = """
         function closeProperties() { document.getElementById('propertiesPanel').classList.remove('open'); }
         function readImageAsBase64(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.readAsDataURL(file); }); }
         
-        // ==================== NOVAS FUNÇÕES: FUNDO DA TELA DE LOGIN ====================
         async function loadLoginBgConfig() {
             try {
                 const response = await fetch('/api/login_bg_config');
@@ -2391,7 +2680,6 @@ HTML_TEMPLATE = """
             const videoEl = document.getElementById('loginBgVideo');
             const matrixEl = document.getElementById('matrixBg');
             
-            // Resetar
             imgEl.style.display = 'none';
             videoEl.style.display = 'none';
             imgEl.src = '';
@@ -2410,16 +2698,12 @@ HTML_TEMPLATE = """
                 videoEl.play().catch(() => {});
                 matrixEl.style.display = 'none';
             } else {
-                // matrix
                 createMatrixAnimation('matrixBg', true);
                 matrixEl.style.display = 'block';
             }
         }
 
         function openLoginBgModal() {
-            // Só admin pode acessar, mas o botão só aparece se estiver logado
-            // Como na tela de login ainda não está logado, permitimos a troca via API com verificação
-            // Vamos solicitar login de admin OU permitir direto se já for admin em sessão
             const modal = document.createElement('div'); modal.className = 'modal';
             modal.innerHTML = `
                 <div class="modal-content" style="max-width: 560px;">
@@ -2523,11 +2807,6 @@ HTML_TEMPLATE = """
             window.tempLoginBgFile = null;
         };
 
-        async function updateLoginBgOpacityFromModal() {
-            // Opcional: se quiser aplicar opacidade em tempo real, pode adicionar evento input
-        }
-        // ============================================================================
-        
         function openDevImageModal() {
             if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem alterar a foto do desenvolvedor'); return; }
             const modal = document.createElement('div'); modal.className = 'modal';
@@ -2661,10 +2940,8 @@ HTML_TEMPLATE = """
                 
                 if (data.success) {
                     currentUser = username; userRole = data.role;
-                    // Mostra o botão de trocar fundo para admin
                     if (data.role === 'admin' || data.role === 'master') {
                         document.getElementById('loginBgToggle').style.display = 'flex';
-                        // NÃO fecha o modal ainda - o botão fica visível
                     }
                     document.getElementById('loginModal').style.display = 'none';
                     document.getElementById('loadingOverlay').style.display = 'flex';
@@ -2797,7 +3074,6 @@ HTML_TEMPLATE = """
         })();
 
         loadDevImages(); createMatrixAnimation('introMatrixBg'); closeProperties();
-        // Carrega config do fundo de login ANTES de mostrar o modal
         loadLoginBgConfig();
         setTimeout(() => { const splash = document.getElementById('splashScreen'); if (splash) splash.style.display = 'none'; }, 3000);
         
@@ -2819,12 +3095,793 @@ HTML_TEMPLATE = """
         window.openDynamicBgModal = openDynamicBgModal;
         window.applyDynamicBg = applyDynamicBg;
         
-        // Novas funções expostas
         window.loadLoginBgConfig = loadLoginBgConfig;
         window.applyLoginBg = applyLoginBg;
         window.openLoginBgModal = openLoginBgModal;
         window.uploadLoginBgMedia = uploadLoginBgMedia;
         window.setLoginBgMatrix = setLoginBgMatrix;
+        
+        // ==================== SIMULADOR 3D - LÓGICA INTEGRADA ====================
+        (function() {
+            // Catálogo expandido mapeando tipos do Projetize para o 3D
+            const SIM3D_EQUIPMENT_TYPES = [
+                { id: 'patch-panel', name: 'Patch Panel Cat6 24p', unit: '1U', type: 'patch', height: 0.4, desc: 'Distribuição UTP estruturada', keywords: ['patch', 'patch panel'] },
+                { id: 'switch-core', name: 'Switch Core L3 Managed', unit: '1U', type: 'switch', height: 0.4, desc: 'Comutação Gigabit & SFP+', keywords: ['switch'] },
+                { id: 'olt-gpon', name: 'OLT GPON 16P', unit: '2U', type: 'olt', height: 0.8, desc: 'Provedor FTTH fibra', keywords: ['olt', 'gpon'] },
+                { id: 'router-r3004g', name: 'Roteador VPN R3004G', unit: '1U', type: 'router', height: 0.4, desc: 'Roteador de borda VPN', keywords: ['router', 'roteador'] },
+                { id: 'pabx-unniti', name: 'Central PABX IP UnniTI', unit: '2U', type: 'unniti', height: 0.8, desc: 'Central telefônica IP', keywords: ['pabx', 'central'] },
+                { id: 'nvr-dvr', name: 'Gravador NVR 16ch IA', unit: '1U', type: 'dvr', height: 0.4, desc: 'Gerenciamento CFTV', keywords: ['nvr', 'dvr', 'gravador'] },
+                { id: 'server-app', name: 'Servidor Virtualização', unit: '2U', type: 'server', height: 0.8, desc: 'Processamento e hypervisor', keywords: ['server', 'servidor'] },
+                { id: 'storage-nas', name: 'NAS Storage SAN 12-Bay', unit: '3U', type: 'nas', height: 1.2, desc: 'Armazenamento massivo', keywords: ['nas', 'storage', 'san'] },
+                { id: 'ups-nobreak', name: 'Nobreak UPS Online', unit: '3U', type: 'ups', height: 1.2, desc: 'Proteção e energia', keywords: ['nobreak', 'ups', 'energia'] },
+                { id: 'pdu-strip', name: 'Régua PDU', unit: '1U', type: 'pdu', height: 0.3, desc: 'Distribuição AC traseira', keywords: ['pdu', 'régua', 'regua'] },
+                { id: 'dio-fiber', name: 'DIO ODF Fibra SC/APC', unit: '1U', type: 'dio', height: 0.4, desc: 'Distribuição fibra interna', keywords: ['dio', 'odf', 'fibra'] }
+            ];
+            
+            let mountedIds = [];
+            let sim3dConnections = [];
+            let activeSourceId = null;
+            let selectedCable = 'cat6';
+            let selectedDestinations = new Set();
+            
+            let scene3d, camera3d, renderer3d, controls3d;
+            let rackMeshes = [];
+            let cableGroup, particleGroup;
+            let textureUpdates = [];
+            let animFrame3d = null;
+            let isOpen = false;
+            let activeCableAnims = [];
+            
+            const raycaster3d = new THREE.Raycaster();
+            const mouse3d = new THREE.Vector2();
+            
+            function matchEquipType(name) {
+                const lowerName = name.toLowerCase();
+                for (const t of SIM3D_EQUIPMENT_TYPES) {
+                    if (t.keywords.some(k => lowerName.includes(k))) return t;
+                }
+                return null;
+            }
+            
+            function getEquipmentMeta(name) {
+                const match = matchEquipType(name);
+                if (match) {
+                    // Retorna uma cópia com nome real
+                    return { ...match, displayName: name };
+                }
+                // Fallback genérico
+                return { id: 'generic-' + name.replace(/\s+/g, '-').toLowerCase(), name: name, unit: '1U', type: 'generic', height: 0.4, desc: 'Equipamento personalizado', displayName: name };
+            }
+            
+            function getAvailableFromProject() {
+                // Junta todos equipamentos da paleta + customizados
+                const list = [];
+                const seen = new Set();
+                
+                // Do catálogo padrão
+                for (const [catName, catData] of Object.entries(categories || {})) {
+                    if (!catData.devices) continue;
+                    for (const dev of catData.devices) {
+                        if (seen.has(dev.name)) continue;
+                        seen.add(dev.name);
+                        list.push({ name: dev.name, type: dev.type, cat: catName, desc: dev.desc, icon: dev.icon });
+                    }
+                }
+                // Customizados
+                for (const dev of (customDevices || [])) {
+                    if (seen.has(dev.name)) continue;
+                    seen.add(dev.name);
+                    list.push({ name: dev.name, type: dev.type, cat: 'Personalizados', desc: dev.desc, icon: dev.icon });
+                }
+                
+                // Aplica match com o catálogo 3D
+                return list.map(dev => {
+                    const meta = matchEquipType(dev.name);
+                    return {
+                        ...dev,
+                        sim3dId: meta ? meta.id : null,
+                        sim3dUnit: meta ? meta.unit : '1U',
+                        sim3dHeight: meta ? meta.height : 0.4,
+                        sim3dType: meta ? meta.type : 'generic',
+                        sim3dDesc: meta ? meta.desc : (dev.desc || 'Personalizado')
+                    };
+                });
+            }
+            
+            function getSim3DId(projectEquipName) {
+                const meta = matchEquipType(projectEquipName);
+                return meta ? meta.id : 'generic-' + projectEquipName.replace(/\s+/g, '-').toLowerCase();
+            }
+            
+            function init3DScene() {
+                const container = document.getElementById('sim3d-container');
+                container.innerHTML = '';
+                
+                scene3d = new THREE.Scene();
+                scene3d.background = new THREE.Color(0x080b13);
+                scene3d.fog = new THREE.FogExp2(0x080b13, 0.015);
+                
+                camera3d = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
+                camera3d.position.set(14, 6.5, 17);
+                
+                renderer3d = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
+                renderer3d.setSize(window.innerWidth, window.innerHeight);
+                renderer3d.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                renderer3d.shadowMap.enabled = true;
+                renderer3d.shadowMap.type = THREE.PCFSoftShadowMap;
+                renderer3d.toneMapping = THREE.ACESFilmicToneMapping;
+                renderer3d.toneMappingExposure = 1.3;
+                container.appendChild(renderer3d.domElement);
+                
+                controls3d = new THREE.OrbitControls(camera3d, renderer3d.domElement);
+                controls3d.enableDamping = true;
+                controls3d.dampingFactor = 0.05;
+                controls3d.target.set(0, 3, 0);
+                controls3d.maxPolarAngle = Math.PI / 2 + 0.05;
+                controls3d.minDistance = 4;
+                controls3d.maxDistance = 30;
+                
+                const ambient = new THREE.AmbientLight(0xffffff, 1.6);
+                scene3d.add(ambient);
+                
+                const spot = new THREE.SpotLight(0x38bdf8, 3.2);
+                spot.position.set(10, 18, 12);
+                spot.angle = Math.PI / 4;
+                spot.castShadow = true;
+                scene3d.add(spot);
+                
+                const fill = new THREE.PointLight(0x0284c7, 2.0, 30);
+                fill.position.set(-12, 8, -5);
+                scene3d.add(fill);
+                
+                cableGroup = new THREE.Group();
+                particleGroup = new THREE.Group();
+                scene3d.add(cableGroup);
+                scene3d.add(particleGroup);
+                
+                buildEnvironment3D();
+                buildRackCabinet3D();
+                rebuildRack3D();
+                renderSim3DTrayUI();
+                
+                window.addEventListener('resize', onSim3DResize);
+                renderer3d.domElement.addEventListener('click', onSim3DClick);
+                
+                animate3D();
+            }
+            
+            function buildEnvironment3D() {
+                const grid = new THREE.GridHelper(50, 50, 0x38bdf8, 0x1e293b);
+                grid.position.y = -2.51;
+                grid.material.opacity = 0.35;
+                grid.material.transparent = true;
+                scene3d.add(grid);
+                
+                const floor = new THREE.Mesh(
+                    new THREE.PlaneGeometry(60, 60),
+                    new THREE.MeshStandardMaterial({ color: 0x0a0e17, roughness: 0.4, metalness: 0.7 })
+                );
+                floor.rotation.x = -Math.PI / 2;
+                floor.position.y = -2.52;
+                floor.receiveShadow = true;
+                scene3d.add(floor);
+            }
+            
+            function buildRackCabinet3D() {
+                const rackGroup = new THREE.Group();
+                const metal = new THREE.MeshStandardMaterial({ color: 0x111622, roughness: 0.5, metalness: 0.85 });
+                
+                const pillarGeo = new THREE.BoxGeometry(0.3, 11, 0.3);
+                [[-2.1, 2.7, -2.1], [2.1, 2.7, -2.1], [-2.1, 2.7, 2.1], [2.1, 2.7, 2.1]].forEach(pos => {
+                    const p = new THREE.Mesh(pillarGeo, metal);
+                    p.position.set(...pos);
+                    rackGroup.add(p);
+                });
+                
+                const top = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.4, 4.6), metal);
+                top.position.set(0, 8.2, 0);
+                rackGroup.add(top);
+                
+                const bot = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.4, 4.6), metal);
+                bot.position.set(0, -2.6, 0);
+                rackGroup.add(bot);
+                
+                const doorGlass = new THREE.Mesh(
+                    new THREE.BoxGeometry(4.0, 10.2, 0.06),
+                    new THREE.MeshPhysicalMaterial({ color: 0x0284c7, transparent: true, opacity: 0.15, transmission: 0.85, roughness: 0.1 })
+                );
+                doorGlass.position.set(0, 2.7, 2.25);
+                rackGroup.add(doorGlass);
+                
+                scene3d.add(rackGroup);
+            }
+            
+            function createEquipmentTexture(type, name, isPowered) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 1024;
+                canvas.height = 256;
+                const ctx = canvas.getContext('2d');
+                
+                function draw() {
+                    ctx.fillStyle = '#1e293b';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    ctx.strokeStyle = '#334155';
+                    ctx.lineWidth = 6;
+                    ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
+                    
+                    ctx.font = 'bold 22px "JetBrains Mono", sans-serif';
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.fillText('NEXUS // ' + name.toUpperCase().substring(0, 32), 30, 45);
+                    
+                    ctx.fillStyle = isPowered ? '#22c55e' : '#64748b';
+                    ctx.beginPath();
+                    ctx.arc(880, 38, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = '12px sans-serif';
+                    ctx.fillText(isPowered ? 'PWR ON' : 'OFF', 900, 43);
+                    
+                    if (type === 'patch') {
+                        for (let i = 0; i < 24; i++) {
+                            const x = 35 + i * 40;
+                            ctx.fillStyle = '#0f172a';
+                            ctx.fillRect(x, 110, 26, 26);
+                            ctx.fillStyle = '#eab308';
+                            ctx.fillRect(x + 5, 114, 16, 4);
+                        }
+                    } else if (type === 'switch' || type === 'olt') {
+                        for (let i = 0; i < 24; i++) {
+                            const x = 50 + i * 38;
+                            ctx.fillStyle = '#0f172a';
+                            ctx.fillRect(x, 100, 24, 24);
+                            ctx.fillStyle = (isPowered && Math.random() > 0.3) ? '#22c55e' : '#334155';
+                            ctx.fillRect(x + 8, 84, 8, 8);
+                        }
+                    } else if (type === 'ups' || type === 'pdu') {
+                        ctx.fillStyle = '#0284c7';
+                        ctx.fillRect(40, 70, 350, 140);
+                        ctx.fillStyle = '#0f172a';
+                        ctx.fillRect(50, 80, 330, 120);
+                        ctx.fillStyle = isPowered ? '#22c55e' : '#ef4444';
+                        ctx.font = 'bold 22px "JetBrains Mono"';
+                        ctx.fillText(isPowered ? 'AC 220V // ON' : 'SEM ENERGIA', 70, 135);
+                    } else {
+                        ctx.fillStyle = '#0f172a';
+                        ctx.fillRect(40, 80, 300, 130);
+                        ctx.fillStyle = isPowered ? '#22c55e' : '#ef4444';
+                        ctx.font = 'bold 20px "JetBrains Mono"';
+                        ctx.fillText(isPowered ? 'STATUS: NORMAL // OK' : 'STATUS: DESLIGADO', 60, 140);
+                    }
+                }
+                
+                draw();
+                const tex = new THREE.CanvasTexture(canvas);
+                textureUpdates.push({ texture: tex, redraw: draw });
+                return tex;
+            }
+            
+            function rebuildRack3D() {
+                rackMeshes.forEach(m => scene3d.remove(m));
+                rackMeshes = [];
+                
+                let currentY = 7.0;
+                
+                mountedIds.forEach((eqId) => {
+                    const eqMeta = SIM3D_EQUIPMENT_TYPES.find(e => e.id === eqId) || { id: eqId, name: eqId, unit: '1U', type: 'generic', height: 0.4 };
+                    
+                    const group = new THREE.Group();
+                    const width = 3.65;
+                    const height = eqMeta.height;
+                    const depth = 3.4;
+                    
+                    const isPowered = sim3dConnections.some(c => (c.to === eqId || c.from === eqId) && c.cable === 'power-ac') || eqId === 'ups-nobreak';
+                    const texture = createEquipmentTexture(eqMeta.type, eqMeta.name, isPowered);
+                    
+                    const materials = [
+                        new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.3 }),
+                        new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.3 }),
+                        new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.7, roughness: 0.4 }),
+                        new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.7, roughness: 0.4 }),
+                        new THREE.MeshStandardMaterial({ map: texture, roughness: 0.2, metalness: 0.5 }),
+                        new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.2 })
+                    ];
+                    
+                    const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), materials);
+                    mesh.castShadow = true;
+                    group.add(mesh);
+                    
+                    group.position.set(0, currentY - height / 2, 0);
+                    group.userData = { id: eqId, meta: eqMeta };
+                    
+                    rackMeshes.push(group);
+                    scene3d.add(group);
+                    
+                    currentY -= (height + 0.1);
+                });
+                
+                renderSim3DConnectionsUI();
+            }
+            
+            function rebuildCables3D() {
+                while (cableGroup.children.length > 0) cableGroup.remove(cableGroup.children[0]);
+                while (particleGroup.children.length > 0) particleGroup.remove(particleGroup.children[0]);
+                activeCableAnims = [];
+                
+                sim3dConnections.forEach(conn => {
+                    const srcMesh = rackMeshes.find(m => m.userData.id === conn.from);
+                    const dstMesh = rackMeshes.find(m => m.userData.id === conn.to);
+                    if (!srcMesh || !dstMesh) return;
+                    
+                    const zOffset = (conn.cable === 'power-ac') ? -1.7 : 1.7;
+                    const p1 = new THREE.Vector3(srcMesh.position.x, srcMesh.position.y, srcMesh.position.z + zOffset);
+                    const p2 = new THREE.Vector3(dstMesh.position.x, dstMesh.position.y, dstMesh.position.z + zOffset);
+                    
+                    const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+                    mid.x += (conn.cable === 'power-ac') ? -2.2 : 2.2;
+                    
+                    const curve = new THREE.QuadraticBezierCurve3(p1, mid, p2);
+                    const tubeGeo = new THREE.TubeGeometry(curve, 32, 0.035, 8, false);
+                    
+                    let cableColor = 0x38bdf8;
+                    let particleColor = 0x22c55e;
+                    if (conn.cable === 'fiber-sfp') { cableColor = 0xf59e0b; particleColor = 0xffffff; }
+                    else if (conn.cable === 'power-ac') { cableColor = 0xef4444; particleColor = 0xfacc15; }
+                    else if (conn.cable === 'coax-bnc') { cableColor = 0xa855f7; particleColor = 0x38bdf8; }
+                    
+                    const cableMat = new THREE.MeshStandardMaterial({ color: cableColor, roughness: 0.3, metalness: 0.2 });
+                    const cableMesh = new THREE.Mesh(tubeGeo, cableMat);
+                    cableGroup.add(cableMesh);
+                    
+                    const particleGeo = new THREE.BufferGeometry();
+                    const count = 12;
+                    const positions = new Float32Array(count * 3);
+                    const progresses = [];
+                    
+                    for (let i = 0; i < count; i++) {
+                        const t = i / count;
+                        progresses.push(t);
+                        const pt = curve.getPoint(t);
+                        positions[i * 3] = pt.x;
+                        positions[i * 3 + 1] = pt.y;
+                        positions[i * 3 + 2] = pt.z;
+                    }
+                    particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                    const particleMat = new THREE.PointsMaterial({ color: particleColor, size: 0.1, transparent: true, opacity: 0.9 });
+                    const pMesh = new THREE.Points(particleGeo, particleMat);
+                    particleGroup.add(pMesh);
+                    
+                    activeCableAnims.push({ mesh: pMesh, curve: curve, progress: progresses });
+                });
+                
+                rebuildRack3D();
+            }
+            
+            function renderSim3DTrayUI() {
+                const tray = document.getElementById('sim3d-equipment-list');
+                if (!tray) return;
+                tray.innerHTML = '';
+                
+                const mountedCountEl = document.getElementById('sim3d-mounted-count');
+                if (mountedCountEl) mountedCountEl.innerText = mountedIds.length;
+                
+                const available = getAvailableFromProject();
+                
+                if (available.length === 0) {
+                    tray.innerHTML = '<p style="color:#64748b;font-size:11px;text-align:center;padding:20px;">Nenhum equipamento na biblioteca. Adicione equipamentos no Projetize primeiro.</p>';
+                    return;
+                }
+                
+                available.forEach((dev) => {
+                    const sim3dId = dev.sim3dId || getSim3DId(dev.name);
+                    const isMounted = mountedIds.includes(sim3dId);
+                    
+                    const div = document.createElement('div');
+                    div.className = `sim3d-eq-item ${isMounted ? 'mounted' : ''}`;
+                    
+                    div.innerHTML = `
+                        <div class="sim3d-eq-info" onclick="window.sim3dToggleMount('${sim3dId}', '${dev.name.replace(/'/g, "\\'")}')">
+                            <div class="sim3d-eq-name">
+                                <span class="sim3d-eq-unit">${dev.sim3dUnit}</span>
+                                ${dev.name}
+                            </div>
+                            <div class="sim3d-eq-desc">${dev.sim3dDesc}</div>
+                        </div>
+                        <div class="sim3d-eq-actions">
+                            ${isMounted ? `
+                                <button onclick="event.stopPropagation();window.sim3dMoveUp('${sim3dId}')" title="Subir" class="sim3d-eq-btn sim3d-eq-btn-small">▲</button>
+                                <button onclick="event.stopPropagation();window.sim3dMoveDown('${sim3dId}')" title="Descer" class="sim3d-eq-btn sim3d-eq-btn-small">▼</button>
+                                <button onclick="event.stopPropagation();window.sim3dToggleMount('${sim3dId}', '${dev.name.replace(/'/g, "\\'")}')" title="Remover" class="sim3d-eq-btn sim3d-eq-btn-remove">✕</button>
+                            ` : `
+                                <button onclick="event.stopPropagation();window.sim3dToggleMount('${sim3dId}', '${dev.name.replace(/'/g, "\\'")}')" class="sim3d-eq-btn">Adicionar</button>
+                            `}
+                        </div>
+                    `;
+                    tray.appendChild(div);
+                });
+            }
+            
+            window.sim3dToggleMount = function(eqId, displayName) {
+                const idx = mountedIds.indexOf(eqId);
+                if (idx >= 0) {
+                    mountedIds.splice(idx, 1);
+                    sim3dConnections = sim3dConnections.filter(c => c.from !== eqId && c.to !== eqId);
+                    sim3dShowToast('Equipamento removido do Rack.');
+                } else {
+                    mountedIds.push(eqId);
+                    sim3dShowToast(`"${displayName}" montado no Rack 3D!`);
+                }
+                rebuildRack3D();
+                renderSim3DTrayUI();
+                rebuildCables3D();
+                if (typeof window.saveSim3DState === 'function') window.saveSim3DState();
+            };
+            
+            window.sim3dMoveUp = function(eqId) {
+                const idx = mountedIds.indexOf(eqId);
+                if (idx <= 0) return;
+                [mountedIds[idx - 1], mountedIds[idx]] = [mountedIds[idx], mountedIds[idx - 1]];
+                rebuildRack3D();
+                renderSim3DTrayUI();
+                rebuildCables3D();
+                if (typeof window.saveSim3DState === 'function') window.saveSim3DState();
+            };
+            
+            window.sim3dMoveDown = function(eqId) {
+                const idx = mountedIds.indexOf(eqId);
+                if (idx < 0 || idx >= mountedIds.length - 1) return;
+                [mountedIds[idx + 1], mountedIds[idx]] = [mountedIds[idx], mountedIds[idx + 1]];
+                rebuildRack3D();
+                renderSim3DTrayUI();
+                rebuildCables3D();
+                if (typeof window.saveSim3DState === 'function') window.saveSim3DState();
+            };
+            
+            function onSim3DClick(event) {
+                if (event.target.closest('#sim3d-patch-modal') || event.target.closest('#sim3d-terminal')) return;
+                if (event.target.closest('.sim3d-drawer') || event.target.closest('.sim3d-header')) return;
+                
+                mouse3d.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse3d.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                
+                raycaster3d.setFromCamera(mouse3d, camera3d);
+                const intersects = raycaster3d.intersectObjects(rackMeshes, true);
+                
+                if (intersects.length > 0) {
+                    let top = intersects[0].object;
+                    while (top.parent && top.parent.type === 'Group' && top.parent !== scene3d) {
+                        top = top.parent;
+                    }
+                    if (top.userData && top.userData.id) {
+                        openSim3DPatchModal(top.userData.id);
+                    }
+                }
+            }
+            
+            function openSim3DPatchModal(eqId) {
+                activeSourceId = eqId;
+                selectedDestinations.clear();
+                
+                const eqMeta = SIM3D_EQUIPMENT_TYPES.find(e => e.id === eqId) || { name: eqId };
+                const titleEl = document.getElementById('sim3d-patch-title');
+                if (titleEl) titleEl.innerText = `Conectar: ${eqMeta.name}`;
+                
+                const listContainer = document.getElementById('sim3d-dest-list');
+                if (!listContainer) return;
+                listContainer.innerHTML = '';
+                
+                mountedIds.forEach(targetId => {
+                    if (targetId === eqId) return;
+                    const targetMeta = SIM3D_EQUIPMENT_TYPES.find(e => e.id === targetId) || { name: targetId, unit: '1U' };
+                    
+                    const label = document.createElement('label');
+                    label.className = 'sim3d-dest-item';
+                    label.innerHTML = `
+                        <span>${targetMeta.name} (${targetMeta.unit || '1U'})</span>
+                        <input type="checkbox" value="${targetId}" onchange="window.sim3dToggleDest('${targetId}')">
+                    `;
+                    listContainer.appendChild(label);
+                });
+                
+                document.getElementById('sim3d-patch-modal').classList.add('open');
+            }
+            
+            window.sim3dToggleDest = function(id) {
+                if (selectedDestinations.has(id)) selectedDestinations.delete(id);
+                else selectedDestinations.add(id);
+            };
+            
+            function renderSim3DConnectionsUI() {
+                const container = document.getElementById('sim3d-connections-list');
+                const panel = document.getElementById('sim3d-connections-panel');
+                const countEl = document.getElementById('sim3d-connections-count');
+                if (!container) return;
+                container.innerHTML = '';
+                if (countEl) countEl.innerText = sim3dConnections.length;
+                
+                if (sim3dConnections.length > 0) {
+                    if (panel) panel.style.display = 'flex';
+                } else {
+                    if (panel) panel.style.display = 'none';
+                }
+                
+                sim3dConnections.forEach((c, idx) => {
+                    const e1 = SIM3D_EQUIPMENT_TYPES.find(e => e.id === c.from) || { name: c.from };
+                    const e2 = SIM3D_EQUIPMENT_TYPES.find(e => e.id === c.to) || { name: c.to };
+                    
+                    const div = document.createElement('div');
+                    div.className = 'sim3d-connection-row';
+                    div.innerHTML = `
+                        <div style="truncate">
+                            <span class="tag">[${c.cable.toUpperCase()}]</span> ${e1.name.substring(0, 14)} ↔ ${e2.name.substring(0, 14)}
+                        </div>
+                        <button onclick="window.sim3dRemoveConnection(${idx})" class="sim3d-connection-remove">✕</button>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+            
+            window.sim3dRemoveConnection = function(idx) {
+                sim3dConnections.splice(idx, 1);
+                rebuildCables3D();
+                sim3dShowToast('Conexão removida!');
+                if (typeof window.saveSim3DState === 'function') window.saveSim3DState();
+            };
+            
+            function runSim3DScript() {
+                const modal = document.getElementById('sim3d-terminal');
+                const output = document.getElementById('sim3d-terminal-output');
+                if (!modal || !output) return;
+                modal.classList.add('open');
+                output.innerHTML = '<p style="color:#64748b;">[SYSTEM] Executando diagnóstico de infraestrutura...</p>';
+                
+                setTimeout(() => {
+                    let logs = [];
+                    let hasError = false;
+                    
+                    const hasNobreak = mountedIds.includes('ups-nobreak');
+                    const hasPDU = mountedIds.includes('pdu-strip');
+                    const hasSwitch = mountedIds.includes('switch-core');
+                    
+                    if (!hasNobreak && !hasPDU) {
+                        logs.push('<span style="color:#f87171;">[ERRO] Nobreak ou Régua PDU ausente no Rack!</span>');
+                        hasError = true;
+                    } else {
+                        logs.push('<span style="color:#34d399;">[OK] Infraestrutura de energia detectada.</span>');
+                    }
+                    
+                    const powerConns = sim3dConnections.filter(c => c.cable === 'power-ac');
+                    if (powerConns.length === 0) {
+                        logs.push('<span style="color:#fbbf24;">[ALERTA] Nenhum equipamento conectado à Energia AC.</span>');
+                    } else {
+                        logs.push(`<span style="color:#34d399;">[OK] ${powerConns.length} equipamentos na energia AC traseira.</span>`);
+                    }
+                    
+                    if (!hasError) {
+                        logs.push('<br><span style="color:#67e8f9;font-weight:bold;">>>> SCRIPT EXECUTADO COM SUCESSO! <<<</span>');
+                        logs.push('<span style="color:#6ee7b7;font-weight:bold;">Infraestrutura perfeitamente cabeada e operacional.</span>');
+                        sim3dShowToast('Infraestrutura validada!');
+                    } else {
+                        logs.push('<br><span style="color:#f87171;font-weight:bold;">>>> FALHA NA VALIDAÇÃO <<<</span>');
+                    }
+                    
+                    output.innerHTML += logs.join('<br>');
+                    output.scrollTop = output.scrollHeight;
+                }, 800);
+            }
+            
+            function sim3dShowToast(msg) {
+                const toast = document.getElementById('sim3d-toast');
+                const msgEl = document.getElementById('sim3d-toast-message');
+                if (!toast || !msgEl) return;
+                msgEl.innerText = msg;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 3000);
+            }
+            
+            function onSim3DResize() {
+                if (!camera3d || !renderer3d) return;
+                camera3d.aspect = window.innerWidth / window.innerHeight;
+                camera3d.updateProjectionMatrix();
+                renderer3d.setSize(window.innerWidth, window.innerHeight);
+            }
+            
+            let lastBlink3d = 0;
+            function animate3D(timestamp) {
+                animFrame3d = requestAnimationFrame(animate3D);
+                
+                if (!lastBlink3d || timestamp - lastBlink3d > 250) {
+                    lastBlink3d = timestamp;
+                    textureUpdates.forEach(item => {
+                        item.redraw();
+                        item.texture.needsUpdate = true;
+                    });
+                }
+                
+                activeCableAnims.forEach(anim => {
+                    const positions = anim.mesh.geometry.attributes.position.array;
+                    const curve = anim.curve;
+                    const progresses = anim.progress;
+                    
+                    for (let i = 0; i < progresses.length; i++) {
+                        progresses[i] += 0.007;
+                        if (progresses[i] > 1) progresses[i] = 0;
+                        
+                        const pt = curve.getPoint(progresses[i]);
+                        positions[i * 3] = pt.x;
+                        positions[i * 3 + 1] = pt.y;
+                        positions[i * 3 + 2] = pt.z;
+                    }
+                    anim.mesh.geometry.attributes.position.needsUpdate = true;
+                });
+                
+                if (controls3d) controls3d.update();
+                if (renderer3d) renderer3d.render(scene3d, camera3d);
+            }
+            
+            // Expor funções de persistência
+            window.saveSim3DState = function() {
+                if (!currentUser) return;
+                localStorage.setItem(STORAGE_KEYS.SIM3D_MOUNTED(currentUser), JSON.stringify(mountedIds));
+                localStorage.setItem(STORAGE_KEYS.SIM3D_CONNECTIONS(currentUser), JSON.stringify(sim3dConnections));
+            };
+            
+            window.loadSim3DState = function() {
+                if (!currentUser) return;
+                try {
+                    const saved = localStorage.getItem(STORAGE_KEYS.SIM3D_MOUNTED(currentUser));
+                    if (saved) mountedIds = JSON.parse(saved);
+                    const savedConn = localStorage.getItem(STORAGE_KEYS.SIM3D_CONNECTIONS(currentUser));
+                    if (savedConn) sim3dConnections = JSON.parse(savedConn);
+                } catch(e) { console.error('Erro ao carregar estado 3D:', e); }
+            };
+            
+            // Função pública para abrir o simulador
+            window.openSim3D = function() {
+                const overlay = document.getElementById('sim3d-overlay');
+                if (!overlay) return;
+                overlay.classList.add('active');
+                isOpen = true;
+                
+                // Carrega estado do usuário
+                loadSim3DState();
+                
+                // Inicializa cena
+                setTimeout(() => {
+                    init3DScene();
+                    // Sincroniza equipamentos do canvas 2D para o 3D (opcional: monta automaticamente itens que combinam)
+                    // Não monta automaticamente, mas a lista já mostra todos os equipamentos disponíveis
+                }, 50);
+                
+                // Setup event listeners (apenas uma vez)
+                setupSim3DEventListeners();
+            };
+            
+            function setupSim3DEventListeners() {
+                const closeBtn = document.getElementById('sim3d-close-btn');
+                const toggleDrawer = document.getElementById('sim3d-toggle-drawer');
+                const closeDrawer = document.getElementById('sim3d-close-drawer');
+                const runScript = document.getElementById('sim3d-run-script');
+                const closeTerminal = document.getElementById('sim3d-terminal-close');
+                const closePatch = document.getElementById('sim3d-patch-close');
+                const confirmPatch = document.getElementById('sim3d-confirm-patch');
+                const resetBtn = document.getElementById('sim3d-reset-btn');
+                const drawer = document.getElementById('sim3d-equipment-drawer');
+                
+                if (closeBtn && !closeBtn.dataset.bound) {
+                    closeBtn.dataset.bound = '1';
+                    closeBtn.addEventListener('click', () => {
+                        const overlay = document.getElementById('sim3d-overlay');
+                        overlay.classList.remove('active');
+                        isOpen = false;
+                        if (animFrame3d) cancelAnimationFrame(animFrame3d);
+                        // Limpa cena
+                        if (renderer3d && renderer3d.domElement && renderer3d.domElement.parentNode) {
+                            renderer3d.domElement.parentNode.removeChild(renderer3d.domElement);
+                        }
+                        if (scene3d) {
+                            while (scene3d.children.length > 0) scene3d.remove(scene3d.children[0]);
+                        }
+                        rackMeshes = [];
+                        textureUpdates = [];
+                        activeCableAnims = [];
+                    });
+                }
+                
+                if (toggleDrawer && !toggleDrawer.dataset.bound) {
+                    toggleDrawer.dataset.bound = '1';
+                    toggleDrawer.addEventListener('click', () => {
+                        drawer.classList.toggle('closed');
+                    });
+                }
+                
+                if (closeDrawer && !closeDrawer.dataset.bound) {
+                    closeDrawer.dataset.bound = '1';
+                    closeDrawer.addEventListener('click', () => {
+                        drawer.classList.add('closed');
+                    });
+                }
+                
+                if (runScript && !runScript.dataset.bound) {
+                    runScript.dataset.bound = '1';
+                    runScript.addEventListener('click', runSim3DScript);
+                }
+                
+                if (closeTerminal && !closeTerminal.dataset.bound) {
+                    closeTerminal.dataset.bound = '1';
+                    closeTerminal.addEventListener('click', () => {
+                        document.getElementById('sim3d-terminal').classList.remove('open');
+                    });
+                }
+                
+                if (closePatch && !closePatch.dataset.bound) {
+                    closePatch.dataset.bound = '1';
+                    closePatch.addEventListener('click', () => {
+                        document.getElementById('sim3d-patch-modal').classList.remove('open');
+                    });
+                }
+                
+                if (confirmPatch && !confirmPatch.dataset.bound) {
+                    confirmPatch.dataset.bound = '1';
+                    confirmPatch.addEventListener('click', () => {
+                        if (selectedDestinations.size === 0) {
+                            sim3dShowToast('⚠️ Selecione pelo menos um destino!');
+                            return;
+                        }
+                        
+                        let hasError = false;
+                        selectedDestinations.forEach(destId => {
+                            if (selectedCable === 'power-ac' && destId !== 'ups-nobreak' && destId !== 'pdu-strip' && activeSourceId !== 'pdu-strip' && activeSourceId !== 'ups-nobreak') {
+                                sim3dShowToast('⚠️ Cabo de Energia AC deve ligar em PDU ou Nobreak!');
+                                hasError = true;
+                            }
+                            
+                            const exists = sim3dConnections.some(c => (c.from === activeSourceId && c.to === destId) || (c.from === destId && c.to === activeSourceId));
+                            if (!exists && !hasError) {
+                                sim3dConnections.push({ from: activeSourceId, to: destId, cable: selectedCable });
+                            }
+                        });
+                        
+                        if (!hasError) {
+                            rebuildCables3D();
+                            document.getElementById('sim3d-patch-modal').classList.remove('open');
+                            sim3dShowToast('Conexão(ões) estabelecida(s)!');
+                            if (typeof window.saveSim3DState === 'function') window.saveSim3DState();
+                        }
+                    });
+                }
+                
+                if (resetBtn && !resetBtn.dataset.bound) {
+                    resetBtn.dataset.bound = '1';
+                    resetBtn.addEventListener('click', () => {
+                        if (confirm('Deseja resetar todo o datacenter 3D?')) {
+                            mountedIds = [];
+                            sim3dConnections = [];
+                            rebuildRack3D();
+                            renderSim3DTrayUI();
+                            rebuildCables3D();
+                            sim3dShowToast('Datacenter 3D resetado!');
+                            if (typeof window.saveSim3DState === 'function') window.saveSim3DState();
+                        }
+                    });
+                }
+                
+                // Cable selection buttons
+                document.querySelectorAll('.sim3d-cable-btn').forEach(btn => {
+                    if (btn.dataset.bound) return;
+                    btn.dataset.bound = '1';
+                    btn.addEventListener('click', (e) => {
+                        const target = e.currentTarget;
+                        document.querySelectorAll('.sim3d-cable-btn').forEach(b => b.classList.remove('active'));
+                        target.classList.add('active');
+                        selectedCable = target.getAttribute('data-cable');
+                    });
+                });
+            }
+        })();
+        // ===================================================================
+        
     </script>
 </body>
 </html>
