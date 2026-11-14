@@ -27,16 +27,19 @@ UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 ICONS_FOLDER = os.path.join(UPLOAD_FOLDER, 'icons')
 DEFAULT_ICONS_FOLDER = os.path.join(UPLOAD_FOLDER, 'default_icons')
 BACKGROUNDS_FOLDER = os.path.join(UPLOAD_FOLDER, 'backgrounds')
+LOGIN_BG_FOLDER = os.path.join(UPLOAD_FOLDER, 'login_bg')
 STATIC_FOLDER = os.path.join(BASE_DIR, 'static')
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(ICONS_FOLDER, exist_ok=True)
 os.makedirs(DEFAULT_ICONS_FOLDER, exist_ok=True)
 os.makedirs(BACKGROUNDS_FOLDER, exist_ok=True)
+os.makedirs(LOGIN_BG_FOLDER, exist_ok=True)
 os.makedirs(STATIC_FOLDER, exist_ok=True)
 
 projects = {}
 USERS_FILE = os.path.join(UPLOAD_FOLDER, 'users.json')
+LOGIN_BG_CONFIG_FILE = os.path.join(UPLOAD_FOLDER, 'login_bg_config.json')
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
@@ -70,8 +73,25 @@ def save_users(users_dict):
 
 users = load_users()
 
+def load_login_bg_config():
+    if os.path.exists(LOGIN_BG_CONFIG_FILE):
+        try:
+            with open(LOGIN_BG_CONFIG_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            pass
+    return {'type': 'matrix', 'filename': None, 'opacity': 0.35}
+
+def save_login_bg_config(config):
+    try:
+        with open(LOGIN_BG_CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(config, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception as e:
+        print(f"Erro ao salvar config do fundo de login: {e}")
+        return False
+
 def get_dev_image_base64():
-    # CORREÇÃO: Procura a imagem na raiz e na pasta static
     possible_paths = [
         os.path.join(BASE_DIR, 'dev.png'),
         os.path.join(BASE_DIR, 'dev.jpg'),
@@ -368,9 +388,8 @@ def upload_dev_image():
         image_data = image_data.split(',')[1] if ',' in image_data else image_data
     
     filename = f"dev{ext}"
-    filepath = os.path.join(BASE_DIR, filename) # CORREÇÃO: Salva na raiz do projeto
+    filepath = os.path.join(BASE_DIR, filename)
     
-    # Remove outras versões antigas
     for old_ext in ['.png', '.jpg', '.jpeg', '.gif', '.webp']:
         old_path = os.path.join(BASE_DIR, f"dev{old_ext}")
         if os.path.exists(old_path) and old_path != filepath:
@@ -383,6 +402,105 @@ def upload_dev_image():
         return jsonify({'success': True, 'url': f'/static/{filename}'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+# ==================== NOVAS ROTAS: FUNDO DA TELA DE LOGIN ====================
+@app.route('/api/upload_login_bg', methods=['POST'])
+@admin_required
+def upload_login_bg():
+    data = request.json
+    media_data = data.get('media', '')
+    media_type = data.get('type', 'image')  # 'image' or 'video'
+    
+    if not media_data:
+        return jsonify({'success': False, 'error': 'Mídia inválida'}), 400
+    
+    # Aceita data URLs de imagem e vídeo
+    if media_data.startswith('data:'):
+        try:
+            header, encoded = media_data.split(',', 1)
+            mime = header.split(';')[0].replace('data:', '')
+            ext_map = {
+                'image/png': '.png', 'image/jpeg': '.jpg', 'image/jpg': '.jpg',
+                'image/gif': '.gif', 'image/webp': '.webp', 'image/svg+xml': '.svg',
+                'video/mp4': '.mp4', 'video/webm': '.webm', 'video/ogg': '.ogv'
+            }
+            ext = ext_map.get(mime, '.bin')
+            file_bytes = base64.b64decode(encoded)
+        except Exception as e:
+            return jsonify({'success': False, 'error': f'Falha no decode: {e}'}), 400
+    else:
+        return jsonify({'success': False, 'error': 'Formato de mídia inválido'}), 400
+    
+    # Remove fundo anterior
+    old_config = load_login_bg_config()
+    if old_config.get('filename'):
+        old_path = os.path.join(LOGIN_BG_FOLDER, old_config['filename'])
+        if os.path.exists(old_path):
+            try: os.remove(old_path)
+            except: pass
+    
+    filename = f"login_bg_{uuid.uuid4().hex}{ext}"
+    filepath = os.path.join(LOGIN_BG_FOLDER, filename)
+    try:
+        with open(filepath, 'wb') as f:
+            f.write(file_bytes)
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+    
+    actual_type = 'video' if mime.startswith('video/') else 'image'
+    config = {
+        'type': actual_type,
+        'filename': filename,
+        'opacity': data.get('opacity', old_config.get('opacity', 0.35)),
+        'mime': mime
+    }
+    save_login_bg_config(config)
+    return jsonify({'success': True, 'filename': filename, 'type': actual_type, 'config': config})
+
+@app.route('/api/login_bg_config', methods=['GET'])
+def get_login_bg_config_route():
+    return jsonify({'success': True, 'config': load_login_bg_config()})
+
+@app.route('/api/login_bg_config', methods=['POST'])
+@admin_required
+def set_login_bg_config_route():
+    data = request.json
+    config = load_login_bg_config()
+    if 'opacity' in data:
+        try:
+            config['opacity'] = max(0.05, min(1.0, float(data['opacity'])))
+        except: pass
+    if 'type' in data and data['type'] in ['matrix', 'image', 'video']:
+        # Se voltar para matrix, remove mídia
+        if data['type'] == 'matrix':
+            if config.get('filename'):
+                old_path = os.path.join(LOGIN_BG_FOLDER, config['filename'])
+                if os.path.exists(old_path):
+                    try: os.remove(old_path)
+                    except: pass
+            config['filename'] = None
+            config['mime'] = None
+        config['type'] = data['type']
+    save_login_bg_config(config)
+    return jsonify({'success': True, 'config': config})
+
+@app.route('/api/reset_login_bg', methods=['POST'])
+@admin_required
+def reset_login_bg():
+    config = load_login_bg_config()
+    if config.get('filename'):
+        old_path = os.path.join(LOGIN_BG_FOLDER, config['filename'])
+        if os.path.exists(old_path):
+            try: os.remove(old_path)
+            except: pass
+    new_config = {'type': 'matrix', 'filename': None, 'opacity': 0.35}
+    save_login_bg_config(new_config)
+    return jsonify({'success': True, 'config': new_config})
+
+@app.route('/uploads/login_bg/<filename>')
+def serve_login_bg(filename):
+    return send_from_directory(LOGIN_BG_FOLDER, filename)
+# ===========================================================================
 
 @app.route('/api/save_global_categories', methods=['POST'])
 @admin_required
@@ -440,7 +558,6 @@ def serve_default_icon(filename):
 def serve_background(filename):
     return send_from_directory(BACKGROUNDS_FOLDER, filename)
 
-# Rota para servir dev.png da raiz
 @app.route('/dev.png')
 def serve_dev_image():
     return send_from_directory(BASE_DIR, 'dev.png')
@@ -533,7 +650,7 @@ def delete_user(username):
         return jsonify({'success': True})
     return jsonify({'error': 'Usuário não encontrado'}), 404
 
-# ==================== HTML_TEMPLATE OTIMIZADO ====================
+# ==================== HTML_TEMPLATE ====================
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -599,28 +716,111 @@ HTML_TEMPLATE = """
         @keyframes btnPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); } 50% { box-shadow: 0 0 0 12px rgba(255, 255, 255, 0); } }
         .intro-footer-note { text-align: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); font-size: 11px; color: rgba(255,255,255,0.6); }
         
-        .login-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #001a2e, #00264d); display: none; justify-content: center; align-items: center; z-index: 20000; overflow-y: auto; padding: 20px; }
-        .login-dev-container { position: relative; z-index: 2; width: 100%; max-width: 500px; background: rgba(0, 38, 77, 0.9); backdrop-filter: blur(10px); border-radius: 20px; padding: 40px; text-align: center; border: 1px solid #ffffff; box-shadow: 0 0 30px rgba(255, 255, 255, 0.2); animation: fadeInScale 0.5s ease-out; }
-        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-        .login-dev-image { width: 150px; height: 150px; border-radius: 50%; margin: 0 auto 20px; overflow: hidden; border: 3px solid #ffffff; box-shadow: 0 0 30px rgba(255, 255, 255, 0.5); animation: borderGlow 2s ease-in-out infinite; display: flex; align-items: center; justify-content: center; background: #005f99; position: relative; }
-        @media (max-width: 768px) { .login-dev-image { width: 120px; height: 120px; } }
-        @keyframes borderGlow { 0%, 100% { border-color: #ffffff; box-shadow: 0 0 20px #ffffff; } 50% { border-color: #00ccff; box-shadow: 0 0 40px #00ccff; } }
+        /* ==================== LOGIN ELEGANTE ==================== */
+        .login-modal { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #000814;
+            display: none; justify-content: center; align-items: center; 
+            z-index: 20000; overflow: hidden; padding: 20px; 
+        }
+        /* Mídia de fundo da tela de login (imagem ou vídeo) */
+        #loginBgMedia { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            object-fit: cover; z-index: 0; opacity: 0.35; pointer-events: none; 
+            display: none;
+        }
+        #loginBgVideo { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; opacity: 0.35; pointer-events: none; display: none; }
+        /* Overlay gradiente sobre a mídia */
+        .login-overlay-gradient { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; 
+            background: linear-gradient(135deg, rgba(0,26,46,0.92) 0%, rgba(0,38,77,0.75) 50%, rgba(0,26,46,0.92) 100%);
+            pointer-events: none;
+        }
+        /* Elementos decorativos */
+        .login-orb {
+            position: absolute; border-radius: 50%; filter: blur(80px); z-index: 0; pointer-events: none;
+            animation: orbFloat 12s ease-in-out infinite;
+        }
+        .login-orb-1 { width: 400px; height: 400px; background: rgba(0, 153, 204, 0.35); top: -100px; left: -100px; }
+        .login-orb-2 { width: 350px; height: 350px; background: rgba(0, 95, 153, 0.4); bottom: -80px; right: -80px; animation-delay: -4s; }
+        .login-orb-3 { width: 250px; height: 250px; background: rgba(0, 204, 255, 0.25); top: 50%; right: 10%; animation-delay: -8s; }
+        @keyframes orbFloat { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(30px, -40px) scale(1.1); } 66% { transform: translate(-20px, 30px) scale(0.95); } }
+        
+        .login-dev-container { 
+            position: relative; z-index: 2; width: 100%; max-width: 460px; 
+            background: rgba(10, 25, 45, 0.65); backdrop-filter: blur(24px); 
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 24px; padding: 42px 40px; text-align: center; 
+            border: 1px solid rgba(0, 204, 255, 0.25); 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 80px rgba(0, 153, 204, 0.15), inset 0 1px 0 rgba(255,255,255,0.1);
+            animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.92) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        
+        /* Botão admin para trocar fundo - aparece no canto superior direito */
+        .login-bg-toggle {
+            position: absolute; top: 20px; right: 20px; z-index: 5;
+            background: rgba(10, 25, 45, 0.75); backdrop-filter: blur(10px);
+            color: #00ccff; border: 1px solid rgba(0, 204, 255, 0.4); 
+            border-radius: 50%; width: 44px; height: 44px; font-size: 18px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        .login-bg-toggle:hover { background: rgba(0, 153, 204, 0.3); transform: scale(1.08) rotate(15deg); color: white; }
+        
+        .login-dev-image { 
+            width: 130px; height: 130px; border-radius: 50%; 
+            margin: 0 auto 20px; overflow: hidden; 
+            border: 3px solid rgba(0, 204, 255, 0.6); 
+            box-shadow: 0 0 30px rgba(0, 204, 255, 0.4), 0 0 0 8px rgba(0, 204, 255, 0.08); 
+            animation: borderGlow 3s ease-in-out infinite; 
+            display: flex; align-items: center; justify-content: center; 
+            background: #005f99; position: relative; 
+        }
+        @media (max-width: 768px) { .login-dev-image { width: 100px; height: 100px; } }
+        @keyframes borderGlow { 0%, 100% { border-color: rgba(0,204,255,0.6); box-shadow: 0 0 30px rgba(0,204,255,0.4), 0 0 0 8px rgba(0,204,255,0.08); } 50% { border-color: rgba(255,255,255,0.9); box-shadow: 0 0 40px rgba(0,204,255,0.7), 0 0 0 10px rgba(0,204,255,0.12); } }
         .login-dev-image img { width: 100%; height: 100%; object-fit: cover; }
-        .login-dev-name { font-size: 24px; color: #ffffff; margin-bottom: 5px; font-weight: bold; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
-        .login-dev-role { font-size: 12px; color: #ccccff; margin-bottom: 20px; }
-        .login-logo { font-size: 50px; margin-bottom: 15px; animation: logoFloat 3s ease-in-out infinite; }
-        @keyframes logoFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        .login-title { font-size: 28px; color: #ffffff; margin-bottom: 10px; font-weight: bold; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
-        .login-subtitle { color: #ccccff; font-size: 12px; margin-bottom: 25px; }
-        .login-input { width: 100%; padding: 12px; margin: 10px 0; background: rgba(0, 38, 77, 0.8); border: 1px solid #ffffff; border-radius: 8px; color: #fff; font-size: 14px; transition: all 0.3s ease; }
-        .login-input:focus { outline: none; border-color: #00ccff; box-shadow: 0 0 10px rgba(0, 204, 255, 0.5); transform: scale(1.02); }
-        .login-input::placeholder { color: #88aacc; }
-        .login-btn { width: 100%; padding: 12px; background: #ffffff; border: none; border-radius: 8px; color: #001a2e; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: all 0.3s; }
-        .login-btn:hover { background: #00ccff; color: #fff; transform: scale(1.02); box-shadow: 0 0 20px rgba(255, 255, 255, 0.5); }
-        .login-error { color: #ff6666; font-size: 12px; margin-top: 15px; display: none; }
-        .login-footer { margin-top: 25px; padding-top: 15px; border-top: 1px solid #ffffff; font-size: 11px; color: #ccccff; }
-        .login-footer a { color: #ffffff; text-decoration: none; transition: all 0.3s; }
-        .login-footer a:hover { text-shadow: 0 0 10px #ffffff; }
+        
+        .login-dev-name { font-size: 22px; color: #ffffff; margin-bottom: 4px; font-weight: 700; letter-spacing: 0.3px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .login-dev-role { font-size: 11px; color: #88c8e8; margin-bottom: 22px; letter-spacing: 0.5px; text-transform: uppercase; font-weight: 600; }
+        
+        .login-brand { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 6px; }
+        .login-logo { font-size: 34px; filter: drop-shadow(0 0 15px rgba(0,204,255,0.6)); }
+        .login-title { font-size: 30px; color: #ffffff; font-weight: 800; letter-spacing: 2px; background: linear-gradient(135deg, #ffffff, #00ccff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px; }
+        .login-subtitle { color: #7ba8c4; font-size: 11px; margin-bottom: 28px; letter-spacing: 1px; text-transform: uppercase; }
+        
+        .login-input { 
+            width: 100%; padding: 14px 18px; margin: 8px 0; 
+            background: rgba(0, 20, 40, 0.6); 
+            border: 1.5px solid rgba(0, 204, 255, 0.2); 
+            border-radius: 12px; color: #fff; font-size: 14px; 
+            transition: all 0.3s ease; 
+        }
+        .login-input:focus { outline: none; border-color: #00ccff; background: rgba(0, 30, 55, 0.85); box-shadow: 0 0 0 4px rgba(0, 204, 255, 0.12), 0 0 20px rgba(0, 204, 255, 0.2); transform: translateY(-1px); }
+        .login-input::placeholder { color: #4d7a99; font-weight: 500; }
+        
+        .login-btn { 
+            width: 100%; padding: 14px; 
+            background: linear-gradient(135deg, #0099cc, #00ccff); 
+            border: none; border-radius: 12px; color: #001a2e; 
+            font-size: 15px; font-weight: 800; cursor: pointer; margin-top: 18px; 
+            transition: all 0.3s; letter-spacing: 1px; text-transform: uppercase;
+            box-shadow: 0 8px 25px rgba(0, 153, 204, 0.4); 
+        }
+        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 35px rgba(0, 153, 204, 0.6); filter: brightness(1.1); }
+        .login-btn:active { transform: translateY(0); }
+        .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        .login-error { color: #ff6b6b; font-size: 12px; margin-top: 14px; display: none; padding: 10px; background: rgba(255, 107, 107, 0.1); border-radius: 8px; border: 1px solid rgba(255,107,107,0.3); }
+        
+        .login-footer { margin-top: 24px; padding-top: 18px; border-top: 1px solid rgba(0, 204, 255, 0.15); font-size: 11px; color: #6a96b8; line-height: 1.7; }
+        .login-footer a { color: #00ccff; text-decoration: none; transition: all 0.3s; font-weight: 600; }
+        .login-footer a:hover { text-shadow: 0 0 12px #00ccff; }
+        
+        /* Spinner do botão */
+        .login-btn .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(0,26,46,0.3); border-top-color: #001a2e; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        /* ===================================================== */
         
         .splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #001a2e, #00264d); display: flex; justify-content: center; align-items: center; z-index: 15000; animation: fadeOut 3s ease-in-out forwards; pointer-events: none; }
         @keyframes fadeOut { 0% { opacity: 1; visibility: visible; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
@@ -761,7 +961,6 @@ HTML_TEMPLATE = """
             .btn { padding: 8px 12px; }
         }
 
-        /* Estilo do Fundo Dinâmico */
         .dynamic-background {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -772,7 +971,6 @@ HTML_TEMPLATE = """
             display: none;
         }
 
-        /* Estilo do Loading Overlay */
         .loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 26, 46, 0.95);
@@ -797,11 +995,9 @@ HTML_TEMPLATE = """
     </style>
 </head>
 <body>
-    <!-- Fundo Dinâmico -->
     <video id="bgVideo" class="dynamic-background" autoplay loop muted playsinline></video>
     <img id="bgGif" class="dynamic-background" src="" alt="">
 
-    <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="loading-spinner"></div>
         <div class="loading-text">Carregando módulos...</div>
@@ -879,7 +1075,7 @@ HTML_TEMPLATE = """
                 <button class="access-btn" onclick="closeIntroAndShowLogin()">🔓 Acessar Sistema</button>
             </div>
             <div class="intro-footer-note">
-                <span>Versão 2.0 | Desenvolvido com 💙 por Thiago Souza</span>
+                <span>Versão 2.1 | Desenvolvido com 💙 por Thiago Souza</span>
             </div>
         </div>
     </div>
@@ -892,28 +1088,53 @@ HTML_TEMPLATE = """
         </div>
     </div>
     
+    <!-- ==================== TELA DE LOGIN ELEGANTE ==================== -->
     <div class="login-modal" id="loginModal">
+        <!-- Mídia de fundo (imagem/vídeo) -->
+        <img id="loginBgMedia" alt="">
+        <video id="loginBgVideo" autoplay loop muted playsinline></video>
+        
+        <!-- Overlay gradiente -->
+        <div class="login-overlay-gradient"></div>
+        
+        <!-- Orbs decorativos -->
+        <div class="login-orb login-orb-1"></div>
+        <div class="login-orb login-orb-2"></div>
+        <div class="login-orb login-orb-3"></div>
+        
+        <!-- Matrix fallback (mantém matriz quando não há mídia) -->
         <div class="matrix-bg" id="matrixBg"></div>
+        
+        <!-- Botão admin para trocar fundo -->
+        <button class="login-bg-toggle" id="loginBgToggle" onclick="openLoginBgModal()" title="Trocar fundo da tela de login (Admin)" style="display:none;">🎬</button>
+        
         <div class="login-dev-container">
             <div class="login-dev-image" id="loginDevImageContainer">
                 <img id="loginDevImage" src="" alt="Thiago Souza" style="display:none;">
             </div>
             <div class="login-dev-name">Thiago Souza</div>
-            <div class="login-dev-role">Analista de Tecnologia | Unidade 2 - São José do Rio Preto</div>
-            <div class="login-logo">🎥🔒</div>
-            <div class="login-title">PROJETIZE</div>
-            <div class="login-subtitle">Sistema Para CFTV, Redes e muito mais...</div>
-            <input type="text" id="loginUsername" class="login-input" placeholder="Usuário">
-            <input type="password" id="loginPassword" class="login-input" placeholder="Senha">
-            <button class="login-btn" onclick="doLogin()">Entrar</button>
-            <div class="login-footer">
-                Desenvolvido por <strong>Thiago Souza</strong><br>
-                Todos os direitos reservados © 2026<br>
-                <a href="https://wa.me/5517996009537" target="_blank">📱 Contato: (17) 99600-9537</a>
+            <div class="login-dev-role">Analista de Tecnologia • São José do Rio Preto</div>
+            
+            <div class="login-brand">
+                <div class="login-logo">🎥🔒</div>
+                <div class="login-title">PROJETIZE</div>
             </div>
+            <div class="login-subtitle">Sistema Para CFTV, Redes e muito mais...</div>
+            
+            <input type="text" id="loginUsername" class="login-input" placeholder="Usuário" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()">
+            <input type="password" id="loginPassword" class="login-input" placeholder="Senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+            <button class="login-btn" id="loginBtn" onclick="doLogin()">Entrar no Sistema</button>
+            
             <div class="login-error" id="loginError">Usuário ou senha inválidos</div>
+            
+            <div class="login-footer">
+                Desenvolvido por <strong style="color:#00ccff;">Thiago Souza</strong><br>
+                Todos os direitos reservados © 2026<br>
+                <a href="https://wa.me/5517996009537" target="_blank">📱 (17) 99600-9537</a>
+            </div>
         </div>
     </div>
+    <!-- ============================================================ -->
     
     <div class="dev-badge" id="devBadge">
         <img class="dev-badge-img" id="badgeDevImage" src="" alt="TS">
@@ -945,7 +1166,6 @@ HTML_TEMPLATE = """
         <button class="btn btn-info" onclick="toggleGrid()">🔲 Grade</button>
         <button class="btn btn-info" onclick="openBackgroundModal()">🖼️ Planta</button>
         
-        <!-- NOVOS BOTÕES (Restritos) -->
         <button id="adminDevBtn" class="btn btn-warning" onclick="openDevImageModal()" style="background:#e83e8c; color:white; display: none;">🖼️ Dev</button>
         <button id="adminBgBtn" class="btn btn-secondary" onclick="openDynamicBgModal()" style="background:#6f42c1; color:white; display: none;">🎬 Fundo</button>
         <button class="btn btn-success" onclick="window.open('https://th-tech.souzathiagosantos03.workers.dev', '_blank')" style="background:#fd7e14; color:white; font-weight:bold;">🌐 TH-TEC</button>
@@ -999,7 +1219,7 @@ HTML_TEMPLATE = """
     <div id="deleteShapeBtn" class="delete-shape-btn" onclick="deleteSelectedShape()">🗑 Excluir Forma</div>
     
     <script>
-        // ==================== CONFIGURAÇÕES INICIAIS & OTIMIZAÇÃO ====================
+        // ==================== CONFIGURAÇÕES INICIAIS ====================
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         let components = [];
@@ -1045,8 +1265,8 @@ HTML_TEMPLATE = """
         let resizeHandle = null;
         let resizeStart = {x:0, y:0, width:0, height:0, x:0, y:0};
         let selectedConnectionType = null;
+        let loginBgConfig = { type: 'matrix', filename: null, opacity: 0.35, mime: null };
         
-        // Detecção de Dispositivo
         function getDeviceType() {
             const ua = navigator.userAgent;
             if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) return "Tablet";
@@ -1055,7 +1275,6 @@ HTML_TEMPLATE = """
         }
         document.getElementById('loadingDeviceType').innerText = "Dispositivo detectado: " + getDeviceType();
 
-        // Cache de imagens para otimização do Canvas
         const imageCache = {};
         function getCachedImage(src) {
             if (!imageCache[src]) {
@@ -1129,7 +1348,6 @@ HTML_TEMPLATE = """
             } catch(e) { console.error(e); }
         }
         
-        // Função de Debounce para salvar dados localmente sem travar o navegador
         let saveTimeout;
         function saveUserData() {
             clearTimeout(saveTimeout);
@@ -1145,7 +1363,7 @@ HTML_TEMPLATE = """
                         height: backgroundHeight, x: backgroundX, y: backgroundY
                     }));
                 }
-            }, 300); // Salva apenas após 300ms de inatividade
+            }, 300);
         }
 
         async function loadUserData() {
@@ -1156,7 +1374,6 @@ HTML_TEMPLATE = """
             
             categories = JSON.parse(JSON.stringify(defaultCategories));
             
-            // Carregamento em paralelo para ser mais rápido
             const promises = [
                 fetch('/api/load_custom_devices').then(r => r.json()).catch(() => ({success: false}))
             ];
@@ -2092,7 +2309,7 @@ HTML_TEMPLATE = """
         function newProject() { if (confirm('Novo projeto? Todos os dados não salvos serão perdidos.')) { components = []; connections = []; shapes = []; selectedComponents = []; selectedShapes = []; selectedConnectionIndex = null; backgroundImage = null; backgroundImageObj = null; backgroundOpacity = 0.8; backgroundWidth = 0; backgroundHeight = 0; backgroundX = 0; backgroundY = 0; isBackgroundSelected = false; closeProperties(); saveUserData(); showToast('📁 Novo projeto criado!'); } }
         
         function saveProjectToFile() {
-            const projectData = { components: components.map(c => ({ ...c, customImage: c.customImage || null, imageData: c.imageData || null, iconFile: c.iconFile || null, customIconTemp: c.customIconTemp || null, customImageTemp: c.customImageTemp || null })), connections: connections, shapes: shapes, background: backgroundImage, backgroundOpacity: backgroundOpacity, backgroundWidth: backgroundWidth, backgroundHeight: backgroundHeight, backgroundX: backgroundX, backgroundY: backgroundY, version: '2.0', date: new Date().toISOString() };
+            const projectData = { components: components.map(c => ({ ...c, customImage: c.customImage || null, imageData: c.imageData || null, iconFile: c.iconFile || null, customIconTemp: c.customIconTemp || null, customImageTemp: c.customImageTemp || null })), connections: connections, shapes: shapes, background: backgroundImage, backgroundOpacity: backgroundOpacity, backgroundWidth: backgroundWidth, backgroundHeight: backgroundHeight, backgroundX: backgroundX, backgroundY: backgroundY, version: '2.1', date: new Date().toISOString() };
             const dataStr = JSON.stringify(projectData, null, 2); const blob = new Blob([dataStr], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `projeto_${Date.now()}.projetize`; a.click(); URL.revokeObjectURL(url); showToast('✅ Projeto salvo com sucesso!');
         }
         
@@ -2157,7 +2374,160 @@ HTML_TEMPLATE = """
         function closeProperties() { document.getElementById('propertiesPanel').classList.remove('open'); }
         function readImageAsBase64(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.readAsDataURL(file); }); }
         
-        // NOVO: Função para editar a imagem do desenvolvedor
+        // ==================== NOVAS FUNÇÕES: FUNDO DA TELA DE LOGIN ====================
+        async function loadLoginBgConfig() {
+            try {
+                const response = await fetch('/api/login_bg_config');
+                const data = await response.json();
+                if (data.success) {
+                    loginBgConfig = data.config;
+                    applyLoginBg();
+                }
+            } catch(e) { console.error('Erro ao carregar config do fundo de login:', e); }
+        }
+
+        function applyLoginBg() {
+            const imgEl = document.getElementById('loginBgMedia');
+            const videoEl = document.getElementById('loginBgVideo');
+            const matrixEl = document.getElementById('matrixBg');
+            
+            // Resetar
+            imgEl.style.display = 'none';
+            videoEl.style.display = 'none';
+            imgEl.src = '';
+            videoEl.src = '';
+            matrixEl.style.display = 'block';
+            
+            if (loginBgConfig.type === 'image' && loginBgConfig.filename) {
+                imgEl.src = `/uploads/login_bg/${loginBgConfig.filename}?t=${Date.now()}`;
+                imgEl.style.display = 'block';
+                imgEl.style.opacity = loginBgConfig.opacity || 0.35;
+                matrixEl.style.display = 'none';
+            } else if (loginBgConfig.type === 'video' && loginBgConfig.filename) {
+                videoEl.src = `/uploads/login_bg/${loginBgConfig.filename}?t=${Date.now()}`;
+                videoEl.style.display = 'block';
+                videoEl.style.opacity = loginBgConfig.opacity || 0.35;
+                videoEl.play().catch(() => {});
+                matrixEl.style.display = 'none';
+            } else {
+                // matrix
+                createMatrixAnimation('matrixBg', true);
+                matrixEl.style.display = 'block';
+            }
+        }
+
+        function openLoginBgModal() {
+            // Só admin pode acessar, mas o botão só aparece se estiver logado
+            // Como na tela de login ainda não está logado, permitimos a troca via API com verificação
+            // Vamos solicitar login de admin OU permitir direto se já for admin em sessão
+            const modal = document.createElement('div'); modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 560px;">
+                    <h3 style="color:var(--text-accent);">🎬 Fundo da Tela de Login</h3>
+                    <p style="font-size:12px;color:#6c757d;margin-bottom:15px;">Personalize o fundo da tela de login com imagem, GIF ou vídeo. Esta alteração é global.</p>
+                    
+                    <div class="background-controls">
+                        <label><strong>📁 Escolher mídia (Imagem, GIF ou Vídeo)</strong></label>
+                        <input type="file" id="loginBgFileInput" accept="image/*,video/mp4,video/webm,video/ogg">
+                        <div class="image-preview" id="loginBgPreview"></div>
+                        <div id="loginBgFileInfo" style="font-size:11px;color:#6c757d;margin-top:6px;"></div>
+                    </div>
+                    
+                    <div class="background-controls">
+                        <label><strong>🎨 Opacidade do Fundo</strong></label>
+                        <input type="range" id="loginBgOpacityRange" min="0.05" max="1" step="0.05" value="${loginBgConfig.opacity || 0.35}" oninput="document.getElementById('loginBgOpacityVal').innerText=Math.round(this.value*100)+'%'">
+                        <span id="loginBgOpacityVal">${Math.round((loginBgConfig.opacity || 0.35)*100)}%</span>
+                    </div>
+                    
+                    <div class="background-controls">
+                        <label><strong>🎨 Usar animação Matrix (padrão)</strong></label>
+                        <button class="btn btn-secondary" onclick="setLoginBgMatrix()" style="width:100%;">🔢 Voltar para Matrix</button>
+                    </div>
+                    
+                    <div class="modal-buttons">
+                        <button class="btn btn-primary" onclick="uploadLoginBgMedia()">✅ Aplicar Fundo</button>
+                        <button class="btn btn-danger" onclick="closeModal()">❌ Fechar</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal); window.currentModal = modal;
+            
+            const fileInput = document.getElementById('loginBgFileInput');
+            if (fileInput) {
+                fileInput.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const preview = document.getElementById('loginBgPreview');
+                    const info = document.getElementById('loginBgFileInfo');
+                    const url = URL.createObjectURL(file);
+                    if (file.type.startsWith('video/')) {
+                        preview.innerHTML = `<video src="${url}" style="max-width:100%;max-height:150px;border-radius:6px;" autoplay loop muted playsinline></video>`;
+                        info.innerText = `📹 Vídeo: ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
+                    } else {
+                        preview.innerHTML = `<img src="${url}" style="max-width:100%;max-height:150px;border-radius:6px;">`;
+                        info.innerText = `🖼️ Imagem: ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+                    }
+                    window.tempLoginBgFile = file;
+                };
+            }
+        }
+
+        window.setLoginBgMatrix = async () => {
+            try {
+                const response = await fetch('/api/login_bg_config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'matrix' })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    loginBgConfig = data.config;
+                    applyLoginBg();
+                    showToast('✅ Fundo Matrix restaurado!');
+                    closeModal();
+                } else {
+                    showToast('❌ ' + (data.error || 'Erro ao salvar'));
+                }
+            } catch(e) { showToast('❌ Erro de conexão'); }
+        };
+
+        window.uploadLoginBgMedia = async () => {
+            if (!window.tempLoginBgFile) { showToast('⚠️ Selecione uma imagem, GIF ou vídeo primeiro'); return; }
+            const file = window.tempLoginBgFile;
+            const maxSize = 40 * 1024 * 1024;
+            if (file.size > maxSize) { showToast('⚠️ Arquivo muito grande. Máximo 40MB.'); return; }
+            
+            showToast('📤 Enviando mídia...');
+            try {
+                const base64 = await readImageAsBase64(file);
+                const mediaType = file.type.startsWith('video/') ? 'video' : 'image';
+                const opacity = parseFloat(document.getElementById('loginBgOpacityRange').value) || 0.35;
+                
+                const response = await fetch('/api/upload_login_bg', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ media: base64, type: mediaType, opacity: opacity })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    loginBgConfig = data.config;
+                    applyLoginBg();
+                    showToast('✅ Fundo da tela de login atualizado!');
+                    closeModal();
+                } else {
+                    showToast('❌ ' + (data.error || 'Erro ao salvar mídia'));
+                }
+            } catch(e) {
+                console.error(e);
+                showToast('❌ Erro ao enviar mídia: ' + e.message);
+            }
+            window.tempLoginBgFile = null;
+        };
+
+        async function updateLoginBgOpacityFromModal() {
+            // Opcional: se quiser aplicar opacidade em tempo real, pode adicionar evento input
+        }
+        // ============================================================================
+        
         function openDevImageModal() {
             if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem alterar a foto do desenvolvedor'); return; }
             const modal = document.createElement('div'); modal.className = 'modal';
@@ -2212,7 +2582,6 @@ HTML_TEMPLATE = """
             closeModal();
         };
 
-        // NOVO: Função para editar o Fundo Dinâmico
         function openDynamicBgModal() {
             if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem alterar o fundo'); return; }
             const modal = document.createElement('div'); modal.className = 'modal';
@@ -2256,7 +2625,6 @@ HTML_TEMPLATE = """
         window.applyDynamicBg = () => {
             if (!window.tempBgFile) { showToast('Selecione um arquivo primeiro'); return; }
             const url = URL.createObjectURL(window.tempBgFile);
-            
             if (window.tempBgFile.type.startsWith('image')) {
                 document.getElementById('bgVideo').style.display = 'none';
                 document.getElementById('bgGif').src = url;
@@ -2273,41 +2641,63 @@ HTML_TEMPLATE = """
         async function doLogin() {
             const username = document.getElementById('loginUsername').value;
             const password = document.getElementById('loginPassword').value;
-            const response = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
-            const data = await response.json();
+            const btn = document.getElementById('loginBtn');
+            const errEl = document.getElementById('loginError');
+            errEl.style.display = 'none';
             
-            if (data.success) {
-                currentUser = username; userRole = data.role;
-                document.getElementById('loginModal').style.display = 'none';
+            if (!username || !password) {
+                errEl.textContent = 'Preencha usuário e senha';
+                errEl.style.display = 'block';
+                return;
+            }
+            
+            btn.disabled = true;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner"></span> Entrando...';
+            
+            try {
+                const response = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
+                const data = await response.json();
                 
-                // Mostra overlay de carregamento
-                document.getElementById('loadingOverlay').style.display = 'flex';
-
-                document.getElementById('toolbar').style.display = 'flex';
-                document.getElementById('userInfo').innerHTML = `<span>👤 ${username}</span><span class="user-role">${data.role.toUpperCase()}</span>`;
-                
-                if (data.role === 'admin' || data.role === 'master') {
-                    document.getElementById('adminUsersBtn').style.display = 'inline-block';
-                    document.getElementById('adminShapesBtn').style.display = 'inline-block';
-                    document.getElementById('adminCategoriesBtn').style.display = 'inline-block';
-                    document.getElementById('adminDevicesBtn').style.display = 'inline-block';
-                    document.getElementById('adminConnectionsBtn').style.display = 'inline-block';
-                    document.getElementById('resetDefaultsBtn').style.display = 'inline-block';
-                    document.getElementById('adminDevBtn').style.display = 'inline-block';
-                    document.getElementById('adminBgBtn').style.display = 'inline-block';
+                if (data.success) {
+                    currentUser = username; userRole = data.role;
+                    // Mostra o botão de trocar fundo para admin
+                    if (data.role === 'admin' || data.role === 'master') {
+                        document.getElementById('loginBgToggle').style.display = 'flex';
+                        // NÃO fecha o modal ainda - o botão fica visível
+                    }
+                    document.getElementById('loginModal').style.display = 'none';
+                    document.getElementById('loadingOverlay').style.display = 'flex';
+                    document.getElementById('toolbar').style.display = 'flex';
+                    document.getElementById('userInfo').innerHTML = `<span>👤 ${username}</span><span class="user-role">${data.role.toUpperCase()}</span>`;
+                    
+                    if (data.role === 'admin' || data.role === 'master') {
+                        document.getElementById('adminUsersBtn').style.display = 'inline-block';
+                        document.getElementById('adminShapesBtn').style.display = 'inline-block';
+                        document.getElementById('adminCategoriesBtn').style.display = 'inline-block';
+                        document.getElementById('adminDevicesBtn').style.display = 'inline-block';
+                        document.getElementById('adminConnectionsBtn').style.display = 'inline-block';
+                        document.getElementById('resetDefaultsBtn').style.display = 'inline-block';
+                        document.getElementById('adminDevBtn').style.display = 'inline-block';
+                        document.getElementById('adminBgBtn').style.display = 'inline-block';
+                    }
+                    
+                    await Promise.all([loadDefaultConfig(), loadDefaultConnections()]);
+                    await loadUserData();
+                    
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    showToast(`Bem-vindo, ${username}!`);
+                } else {
+                    errEl.textContent = data.error || 'Usuário ou senha inválidos';
+                    errEl.style.display = 'block';
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
                 }
-                
-                await Promise.all([
-                    loadDefaultConfig(),
-                    loadDefaultConnections()
-                ]);
-                await loadUserData();
-                
-                // Esconde overlay de carregamento
-                document.getElementById('loadingOverlay').style.display = 'none';
-                showToast(`Bem-vindo, ${username}!`);
-            } else {
-                document.getElementById('loginError').style.display = 'block';
+            } catch(e) {
+                errEl.textContent = 'Erro de conexão com o servidor';
+                errEl.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = originalText;
             }
         }
         
@@ -2356,7 +2746,7 @@ HTML_TEMPLATE = """
         }
         
         window.nextSlide = () => showSlide(slideIndex + 1); window.prevSlide = () => showSlide(slideIndex - 1); window.currentSlide = (index) => showSlide(index);
-        function closeIntroAndShowLogin() { document.getElementById('introScreen').style.display = 'none'; document.getElementById('loginModal').style.display = 'flex'; createMatrixAnimation('matrixBg', true); }
+        function closeIntroAndShowLogin() { document.getElementById('introScreen').style.display = 'none'; document.getElementById('loginModal').style.display = 'flex'; loadLoginBgConfig(); }
         
         function loadDevImages() {
             const loginContainer = document.getElementById('loginDevImageContainer'); const loginImg = document.getElementById('loginDevImage'); const badgeImg = document.getElementById('badgeDevImage'); const devSlideImg = document.getElementById('devSlideImg'); const devSlideContainer = document.getElementById('devSlideImage');
@@ -2385,7 +2775,6 @@ HTML_TEMPLATE = """
                     if (badgeImg) { badgeImg.style.display = 'none'; badgeImg.parentElement.style.background = '#005f99'; badgeImg.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:16px;font-weight:bold;">TS</div>'; } 
                 }
             };
-            // CORREÇÃO: Aponta para a URL base64 para evitar problemas de cache ou rotas estáticas bloqueadas
             img.src = devImageBase64 ? 'data:image/png;base64,' + devImageBase64 : '/static/dev.png?v=2';
         }
         
@@ -2399,7 +2788,6 @@ HTML_TEMPLATE = """
         canvas.addEventListener('touchstart', handleStart, { passive: false }); canvas.addEventListener('touchmove', handleMove, { passive: false }); canvas.addEventListener('touchend', handleEnd); canvas.addEventListener('touchcancel', handleEnd);
         canvas.addEventListener('mousedown', handleStart); canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mouseup', handleEnd); canvas.addEventListener('click', handleClick); canvas.addEventListener('contextmenu', handleContextMenu);
         
-        // CARREGAMENTO INICIAL (Antes do login, para a paleta já aparecer preenchida)
         (async function init() {
             await loadDefaultConfig();
             await loadDefaultConnections();
@@ -2409,6 +2797,8 @@ HTML_TEMPLATE = """
         })();
 
         loadDevImages(); createMatrixAnimation('introMatrixBg'); closeProperties();
+        // Carrega config do fundo de login ANTES de mostrar o modal
+        loadLoginBgConfig();
         setTimeout(() => { const splash = document.getElementById('splashScreen'); if (splash) splash.style.display = 'none'; }, 3000);
         
         window.newProject = newProject; window.saveProjectToFile = saveProjectToFile; window.loadProjectFromFile = loadProjectFromFile; window.exportPDF = exportPDF; window.exportPDFWithList = exportPDFWithList; window.generateBudget = generateBudget;
@@ -2424,11 +2814,17 @@ HTML_TEMPLATE = """
         window.addCustomConnection = addCustomConnection; window.deleteCustomConnection = deleteCustomConnection; window.editCustomConnection = editCustomConnection; window.addConnectionToCategory = addConnectionToCategory; window.addConnectionToCategoryConfirm = addConnectionToCategoryConfirm;
         window.openCategoryIconModal = openCategoryIconModal; window.applyCategoryIcon = applyCategoryIcon; window.openConnectionIconModal = openConnectionIconModal; window.applyConnectionIcon = applyConnectionIcon; window.openDeviceIconModal = openDeviceIconModal; window.applyDeviceIcon = applyDeviceIcon; window.openCustomDeviceIconModal = openCustomDeviceIconModal; window.applyCustomDeviceIcon = applyCustomDeviceIcon; window.addConnectionFromModal = addConnectionFromModal; window.renderConnectionsPalette = renderConnectionsPalette; window.renderPalette = renderPalette;
         
-        // Expor as novas funções
         window.openDevImageModal = openDevImageModal;
         window.uploadNewDevImage = uploadNewDevImage;
         window.openDynamicBgModal = openDynamicBgModal;
         window.applyDynamicBg = applyDynamicBg;
+        
+        // Novas funções expostas
+        window.loadLoginBgConfig = loadLoginBgConfig;
+        window.applyLoginBg = applyLoginBg;
+        window.openLoginBgModal = openLoginBgModal;
+        window.uploadLoginBgMedia = uploadLoginBgMedia;
+        window.setLoginBgMatrix = setLoginBgMatrix;
     </script>
 </body>
 </html>
