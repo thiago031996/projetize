@@ -19,7 +19,7 @@ import math
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 app.config['SECRET_KEY'] = 'projetize-super-secret-key-2026'
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000 # Cache de 1 ano para arquivos estáticos
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 # Desativado para forçar atualização das imagens
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -560,7 +560,7 @@ HTML_TEMPLATE = """
         .login-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #001a2e, #00264d); display: none; justify-content: center; align-items: center; z-index: 20000; overflow-y: auto; padding: 20px; }
         .login-dev-container { position: relative; z-index: 2; width: 100%; max-width: 500px; background: rgba(0, 38, 77, 0.9); backdrop-filter: blur(10px); border-radius: 20px; padding: 40px; text-align: center; border: 1px solid #ffffff; box-shadow: 0 0 30px rgba(255, 255, 255, 0.2); animation: fadeInScale 0.5s ease-out; }
         @keyframes fadeInScale { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-        .login-dev-image { width: 150px; height: 150px; border-radius: 50%; margin: 0 auto 20px; overflow: hidden; border: 3px solid #ffffff; box-shadow: 0 0 30px rgba(255, 255, 255, 0.5); animation: borderGlow 2s ease-in-out infinite; display: flex; align-items: center; justify-content: center; background: #005f99; }
+        .login-dev-image { width: 150px; height: 150px; border-radius: 50%; margin: 0 auto 20px; overflow: hidden; border: 3px solid #ffffff; box-shadow: 0 0 30px rgba(255, 255, 255, 0.5); animation: borderGlow 2s ease-in-out infinite; display: flex; align-items: center; justify-content: center; background: #005f99; position: relative; }
         @media (max-width: 768px) { .login-dev-image { width: 120px; height: 120px; } }
         @keyframes borderGlow { 0%, 100% { border-color: #ffffff; box-shadow: 0 0 20px #ffffff; } 50% { border-color: #00ccff; box-shadow: 0 0 40px #00ccff; } }
         .login-dev-image img { width: 100%; height: 100%; object-fit: cover; }
@@ -647,7 +647,7 @@ HTML_TEMPLATE = """
         .canvas-area::-webkit-scrollbar { width: 12px; height: 12px; }
         .canvas-area::-webkit-scrollbar-track { background: #e9ecef; border-radius: 6px; }
         .canvas-area::-webkit-scrollbar-thumb { background: #005f99; border-radius: 6px; }
-        #canvas { background: var(--bg-primary); box-shadow: 0 0 20px rgba(0,0,0,0.1); cursor: crosshair; display: block; margin: 20px auto; transform-origin: 0 0; }
+        #canvas { background: transparent; cursor: crosshair; display: block; margin: 20px auto; transform-origin: 0 0; }
         @media (max-width: 768px) { #canvas { margin: 10px auto; } }
         
         .properties { width: 0; background: var(--bg-tertiary); color: var(--text-primary); padding: 0; overflow-y: auto; border-left: none; transition: width 0.3s ease; position: relative; flex-shrink: 0; }
@@ -718,9 +718,24 @@ HTML_TEMPLATE = """
             .context-menu-item { padding: 12px 20px; font-size: 14px; }
             .btn { padding: 8px 12px; }
         }
+
+        /* NOVO: CSS para o Fundo Dinâmico */
+        .dynamic-background {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1;
+            object-fit: cover;
+            pointer-events: none;
+            opacity: 0.3; /* Deixa o fundo transparente para não atrapalhar o desenho */
+            display: none;
+        }
     </style>
 </head>
 <body>
+    <!-- Fundo Dinâmico -->
+    <video id="bgVideo" class="dynamic-background" autoplay loop muted playsinline></video>
+    <img id="bgGif" class="dynamic-background" src="" alt="">
+
     <button class="mobile-menu-toggle" onclick="toggleMobilePalette()">📋</button>
     <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobilePalette()"></div>
     <div class="rgb-line"></div>
@@ -857,6 +872,12 @@ HTML_TEMPLATE = """
         <button id="resetDefaultsBtn" class="btn btn-warning" onclick="resetToDefaultConfig()" style="display: none;">🔄 Padrões</button>
         <button class="btn btn-info" onclick="toggleGrid()">🔲 Grade</button>
         <button class="btn btn-info" onclick="openBackgroundModal()">🖼️ Planta</button>
+        
+        <!-- NOVOS BOTÕES -->
+        <button class="btn btn-warning" onclick="openDevImageModal()" style="background:#e83e8c; color:white;">🖼️ Dev</button>
+        <button class="btn btn-secondary" onclick="openDynamicBgModal()" style="background:#6f42c1; color:white;">🎬 Fundo</button>
+        <button class="btn btn-success" onclick="window.open('https://th-tech.souzathiagosantos03.workers.dev', '_blank')" style="background:#fd7e14; color:white; font-weight:bold;">🌐 TH-TEC</button>
+        
         <button class="btn btn-danger" onclick="logout()">🚪 Sair</button>
         <span style="flex:1"></span>
         <div class="user-info" id="userInfo"></div>
@@ -2055,7 +2076,118 @@ HTML_TEMPLATE = """
         function closeProperties() { document.getElementById('propertiesPanel').classList.remove('open'); }
         function readImageAsBase64(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.readAsDataURL(file); }); }
         
-        // OTIMIZAÇÃO NO LOGIN (Promessas em paralelo e carregamento inicial)
+        // NOVO: Função para editar a imagem do desenvolvedor
+        function openDevImageModal() {
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem alterar a foto do desenvolvedor'); return; }
+            const modal = document.createElement('div'); modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3 style="color:var(--text-accent);">🖼️ Alterar Foto do Desenvolvedor</h3>
+                    <p>Envie uma nova imagem para substituir a foto do desenvolvedor.</p>
+                    <div class="property-group">
+                        <label>Escolha uma imagem</label>
+                        <input type="file" id="newDevImage" accept="image/*">
+                        <div class="image-preview" id="newDevPreview"></div>
+                    </div>
+                    <div class="modal-buttons">
+                        <button class="btn btn-primary" onclick="uploadNewDevImage()">✅ Salvar Foto</button>
+                        <button class="btn btn-danger" onclick="closeModal()">❌ Cancelar</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal); window.currentModal = modal;
+            const imageInput = document.getElementById('newDevImage');
+            if (imageInput) { 
+                imageInput.onchange = async (e) => { 
+                    const file = e.target.files[0]; 
+                    if (file) { 
+                        const base64 = await readImageAsBase64(file); 
+                        const preview = document.getElementById('newDevPreview'); 
+                        if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:100px;max-height:100px;">`; 
+                        window.tempDevImage = base64;
+                    } 
+                }; 
+            }
+        }
+
+        window.uploadNewDevImage = async () => {
+            if (!window.tempDevImage) { showToast('Selecione uma imagem primeiro'); return; }
+            try {
+                const response = await fetch('/api/upload_dev_image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: window.tempDevImage })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('✅ Foto do desenvolvedor atualizada com sucesso!');
+                    setTimeout(() => location.reload(), 1000); // Recarrega para atualizar o cache
+                } else {
+                    showToast('❌ Erro ao salvar imagem: ' + data.error);
+                }
+            } catch(e) {
+                showToast('❌ Erro de conexão ao salvar imagem');
+            }
+            window.tempDevImage = null;
+            closeModal();
+        };
+
+        // NOVO: Função para editar o Fundo Dinâmico
+        function openDynamicBgModal() {
+            const modal = document.createElement('div'); modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3 style="color:var(--text-accent);">🎬 Fundo Dinâmico (GIF ou Vídeo)</h3>
+                    <p>Selecione um arquivo GIF ou Vídeo (MP4) para usar como plano de fundo.</p>
+                    <div class="property-group">
+                        <label>Escolha um arquivo</label>
+                        <input type="file" id="newBgFile" accept="image/gif, video/mp4">
+                        <div class="image-preview" id="newBgPreview"></div>
+                    </div>
+                    <div class="property-group">
+                        <label>Opacidade do Fundo</label>
+                        <input type="range" id="dynamicBgOpacity" min="0.05" max="1" step="0.05" value="0.3" oninput="document.getElementById('bgVideo').style.opacity = this.value; document.getElementById('bgGif').style.opacity = this.value;">
+                    </div>
+                    <div class="modal-buttons">
+                        <button class="btn btn-primary" onclick="applyDynamicBg()">✅ Aplicar</button>
+                        <button class="btn btn-danger" onclick="closeModal()">❌ Cancelar</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal); window.currentModal = modal;
+            const fileInput = document.getElementById('newBgFile');
+            if (fileInput) { 
+                fileInput.onchange = (e) => { 
+                    const file = e.target.files[0]; 
+                    if (file) { 
+                        const preview = document.getElementById('newBgPreview'); 
+                        const url = URL.createObjectURL(file);
+                        if (file.type.startsWith('image')) {
+                            preview.innerHTML = `<img src="${url}" style="max-width:100px;max-height:100px;">`;
+                        } else {
+                            preview.innerHTML = `<video src="${url}" style="max-width:100px;max-height:100px;" autoplay loop muted></video>`;
+                        }
+                        window.tempBgFile = file;
+                    } 
+                }; 
+            }
+        }
+
+        window.applyDynamicBg = () => {
+            if (!window.tempBgFile) { showToast('Selecione um arquivo primeiro'); return; }
+            const url = URL.createObjectURL(window.tempBgFile);
+            
+            if (window.tempBgFile.type.startsWith('image')) {
+                document.getElementById('bgVideo').style.display = 'none';
+                document.getElementById('bgGif').src = url;
+                document.getElementById('bgGif').style.display = 'block';
+            } else {
+                document.getElementById('bgGif').style.display = 'none';
+                document.getElementById('bgVideo').src = url;
+                document.getElementById('bgVideo').style.display = 'block';
+            }
+            showToast('✅ Fundo dinâmico aplicado com sucesso!');
+            closeModal();
+        };
+
         async function doLogin() {
             const username = document.getElementById('loginUsername').value;
             const password = document.getElementById('loginPassword').value;
@@ -2077,7 +2209,6 @@ HTML_TEMPLATE = """
                     document.getElementById('resetDefaultsBtn').style.display = 'inline-block';
                 }
                 
-                // Carrega TUDO de uma vez só (MUITO MAIS RÁPIDO)
                 await Promise.all([
                     loadDefaultConfig(),
                     loadDefaultConnections()
@@ -2181,6 +2312,12 @@ HTML_TEMPLATE = """
         window.openPermanentIconModal = openPermanentIconModal; window.applyPermanentIcon = applyPermanentIcon; window.openPermanentIconModalFromMenu = openPermanentIconModalFromMenu;
         window.addCustomConnection = addCustomConnection; window.deleteCustomConnection = deleteCustomConnection; window.editCustomConnection = editCustomConnection; window.addConnectionToCategory = addConnectionToCategory; window.addConnectionToCategoryConfirm = addConnectionToCategoryConfirm;
         window.openCategoryIconModal = openCategoryIconModal; window.applyCategoryIcon = applyCategoryIcon; window.openConnectionIconModal = openConnectionIconModal; window.applyConnectionIcon = applyConnectionIcon; window.openDeviceIconModal = openDeviceIconModal; window.applyDeviceIcon = applyDeviceIcon; window.openCustomDeviceIconModal = openCustomDeviceIconModal; window.applyCustomDeviceIcon = applyCustomDeviceIcon; window.addConnectionFromModal = addConnectionFromModal; window.renderConnectionsPalette = renderConnectionsPalette; window.renderPalette = renderPalette;
+        
+        // Expor as novas funções
+        window.openDevImageModal = openDevImageModal;
+        window.uploadNewDevImage = uploadNewDevImage;
+        window.openDynamicBgModal = openDynamicBgModal;
+        window.applyDynamicBg = applyDynamicBg;
     </script>
 </body>
 </html>
