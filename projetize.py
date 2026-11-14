@@ -16,7 +16,7 @@ from datetime import datetime
 import mimetypes
 import math
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 app.config['SECRET_KEY'] = 'projetize-super-secret-key-2026'
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
@@ -71,10 +71,12 @@ def save_users(users_dict):
 users = load_users()
 
 def get_dev_image_base64():
+    # CORREÇÃO: Procura a imagem na raiz e na pasta static
     possible_paths = [
+        os.path.join(BASE_DIR, 'dev.png'),
+        os.path.join(BASE_DIR, 'dev.jpg'),
         os.path.join(STATIC_FOLDER, 'dev.png'),
         os.path.join(STATIC_FOLDER, 'dev.jpg'),
-        os.path.join(STATIC_FOLDER, 'developer.png'),
     ]
     for path in possible_paths:
         try:
@@ -366,11 +368,11 @@ def upload_dev_image():
         image_data = image_data.split(',')[1] if ',' in image_data else image_data
     
     filename = f"dev{ext}"
-    filepath = os.path.join(STATIC_FOLDER, filename)
+    filepath = os.path.join(BASE_DIR, filename) # CORREÇÃO: Salva na raiz do projeto
     
     # Remove outras versões antigas
     for old_ext in ['.png', '.jpg', '.jpeg', '.gif', '.webp']:
-        old_path = os.path.join(STATIC_FOLDER, f"dev{old_ext}")
+        old_path = os.path.join(BASE_DIR, f"dev{old_ext}")
         if os.path.exists(old_path) and old_path != filepath:
             try: os.remove(old_path)
             except: pass
@@ -437,6 +439,11 @@ def serve_default_icon(filename):
 @app.route('/uploads/backgrounds/<filename>')
 def serve_background(filename):
     return send_from_directory(BACKGROUNDS_FOLDER, filename)
+
+# Rota para servir dev.png da raiz
+@app.route('/dev.png')
+def serve_dev_image():
+    return send_from_directory(BASE_DIR, 'dev.png')
 
 @app.route('/static/<path:filename>')
 def serve_static(filename):
@@ -2354,12 +2361,32 @@ HTML_TEMPLATE = """
         function loadDevImages() {
             const loginContainer = document.getElementById('loginDevImageContainer'); const loginImg = document.getElementById('loginDevImage'); const badgeImg = document.getElementById('badgeDevImage'); const devSlideImg = document.getElementById('devSlideImg'); const devSlideContainer = document.getElementById('devSlideImage');
             const img = new Image();
-            img.onload = function() { if (loginImg) { loginImg.src = img.src; loginImg.style.display = 'block'; } if (badgeImg) badgeImg.src = img.src; if (devSlideImg) { devSlideImg.src = img.src; devSlideImg.style.display = 'block'; } if (devSlideContainer) devSlideContainer.style.background = 'transparent'; if (loginContainer) loginContainer.style.background = 'transparent'; };
-            img.onerror = function() {
-                if (devImageBase64) { const dataUrl = 'data:image/png;base64,' + devImageBase64; if (loginImg) { loginImg.src = dataUrl; loginImg.style.display = 'block'; } if (badgeImg) badgeImg.src = dataUrl; if (devSlideImg) { devSlideImg.src = dataUrl; devSlideImg.style.display = 'block'; } if (devSlideContainer) devSlideContainer.style.background = 'transparent'; if (loginContainer) loginContainer.style.background = 'transparent'; }
-                else { if (loginImg) loginImg.style.display = 'none'; if (devSlideImg) devSlideImg.style.display = 'none'; if (loginContainer) { loginContainer.style.background = '#005f99'; loginContainer.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:40px;font-weight:bold;">TS</div>'; } if (devSlideContainer) { devSlideContainer.style.background = '#005f99'; devSlideContainer.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:40px;font-weight:bold;">TS</div>'; } if (badgeImg) { badgeImg.style.display = 'none'; badgeImg.parentElement.style.background = '#005f99'; badgeImg.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:16px;font-weight:bold;">TS</div>'; } }
+            img.onload = function() { 
+                if (loginImg) { loginImg.src = img.src; loginImg.style.display = 'block'; } 
+                if (badgeImg) badgeImg.src = img.src; 
+                if (devSlideImg) { devSlideImg.src = img.src; devSlideImg.style.display = 'block'; } 
+                if (devSlideContainer) devSlideContainer.style.background = 'transparent'; 
+                if (loginContainer) loginContainer.style.background = 'transparent'; 
             };
-            img.src = '/static/dev.png?v=2'; // Força o recarregamento da imagem
+            img.onerror = function() {
+                if (devImageBase64) { 
+                    const dataUrl = 'data:image/png;base64,' + devImageBase64; 
+                    if (loginImg) { loginImg.src = dataUrl; loginImg.style.display = 'block'; } 
+                    if (badgeImg) badgeImg.src = dataUrl; 
+                    if (devSlideImg) { devSlideImg.src = dataUrl; devSlideImg.style.display = 'block'; } 
+                    if (devSlideContainer) devSlideContainer.style.background = 'transparent'; 
+                    if (loginContainer) loginContainer.style.background = 'transparent'; 
+                }
+                else { 
+                    if (loginImg) loginImg.style.display = 'none'; 
+                    if (devSlideImg) devSlideImg.style.display = 'none'; 
+                    if (loginContainer) { loginContainer.style.background = '#005f99'; loginContainer.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:40px;font-weight:bold;">TS</div>'; } 
+                    if (devSlideContainer) { devSlideContainer.style.background = '#005f99'; devSlideContainer.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:40px;font-weight:bold;">TS</div>'; } 
+                    if (badgeImg) { badgeImg.style.display = 'none'; badgeImg.parentElement.style.background = '#005f99'; badgeImg.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:16px;font-weight:bold;">TS</div>'; } 
+                }
+            };
+            // CORREÇÃO: Aponta para a URL base64 para evitar problemas de cache ou rotas estáticas bloqueadas
+            img.src = devImageBase64 ? 'data:image/png;base64,' + devImageBase64 : '/static/dev.png?v=2';
         }
         
         canvas.addEventListener('dragover', (e) => e.preventDefault());
