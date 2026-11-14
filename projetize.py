@@ -19,7 +19,7 @@ import math
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 app.config['SECRET_KEY'] = 'projetize-super-secret-key-2026'
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 # Desativado para forçar atualização das imagens
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -344,6 +344,41 @@ def upload_icon():
         with open(filepath, 'wb') as f:
             f.write(base64.b64decode(image_data))
         return jsonify({'success': True, 'filename': filename, 'type': target_type})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/upload_dev_image', methods=['POST'])
+@admin_required
+def upload_dev_image():
+    data = request.json
+    image_data = data.get('image', '')
+    if not image_data or not image_data.startswith('data:image'):
+        return jsonify({'success': False, 'error': 'Imagem inválida'}), 400
+    
+    format_map = {'data:image/png;base64,': '.png', 'data:image/jpeg;base64,': '.jpg', 'data:image/jpg;base64,': '.jpg', 'data:image/gif;base64,': '.gif', 'data:image/webp;base64,': '.webp'}
+    ext = '.png'
+    for key, value in format_map.items():
+        if image_data.startswith(key):
+            ext = value
+            image_data = image_data.replace(key, '')
+            break
+    else:
+        image_data = image_data.split(',')[1] if ',' in image_data else image_data
+    
+    filename = f"dev{ext}"
+    filepath = os.path.join(STATIC_FOLDER, filename)
+    
+    # Remove outras versões antigas
+    for old_ext in ['.png', '.jpg', '.jpeg', '.gif', '.webp']:
+        old_path = os.path.join(STATIC_FOLDER, f"dev{old_ext}")
+        if os.path.exists(old_path) and old_path != filepath:
+            try: os.remove(old_path)
+            except: pass
+    
+    try:
+        with open(filepath, 'wb') as f:
+            f.write(base64.b64decode(image_data))
+        return jsonify({'success': True, 'url': f'/static/{filename}'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -719,22 +754,52 @@ HTML_TEMPLATE = """
             .btn { padding: 8px 12px; }
         }
 
-        /* NOVO: CSS para o Fundo Dinâmico */
+        /* Estilo do Fundo Dinâmico */
         .dynamic-background {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
             z-index: -1;
             object-fit: cover;
             pointer-events: none;
-            opacity: 0.3; /* Deixa o fundo transparente para não atrapalhar o desenho */
+            opacity: 0.3;
             display: none;
         }
+
+        /* Estilo do Loading Overlay */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 26, 46, 0.95);
+            z-index: 30000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        .loading-spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #00ccff;
+            border-radius: 50%;
+            width: 60px; height: 60px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-text { font-size: 18px; font-weight: bold; animation: pulseText 1.5s infinite; }
+        @keyframes pulseText { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
     </style>
 </head>
 <body>
     <!-- Fundo Dinâmico -->
     <video id="bgVideo" class="dynamic-background" autoplay loop muted playsinline></video>
     <img id="bgGif" class="dynamic-background" src="" alt="">
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Carregando módulos...</div>
+        <div style="font-size: 12px; margin-top: 10px; opacity: 0.7;" id="loadingDeviceType"></div>
+    </div>
 
     <button class="mobile-menu-toggle" onclick="toggleMobilePalette()">📋</button>
     <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobilePalette()"></div>
@@ -873,9 +938,9 @@ HTML_TEMPLATE = """
         <button class="btn btn-info" onclick="toggleGrid()">🔲 Grade</button>
         <button class="btn btn-info" onclick="openBackgroundModal()">🖼️ Planta</button>
         
-        <!-- NOVOS BOTÕES -->
-        <button class="btn btn-warning" onclick="openDevImageModal()" style="background:#e83e8c; color:white;">🖼️ Dev</button>
-        <button class="btn btn-secondary" onclick="openDynamicBgModal()" style="background:#6f42c1; color:white;">🎬 Fundo</button>
+        <!-- NOVOS BOTÕES (Restritos) -->
+        <button id="adminDevBtn" class="btn btn-warning" onclick="openDevImageModal()" style="background:#e83e8c; color:white; display: none;">🖼️ Dev</button>
+        <button id="adminBgBtn" class="btn btn-secondary" onclick="openDynamicBgModal()" style="background:#6f42c1; color:white; display: none;">🎬 Fundo</button>
         <button class="btn btn-success" onclick="window.open('https://th-tech.souzathiagosantos03.workers.dev', '_blank')" style="background:#fd7e14; color:white; font-weight:bold;">🌐 TH-TEC</button>
         
         <button class="btn btn-danger" onclick="logout()">🚪 Sair</button>
@@ -974,6 +1039,15 @@ HTML_TEMPLATE = """
         let resizeStart = {x:0, y:0, width:0, height:0, x:0, y:0};
         let selectedConnectionType = null;
         
+        // Detecção de Dispositivo
+        function getDeviceType() {
+            const ua = navigator.userAgent;
+            if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) return "Tablet";
+            if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated/i.test(ua)) return "Celular";
+            return "Desktop / Notebook";
+        }
+        document.getElementById('loadingDeviceType').innerText = "Dispositivo detectado: " + getDeviceType();
+
         // Cache de imagens para otimização do Canvas
         const imageCache = {};
         function getCachedImage(src) {
@@ -2120,7 +2194,7 @@ HTML_TEMPLATE = """
                 const data = await response.json();
                 if (data.success) {
                     showToast('✅ Foto do desenvolvedor atualizada com sucesso!');
-                    setTimeout(() => location.reload(), 1000); // Recarrega para atualizar o cache
+                    setTimeout(() => location.reload(), 1000); 
                 } else {
                     showToast('❌ Erro ao salvar imagem: ' + data.error);
                 }
@@ -2133,6 +2207,7 @@ HTML_TEMPLATE = """
 
         // NOVO: Função para editar o Fundo Dinâmico
         function openDynamicBgModal() {
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem alterar o fundo'); return; }
             const modal = document.createElement('div'); modal.className = 'modal';
             modal.innerHTML = `
                 <div class="modal-content">
@@ -2197,6 +2272,10 @@ HTML_TEMPLATE = """
             if (data.success) {
                 currentUser = username; userRole = data.role;
                 document.getElementById('loginModal').style.display = 'none';
+                
+                // Mostra overlay de carregamento
+                document.getElementById('loadingOverlay').style.display = 'flex';
+
                 document.getElementById('toolbar').style.display = 'flex';
                 document.getElementById('userInfo').innerHTML = `<span>👤 ${username}</span><span class="user-role">${data.role.toUpperCase()}</span>`;
                 
@@ -2207,6 +2286,8 @@ HTML_TEMPLATE = """
                     document.getElementById('adminDevicesBtn').style.display = 'inline-block';
                     document.getElementById('adminConnectionsBtn').style.display = 'inline-block';
                     document.getElementById('resetDefaultsBtn').style.display = 'inline-block';
+                    document.getElementById('adminDevBtn').style.display = 'inline-block';
+                    document.getElementById('adminBgBtn').style.display = 'inline-block';
                 }
                 
                 await Promise.all([
@@ -2214,6 +2295,9 @@ HTML_TEMPLATE = """
                     loadDefaultConnections()
                 ]);
                 await loadUserData();
+                
+                // Esconde overlay de carregamento
+                document.getElementById('loadingOverlay').style.display = 'none';
                 showToast(`Bem-vindo, ${username}!`);
             } else {
                 document.getElementById('loginError').style.display = 'block';
