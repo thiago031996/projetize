@@ -37,6 +37,7 @@ os.makedirs(STATIC_FOLDER, exist_ok=True)
 
 projects = {}
 USERS_FILE = os.path.join(UPLOAD_FOLDER, 'users.json')
+LOGIN_BG_CONFIG_FILE = os.path.join(UPLOAD_FOLDER, 'login_bg_config.json')
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
@@ -185,6 +186,22 @@ def delete_background_image(filename):
             return True
         except: pass
     return False
+
+# ============ CARREGAR CONFIGURAÇÃO DO FUNDO DO LOGIN ============
+def load_login_bg_config():
+    if os.path.exists(LOGIN_BG_CONFIG_FILE):
+        try:
+            with open(LOGIN_BG_CONFIG_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except: pass
+    return {'type': 'gradient', 'url': '', 'opacity': 0.6}
+
+def save_login_bg_config(config):
+    try:
+        with open(LOGIN_BG_CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(config, f, ensure_ascii=False, indent=2)
+        return True
+    except: return False
 
 DEFAULT_CONNECTIONS_CONFIG = {
     'Cabeadas': {
@@ -382,6 +399,71 @@ def upload_dev_image():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# ============ NOVAS ROTAS PARA FUNDO DO LOGIN ============
+@app.route('/api/login_bg_config', methods=['GET'])
+def get_login_bg_config():
+    return jsonify({'success': True, 'config': load_login_bg_config()})
+
+@app.route('/api/upload_login_bg', methods=['POST'])
+def upload_login_bg():
+    """Rota para upload de GIF ou vídeo de fundo do login (SEM precisar estar logado)"""
+    data = request.json
+    file_type = data.get('type', 'image')  # 'image' ou 'video'
+    file_data = data.get('data', '')
+    
+    if not file_data:
+        return jsonify({'success': False, 'error': 'Dados vazios'}), 400
+    
+    try:
+        # Se for vídeo, salva direto (base64 de arquivo binário)
+        if file_type == 'video':
+            # data é base64 puro do arquivo
+            if ',' in file_data:
+                file_data = file_data.split(',')[1]
+            ext = data.get('ext', '.mp4')
+            filename = f"login_bg_{uuid.uuid4().hex}{ext}"
+            filepath = os.path.join(BACKGROUNDS_FOLDER, filename)
+            with open(filepath, 'wb') as f:
+                f.write(base64.b64decode(file_data))
+        else:
+            # Imagem/GIF - usa a função existente
+            filename = save_background_image(file_data, f"login_bg_{uuid.uuid4().hex}")
+            if not filename:
+                return jsonify({'success': False, 'error': 'Erro ao processar imagem'}), 500
+        
+        url = f'/uploads/backgrounds/{filename}'
+        
+        # Salva configuração no servidor
+        config = load_login_bg_config()
+        config['url'] = url
+        config['type'] = file_type
+        save_login_bg_config(config)
+        
+        return jsonify({'success': True, 'url': url, 'filename': filename})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/save_login_bg_config', methods=['POST'])
+def save_login_bg_config_route():
+    data = request.json
+    config = load_login_bg_config()
+    if 'opacity' in data:
+        config['opacity'] = float(data['opacity'])
+    if 'type' in data:
+        config['type'] = data['type']
+    if 'url' in data:
+        config['url'] = data['url']
+    save_login_bg_config(config)
+    return jsonify({'success': True, 'config': config})
+
+@app.route('/api/reset_login_bg', methods=['POST'])
+def reset_login_bg():
+    config = {'type': 'gradient', 'url': '', 'opacity': 0.6}
+    save_login_bg_config(config)
+    return jsonify({'success': True})
+
+# ============================================================
+
 @app.route('/api/save_global_categories', methods=['POST'])
 @admin_required
 def save_global_categories():
@@ -530,7 +612,7 @@ def delete_user(username):
         return jsonify({'success': True})
     return jsonify({'error': 'Usuário não encontrado'}), 404
 
-# ==================== HTML TEMPLATE - PARIDADE TOTAL DESKTOP/MOBILE ====================
+# ==================== HTML TEMPLATE ====================
 HTML_TEMPLATE = r"""
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -554,6 +636,26 @@ HTML_TEMPLATE = r"""
         .rgb-line { position: fixed; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, #005f99, #0099cc, #00ccff, #005f99); background-size: 300% 100%; animation: rgbMove 3s linear infinite; z-index: 10000; }
         @keyframes rgbMove { 0% { background-position: 0% 0%; } 100% { background-position: 300% 100%; } }
         
+        /* ============ FUNDO DINÂMICO DO LOGIN ============ */
+        .login-bg-dynamic {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            object-fit: cover;
+            z-index: 0;
+            pointer-events: none;
+            display: none;
+        }
+        .login-bg-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: linear-gradient(135deg, rgba(0,26,46,0.85), rgba(0,38,77,0.85));
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        /* ============ TELA DE INTRO ============ */
         .intro-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #001a2e, #00264d); display: flex; justify-content: center; align-items: center; z-index: 25000; overflow-y: auto; padding: 20px; }
         .matrix-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; font-family: monospace; color: #ffffff; z-index: 0; opacity: 0.3; pointer-events: none; }
         .matrix-column { position: absolute; top: -100%; animation: matrixFall linear infinite; white-space: pre; font-size: 16px; line-height: 1.2; opacity: 0.8; text-shadow: 0 0 8px #ffffff; color: #ffffff; font-weight: bold; }
@@ -576,8 +678,9 @@ HTML_TEMPLATE = r"""
         .access-btn { background: #ffffff; color: #001a2e; border: none; padding: 10px 30px; border-radius: 30px; font-size: 14px; font-weight: bold; cursor: pointer; margin: 10px auto 5px; }
         .intro-footer-note { text-align: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); font-size: 11px; color: rgba(255,255,255,0.6); }
         
-        .login-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #001a2e, #00264d); display: none; justify-content: center; align-items: center; z-index: 20000; overflow-y: auto; padding: 20px; }
-        .login-dev-container { position: relative; z-index: 2; width: 100%; max-width: 500px; background: rgba(0, 38, 77, 0.9); backdrop-filter: blur(10px); border-radius: 20px; padding: 40px; text-align: center; border: 1px solid #ffffff; box-shadow: 0 0 30px rgba(255, 255, 255, 0.2); }
+        /* ============ LOGIN ============ */
+        .login-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; z-index: 20000; overflow-y: auto; padding: 20px; background: linear-gradient(135deg, #001a2e, #00264d); }
+        .login-dev-container { position: relative; z-index: 2; width: 100%; max-width: 500px; background: rgba(0, 38, 77, 0.92); backdrop-filter: blur(10px); border-radius: 20px; padding: 40px; text-align: center; border: 1px solid #ffffff; box-shadow: 0 0 30px rgba(255, 255, 255, 0.2); }
         .login-dev-image { width: 150px; height: 150px; border-radius: 50%; margin: 0 auto 20px; overflow: hidden; border: 3px solid #ffffff; display: flex; align-items: center; justify-content: center; background: #005f99; }
         .login-dev-image img { width: 100%; height: 100%; object-fit: cover; }
         .login-dev-name { font-size: 24px; color: #ffffff; margin-bottom: 5px; font-weight: bold; }
@@ -592,6 +695,170 @@ HTML_TEMPLATE = r"""
         .login-footer { margin-top: 25px; padding-top: 15px; border-top: 1px solid #ffffff; font-size: 11px; color: #ccccff; }
         .login-footer a { color: #ffffff; text-decoration: none; }
         
+        /* ============ BOTÃO FLUTUANTE CONFIG BG (na tela de login) ============ */
+        .login-settings-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 20001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(255,255,255,0.3);
+        }
+        .login-settings-btn:hover, .login-settings-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1) rotate(45deg);
+            box-shadow: 0 0 30px rgba(0, 204, 255, 0.6);
+        }
+        
+        /* ============ MODAL CONFIG BG ============ */
+        .bg-config-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 30000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .bg-config-modal.active { display: flex; }
+        .bg-config-content {
+            background: linear-gradient(135deg, #00264d, #001a2e);
+            border: 2px solid #00ccff;
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 550px;
+            color: white;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 0 40px rgba(0, 204, 255, 0.5);
+        }
+        .bg-config-content h2 {
+            color: #00ccff;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 22px;
+            text-shadow: 0 0 15px #00ccff;
+        }
+        .bg-config-content .form-group {
+            margin-bottom: 18px;
+        }
+        .bg-config-content label {
+            display: block;
+            color: #ccccff;
+            font-size: 13px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .bg-config-content input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px dashed #00ccff;
+            border-radius: 8px;
+            color: white;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .bg-config-content input[type="file"]::file-selector-button {
+            background: #00ccff;
+            color: #001a2e;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .bg-config-content input[type="range"] {
+            width: 100%;
+            margin-top: 8px;
+        }
+        .bg-config-content .preview-box {
+            width: 100%;
+            height: 180px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #00ccff;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+            position: relative;
+        }
+        .bg-config-content .preview-box img,
+        .bg-config-content .preview-box video {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .bg-config-content .preview-box .empty-preview {
+            color: #88aacc;
+            font-size: 13px;
+            text-align: center;
+            padding: 20px;
+        }
+        .bg-config-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+        .bg-config-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            min-width: 120px;
+            transition: all 0.3s;
+        }
+        .bg-config-btn-primary {
+            background: #00ccff;
+            color: #001a2e;
+        }
+        .bg-config-btn-primary:hover { background: #ffffff; transform: scale(1.02); }
+        .bg-config-btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .bg-config-btn-danger:hover { background: #c82333; transform: scale(1.02); }
+        .bg-config-btn-secondary {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .bg-config-btn-secondary:hover { background: rgba(255,255,255,0.25); }
+        .bg-config-tip {
+            background: rgba(0, 204, 255, 0.1);
+            border-left: 3px solid #00ccff;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #b3e6ff;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        /* ============ RESTO DO SISTEMA (mesmo de antes) ============ */
         .splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #001a2e, #00264d); display: flex; justify-content: center; align-items: center; z-index: 15000; animation: fadeOut 3s ease-in-out forwards; pointer-events: none; }
         @keyframes fadeOut { 0% { opacity: 1; visibility: visible; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
         .splash-content { text-align: center; z-index: 2; }
@@ -660,7 +927,6 @@ HTML_TEMPLATE = r"""
         .context-menu { position: fixed; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 5px 0; z-index: 2000; display: none; min-width: 200px; }
         .context-menu-item { padding: 12px 18px; cursor: pointer; color: var(--text-primary); font-size: 13px; }
         .context-menu-item:hover { background: var(--button-primary); color: #fff; }
-        .selection-info { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); background: var(--bg-secondary); padding: 4px 10px; border-radius: 20px; font-size: 11px; z-index: 1000; border: 1px solid var(--border-color); display: none; }
         
         .shapes-toolbar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--bg-secondary); padding: 8px 15px; border-radius: 30px; display: flex; gap: 8px; z-index: 150; border: 1px solid var(--border-color); flex-wrap: wrap; max-width: 90%; justify-content: center; }
         .shape-btn { background: var(--bg-tertiary); border: none; color: var(--text-primary); padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; }
@@ -676,118 +942,53 @@ HTML_TEMPLATE = r"""
         
         /* ============ MOBILE STYLES ============ */
         body.mobile-mode .dev-badge { display: none; }
-        
-        body.mobile-mode .toolbar {
-            position: fixed; top: 0; left: 0; right: 0;
-            margin-left: 0; padding: 8px 10px;
-            background: var(--button-primary); color: white;
-            overflow-x: auto; overflow-y: hidden; flex-wrap: nowrap;
-            height: var(--mobile-toolbar-height); z-index: 500;
-            -webkit-overflow-scrolling: touch;
-        }
+        body.mobile-mode .toolbar { position: fixed; top: 0; left: 0; right: 0; margin-left: 0; padding: 8px 10px; background: var(--button-primary); color: white; overflow-x: auto; overflow-y: hidden; flex-wrap: nowrap; height: var(--mobile-toolbar-height); z-index: 500; -webkit-overflow-scrolling: touch; }
         body.mobile-mode .toolbar::-webkit-scrollbar { display: none; }
         body.mobile-mode .toolbar .btn { flex-shrink: 0; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 12px; font-size: 11px; }
-        body.mobile-mode .toolbar .btn:active { background: rgba(255,255,255,0.4); }
         body.mobile-mode .toolbar .user-info { display: none !important; }
         body.mobile-mode .toolbar .zoom-controls { display: none !important; }
         body.mobile-mode .toolbar span[style*="flex:1"] { display: none !important; }
-        
         body.mobile-mode .main-container { height: calc(100vh - var(--mobile-toolbar-height) - var(--mobile-nav-height)); margin-top: var(--mobile-toolbar-height); margin-bottom: var(--mobile-nav-height); display: block; position: relative; }
-        
-        body.mobile-mode .palette {
-            position: fixed; top: var(--mobile-toolbar-height); bottom: var(--mobile-nav-height); left: 0; right: 0;
-            width: 100% !important; max-width: 100% !important; z-index: 400;
-            transform: translateY(100%); transition: transform 0.3s ease;
-            padding: 15px; overflow-y: auto; border: none;
-            background: var(--bg-secondary);
-        }
+        body.mobile-mode .palette { position: fixed; top: var(--mobile-toolbar-height); bottom: var(--mobile-nav-height); left: 0; right: 0; width: 100% !important; max-width: 100% !important; z-index: 400; transform: translateY(100%); transition: transform 0.3s ease; padding: 15px; overflow-y: auto; border: none; background: var(--bg-secondary); }
         body.mobile-mode .palette.mobile-open { transform: translateY(0); }
         body.mobile-mode .palette .toggle-palette { display: none; }
-        
-        body.mobile-mode #categories-container,
-        body.mobile-mode #connections-container {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px;
-        }
+        body.mobile-mode #categories-container, body.mobile-mode #connections-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
         body.mobile-mode .category { margin-bottom: 15px; grid-column: 1 / -1; }
-        body.mobile-mode .category-header { margin-bottom: 10px; }
         body.mobile-mode .category h3 { font-size: 13px; padding: 8px; background: var(--button-primary); color: white; border-radius: 6px; border-left: none; }
         body.mobile-mode .category-actions { display: flex !important; }
         body.mobile-mode .category-actions button { background: var(--button-primary); color: white; padding: 4px 8px; border-radius: 4px; font-size: 14px; }
         body.mobile-mode .category > div { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
-        body.mobile-mode .component {
-            flex-direction: column; align-items: center; justify-content: center; text-align: center;
-            padding: 12px 6px; min-height: 90px; cursor: pointer;
-            touch-action: manipulation;
-        }
+        body.mobile-mode .component { flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 12px 6px; min-height: 90px; cursor: pointer; }
         body.mobile-mode .component-icon { font-size: 32px; width: auto; height: auto; margin-bottom: 5px; }
         body.mobile-mode .component-icon img { width: 32px; height: 32px; }
         body.mobile-mode .component-info { flex: none; width: 100%; }
         body.mobile-mode .component-name { font-size: 11px; word-break: break-word; }
-        body.mobile-mode .component-desc { font-size: 9px; }
         body.mobile-mode .component-actions { display: flex !important; position: static; transform: none; margin-top: 5px; justify-content: center; }
-        body.mobile-mode .component-actions button { font-size: 12px; padding: 4px 6px; }
-        
-        body.mobile-mode .canvas-area {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-        }
-        
-        body.mobile-mode .properties {
-            position: fixed; top: var(--mobile-toolbar-height); bottom: var(--mobile-nav-height); left: 0; right: 0;
-            width: 100% !important; z-index: 450;
-            transform: translateY(100%); transition: transform 0.3s ease;
-            padding: 15px; overflow-y: auto; border: none;
-            background: var(--bg-secondary);
-        }
+        body.mobile-mode .canvas-area { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+        body.mobile-mode .properties { position: fixed; top: var(--mobile-toolbar-height); bottom: var(--mobile-nav-height); left: 0; right: 0; width: 100% !important; z-index: 450; transform: translateY(100%); transition: transform 0.3s ease; padding: 15px; overflow-y: auto; border: none; background: var(--bg-secondary); }
         body.mobile-mode .properties.open { transform: translateY(0); width: 100% !important; }
         
-        .mobile-nav {
-            display: none;
-            position: fixed; bottom: 0; left: 0; right: 0;
-            height: var(--mobile-nav-height);
-            background: var(--bg-secondary);
-            border-top: 2px solid var(--border-color);
-            z-index: 600;
-        }
+        .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; height: var(--mobile-nav-height); background: var(--bg-secondary); border-top: 2px solid var(--border-color); z-index: 600; }
         body.mobile-mode .mobile-nav { display: flex; }
-        .mobile-nav-btn {
-            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: none; border: none; color: var(--text-secondary);
-            font-size: 10px; cursor: pointer; gap: 3px; padding: 5px;
-            touch-action: manipulation;
-        }
+        .mobile-nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: none; border: none; color: var(--text-secondary); font-size: 10px; cursor: pointer; gap: 3px; padding: 5px; }
         .mobile-nav-btn.active { color: var(--button-primary); background: rgba(0, 95, 153, 0.1); }
         .mobile-nav-btn .nav-icon { font-size: 22px; }
         .mobile-nav-btn .nav-label { font-weight: 600; }
         
-        .mobile-fab-container {
-            display: none;
-            position: fixed; bottom: calc(var(--mobile-nav-height) + 15px); right: 15px;
-            flex-direction: column; gap: 10px; z-index: 550;
-        }
+        .mobile-fab-container { display: none; position: fixed; bottom: calc(var(--mobile-nav-height) + 15px); right: 15px; flex-direction: column; gap: 10px; z-index: 550; }
         body.mobile-mode .mobile-fab-container { display: flex; }
-        .mobile-fab {
-            width: 50px; height: 50px; border-radius: 50%;
-            background: var(--button-primary); color: white; border: none;
-            font-size: 20px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-        }
+        .mobile-fab { width: 50px; height: 50px; border-radius: 50%; background: var(--button-primary); color: white; border: none; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 10px rgba(0,0,0,0.3); }
         
-        .mobile-overlay {
-            display: none;
-            position: fixed; top: var(--mobile-toolbar-height); bottom: var(--mobile-nav-height); left: 0; right: 0;
-            background: rgba(0,0,0,0.3); z-index: 390;
-        }
+        .mobile-overlay { display: none; position: fixed; top: var(--mobile-toolbar-height); bottom: var(--mobile-nav-height); left: 0; right: 0; background: rgba(0,0,0,0.3); z-index: 390; }
         .mobile-overlay.active { display: block; }
-        
-        /* Mobile context menu - taller for touch */
-        @media (max-width: 1024px) {
-            .context-menu { min-width: 220px; }
-            .context-menu-item { padding: 14px 18px; font-size: 14px; }
-        }
     </style>
 </head>
 <body>
+    <!-- FUNDO DINÂMICO DO LOGIN (GIF ou vídeo) -->
+    <video id="loginBgVideo" class="login-bg-dynamic" autoplay loop muted playsinline></video>
+    <img id="loginBgGif" class="login-bg-dynamic" src="" alt="">
+    <div id="loginBgOverlay" class="login-bg-overlay"></div>
+
     <video id="bgVideo" class="dynamic-background" autoplay loop muted playsinline></video>
     <img id="bgGif" class="dynamic-background" src="" alt="">
 
@@ -891,13 +1092,49 @@ HTML_TEMPLATE = r"""
         </div>
     </div>
     
+    <!-- BOTÃO PARA CONFIGURAR FUNDO DO LOGIN -->
+    <button class="login-settings-btn" id="loginSettingsBtn" onclick="openLoginBgConfig()" title="Alterar fundo do login" style="display:none;">⚙️</button>
+    
+    <!-- MODAL DE CONFIGURAÇÃO DO FUNDO DO LOGIN -->
+    <div class="bg-config-modal" id="bgConfigModal">
+        <div class="bg-config-content">
+            <h2>🎬 Fundo do Login</h2>
+            
+            <div class="bg-config-tip">
+                💡 <strong>Dica:</strong> Você pode usar uma <strong>imagem</strong>, <strong>GIF animado</strong> ou <strong>vídeo MP4</strong> como fundo da tela de login.
+                <br>O arquivo será salvo no servidor e aplicado para todos os usuários.
+            </div>
+            
+            <div class="form-group">
+                <label>📁 Escolha o arquivo (Imagem, GIF ou Vídeo MP4)</label>
+                <input type="file" id="loginBgFileInput" accept="image/*,video/mp4,video/webm">
+            </div>
+            
+            <div class="form-group">
+                <label>👁️ Pré-visualização</label>
+                <div class="preview-box" id="loginBgPreview">
+                    <div class="empty-preview">Nenhum arquivo selecionado</div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>🎨 Opacidade do Fundo: <span id="loginBgOpacityValue">60%</span></label>
+                <input type="range" id="loginBgOpacityRange" min="0.1" max="1" step="0.05" value="0.6">
+            </div>
+            
+            <div class="bg-config-buttons">
+                <button class="bg-config-btn bg-config-btn-primary" onclick="applyLoginBg()">✅ Aplicar</button>
+                <button class="bg-config-btn bg-config-btn-danger" onclick="resetLoginBg()">🔄 Padrão</button>
+                <button class="bg-config-btn bg-config-btn-secondary" onclick="closeLoginBgConfig()">❌ Fechar</button>
+            </div>
+        </div>
+    </div>
+    
     <div class="dev-badge" id="devBadge">
         <img class="dev-badge-img" id="badgeDevImage" src="" alt="TS">
     </div>
     
-    <div class="selection-info" id="selectionInfo"></div>
     <div class="context-menu" id="contextMenu"></div>
-    
     <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobilePanels()"></div>
 
     <div class="toolbar" id="toolbar" style="display: none;">
@@ -917,7 +1154,7 @@ HTML_TEMPLATE = r"""
         <button class="btn btn-info" onclick="toggleGrid()">🔲 <span>Grade</span></button>
         <button class="btn btn-info" onclick="openBackgroundModal()">🖼️ <span>Planta</span></button>
         <button id="adminDevBtn" class="btn btn-warning" onclick="openDevImageModal()" style="background:#e83e8c; color:white; display: none;">🖼️ <span>Dev</span></button>
-        <button id="adminBgBtn" class="btn btn-secondary" onclick="openDynamicBgModal()" style="background:#6f42c1; color:white; display: none;">🎬 <span>Fundo</span></button>
+        <button id="adminBgBtn" class="btn btn-secondary" onclick="openLoginBgConfig()" style="background:#6f42c1; color:white; display: none;">🎬 <span>Fundo Login</span></button>
         <button class="btn btn-success" onclick="window.open('https://th-tech.souzathiagosantos03.workers.dev', '_blank')" style="background:#fd7e14; color:white; font-weight:bold;">🌐 <span>TH-TEC</span></button>
         <button class="btn btn-danger" onclick="logout()">🚪 <span>Sair</span></button>
         <span style="flex:1"></span>
@@ -969,40 +1206,32 @@ HTML_TEMPLATE = r"""
     
     <div class="mobile-nav" id="mobileNav">
         <button class="mobile-nav-btn active" onclick="mobileTab('canvas', this)">
-            <span class="nav-icon">🎨</span>
-            <span class="nav-label">Projeto</span>
+            <span class="nav-icon">🎨</span><span class="nav-label">Projeto</span>
         </button>
         <button class="mobile-nav-btn" onclick="mobileTab('palette', this)">
-            <span class="nav-icon">📦</span>
-            <span class="nav-label">Equipamentos</span>
+            <span class="nav-icon">📦</span><span class="nav-label">Equipamentos</span>
         </button>
         <button class="mobile-nav-btn" onclick="mobileTab('properties', this)">
-            <span class="nav-icon">📋</span>
-            <span class="nav-label">Propriedades</span>
+            <span class="nav-icon">📋</span><span class="nav-label">Propriedades</span>
         </button>
         <button class="mobile-nav-btn" onclick="mobileTab('tools', this)">
-            <span class="nav-icon">🛠️</span>
-            <span class="nav-label">Ferramentas</span>
+            <span class="nav-icon">🛠️</span><span class="nav-label">Ferramentas</span>
         </button>
     </div>
     
     <div class="mobile-fab-container">
-        <button class="mobile-fab" onclick="zoomIn()" title="Zoom +">🔍</button>
-        <button class="mobile-fab" onclick="zoomOut()" title="Zoom -">🔎</button>
-        <button class="mobile-fab" onclick="openBackgroundModal()" title="Planta">🖼️</button>
+        <button class="mobile-fab" onclick="zoomIn()">🔍</button>
+        <button class="mobile-fab" onclick="zoomOut()">🔎</button>
+        <button class="mobile-fab" onclick="openBackgroundModal()">🖼️</button>
     </div>
     
     <script>
         // ==================== DETECÇÃO MOBILE ====================
         function isMobileDevice() {
-            return (window.innerWidth <= 1024) || 
-                   /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                   (navigator.maxTouchPoints > 0 && window.innerWidth <= 1366);
+            return (window.innerWidth <= 1024) || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 0 && window.innerWidth <= 1366);
         }
-        
         let isMobile = isMobileDevice();
         if (isMobile) document.body.classList.add('mobile-mode');
-        
         window.addEventListener('resize', () => {
             const newIsMobile = isMobileDevice();
             if (newIsMobile !== isMobile) {
@@ -1012,15 +1241,187 @@ HTML_TEMPLATE = r"""
             }
         });
         
+        // ==================== SISTEMA DE FUNDO DO LOGIN ====================
+        let currentLoginBgConfig = { type: 'gradient', url: '', opacity: 0.6 };
+        let selectedLoginBgFile = null;
+        let selectedLoginBgType = null;
+        
+        async function loadLoginBgConfig() {
+            try {
+                const response = await fetch('/api/login_bg_config');
+                const data = await response.json();
+                if (data.success) {
+                    currentLoginBgConfig = data.config;
+                    applyLoginBgToScreen(currentLoginBgConfig);
+                }
+            } catch(e) { console.error('Erro ao carregar config do fundo:', e); }
+        }
+        
+        function applyLoginBgToScreen(config) {
+            const video = document.getElementById('loginBgVideo');
+            const gif = document.getElementById('loginBgGif');
+            const overlay = document.getElementById('loginBgOverlay');
+            
+            if (!config.url) {
+                video.style.display = 'none';
+                gif.style.display = 'none';
+                overlay.style.background = 'linear-gradient(135deg, rgba(0,26,46,0.85), rgba(0,38,77,0.85))';
+                return;
+            }
+            
+            const opacity = config.opacity || 0.6;
+            
+            if (config.type === 'video') {
+                gif.style.display = 'none';
+                video.src = config.url;
+                video.style.display = 'block';
+                video.style.opacity = opacity;
+                video.load();
+                video.play().catch(() => {});
+                overlay.style.background = 'transparent';
+            } else {
+                video.style.display = 'none';
+                gif.src = config.url;
+                gif.style.display = 'block';
+                gif.style.opacity = opacity;
+                overlay.style.background = 'transparent';
+            }
+        }
+        
+        function openLoginBgConfig() {
+            const modal = document.getElementById('bgConfigModal');
+            modal.classList.add('active');
+            
+            // Reset
+            selectedLoginBgFile = null;
+            selectedLoginBgType = null;
+            document.getElementById('loginBgFileInput').value = '';
+            const preview = document.getElementById('loginBgPreview');
+            preview.innerHTML = '<div class="empty-preview">Nenhum arquivo selecionado</div>';
+            document.getElementById('loginBgOpacityRange').value = currentLoginBgConfig.opacity || 0.6;
+            document.getElementById('loginBgOpacityValue').textContent = Math.round((currentLoginBgConfig.opacity || 0.6) * 100) + '%';
+            
+            // Se já tem fundo, mostra preview
+            if (currentLoginBgConfig.url) {
+                if (currentLoginBgConfig.type === 'video') {
+                    preview.innerHTML = `<video src="${currentLoginBgConfig.url}" autoplay loop muted playsinline style="max-width:100%; max-height:100%;"></video>`;
+                } else {
+                    preview.innerHTML = `<img src="${currentLoginBgConfig.url}" style="max-width:100%; max-height:100%;">`;
+                }
+            }
+        }
+        
+        function closeLoginBgConfig() {
+            document.getElementById('bgConfigModal').classList.remove('active');
+        }
+        
+        function resetLoginBg() {
+            if (!confirm('Remover o fundo personalizado e voltar ao padrão?')) return;
+            fetch('/api/reset_login_bg', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        currentLoginBgConfig = { type: 'gradient', url: '', opacity: 0.6 };
+                        applyLoginBgToScreen(currentLoginBgConfig);
+                        closeLoginBgConfig();
+                        showToast('✅ Fundo restaurado ao padrão');
+                    }
+                });
+        }
+        
+        async function applyLoginBg() {
+            const opacity = parseFloat(document.getElementById('loginBgOpacityRange').value);
+            
+            // Se não tem arquivo novo selecionado, só atualiza opacidade
+            if (!selectedLoginBgFile && currentLoginBgConfig.url) {
+                try {
+                    const response = await fetch('/api/save_login_bg_config', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ opacity: opacity })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        currentLoginBgConfig = data.config;
+                        applyLoginBgToScreen(currentLoginBgConfig);
+                        showToast('✅ Opacidade atualizada!');
+                        closeLoginBgConfig();
+                    }
+                } catch(e) { showToast('❌ Erro ao salvar'); }
+                return;
+            }
+            
+            if (!selectedLoginBgFile) {
+                showToast('⚠️ Selecione um arquivo primeiro');
+                return;
+            }
+            
+            // Upload do arquivo
+            showToast('📤 Enviando arquivo...');
+            
+            try {
+                let fileData, fileType, ext;
+                const file = selectedLoginBgFile;
+                
+                if (file.type.startsWith('video/')) {
+                    fileType = 'video';
+                    ext = '.' + file.name.split('.').pop();
+                    // Lê arquivo como base64 (sem prefixo data:)
+                    fileData = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const result = e.target.result;
+                            resolve(result.split(',')[1]); // Remove data:video/...;base64,
+                        };
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                } else {
+                    fileType = 'image';
+                    fileData = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                }
+                
+                const response = await fetch('/api/upload_login_bg', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: fileType, data: fileData, ext: ext || '.mp4' })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Salva opacidade
+                    await fetch('/api/save_login_bg_config', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ opacity: opacity, type: fileType, url: data.url })
+                    });
+                    
+                    currentLoginBgConfig = { type: fileType, url: data.url, opacity: opacity };
+                    applyLoginBgToScreen(currentLoginBgConfig);
+                    showToast('✅ Fundo aplicado com sucesso!');
+                    closeLoginBgConfig();
+                } else {
+                    showToast('❌ Erro: ' + (data.error || 'Erro desconhecido'));
+                }
+            } catch(e) {
+                console.error(e);
+                showToast('❌ Erro ao enviar arquivo');
+            }
+        }
+        
         // ==================== MOBILE TABS ====================
         function mobileTab(tab, btn) {
             document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
             if (btn) btn.classList.add('active');
-            
             const palette = document.getElementById('palette');
             const properties = document.getElementById('propertiesPanel');
             const overlay = document.getElementById('mobileOverlay');
-            
             palette.classList.remove('mobile-open');
             properties.classList.remove('open');
             overlay.classList.remove('active');
@@ -1069,15 +1470,13 @@ HTML_TEMPLATE = r"""
                         <button class="btn btn-info" style="padding:12px 6px; flex-direction: column; height: 75px; font-size: 10px;" onclick="toggleShapesToolbar(); closeModal();">📐<br>Formas</button>
                         <button class="btn btn-danger" style="padding:12px 6px; flex-direction: column; height: 75px; font-size: 10px;" onclick="deleteSelectedItems(); closeModal();">🗑<br>Excluir</button>
                         <button class="btn btn-info" style="padding:12px 6px; flex-direction: column; height: 75px; font-size: 10px;" onclick="openUserManagement(); closeModal();">👥<br>Usuários</button>
+                        <button class="btn btn-secondary" style="padding:12px 6px; flex-direction: column; height: 75px; font-size: 10px; background:#6f42c1; color:white;" onclick="openLoginBgConfig(); closeModal();">🎬<br>Fundo Login</button>
                         <button class="btn btn-success" style="padding:12px 6px; flex-direction: column; height: 75px; font-size: 10px; background:#fd7e14;" onclick="window.open('https://th-tech.souzathiagosantos03.workers.dev', '_blank');">🌐<br>TH-TEC</button>
                         <button class="btn btn-danger" style="padding:12px 6px; flex-direction: column; height: 75px; font-size: 10px;" onclick="logout();">🚪<br>Sair</button>
-                        <button class="btn btn-secondary" style="padding:12px 6px; flex-direction: column; height: 75px; font-size: 10px;" onclick="resetIconSize(); zoom=1; applyZoomToCanvas(); closeModal();">🔄<br>Reset</button>
                         <button class="btn btn-info" style="padding:12px 6px; flex-direction: column; height: 75px; font-size: 10px;" onclick="openAddCategoryModal(); closeModal();">📁<br>+Cat</button>
                         <button class="btn btn-info" style="padding:12px 6px; flex-direction: column; height: 75px; font-size: 10px;" onclick="openAddDeviceModal(); closeModal();">🔧<br>+Equip</button>
                         <button class="btn btn-info" style="padding:12px 6px; flex-direction: column; height: 75px; font-size: 10px;" onclick="openAddConnectionModal(); closeModal();">🔌<br>+Conexão</button>
                         <button class="btn btn-warning" style="padding:12px 6px; flex-direction: column; height: 75px; font-size: 10px;" onclick="openDevImageModal(); closeModal();">🖼️<br>Dev</button>
-                        <button class="btn btn-secondary" style="padding:12px 6px; flex-direction: column; height: 75px; font-size: 10px; background:#6f42c1; color:white;" onclick="openDynamicBgModal(); closeModal();">🎬<br>Fundo</button>
-                        <button class="btn btn-warning" style="padding:12px 6px; flex-direction: column; height: 75px; font-size: 10px;" onclick="resetToDefaultConfig(); closeModal();">🔄<br>Padrões</button>
                     </div>
                     <div class="modal-buttons" style="margin-top:15px;">
                         <button class="btn btn-secondary" style="width:100%; padding:12px;" onclick="closeModal()">Fechar</button>
@@ -1100,9 +1499,6 @@ HTML_TEMPLATE = r"""
         let dragOffset = {x:0, y:0};
         let zoom = 1;
         let iconSize = 36;
-        let isDrawingConnection = false;
-        let connectionStart = null;
-        let currentAngleHandle = null;
         let shapeMode = null;
         let shapeStart = null;
         let drawingPreview = null;
@@ -1123,7 +1519,6 @@ HTML_TEMPLATE = r"""
         let dragBackgroundStart = {x:0, y:0};
         let contextMenuComponent = null;
         let contextMenuShape = null;
-        let pendingComponentToConnect = null;
         
         const imageCache = {};
         function getCachedImage(src) {
@@ -1138,25 +1533,24 @@ HTML_TEMPLATE = r"""
         const devImageBase64 = '""" + dev_image_data + """';
         
         const defaultCableColors = {
-            'cat5': { color: '#28a745', name: 'CAT5', icon: '🟢', type: 'cable', speed: '100 Mbps', desc: 'Cabo de rede categoria 5' },
-            'cat5e': { color: '#17a2b8', name: 'CAT5e', icon: '🔵', type: 'cable', speed: '1 Gbps', desc: 'Cabo de rede categoria 5e' },
-            'cat6': { color: '#ffc107', name: 'CAT6', icon: '🟡', type: 'cable', speed: '10 Gbps', desc: 'Cabo de rede categoria 6' },
-            'fiber': { color: '#20c997', name: 'FIBRA', icon: '🔷', type: 'cable', speed: '10 Gbps', desc: 'Cabo de fibra óptica' },
-            'coaxial': { color: '#e83e8c', name: 'COAXIAL', icon: '🟣', type: 'cable', speed: '1 Gbps', desc: 'Cabo coaxial' },
-            'alarme': { color: '#dc3545', name: 'ALARME', icon: '🔴', type: 'cable', speed: 'Baixa', desc: 'Cabo para alarme' },
-            'ci': { color: '#6f42c1', name: 'CABO CI', icon: '🟣', type: 'cable', speed: 'Média', desc: 'Cabo de controle industrial' },
-            'energia': { color: '#fd7e14', name: 'ENERGIA', icon: '🔴', type: 'cable', speed: '-', desc: 'Cabo de energia elétrica' },
-            'wifi': { color: '#00aaff', name: 'Wi-Fi', icon: '📶', type: 'wireless', speed: '1 Gbps', desc: 'Conexão Wi-Fi', animation: 'wave' },
-            'ook': { color: '#ff6600', name: 'OOK', icon: '📻', type: 'wireless', speed: '100 Kbps', desc: 'OOK - Rádio Frequência', animation: 'packet' },
-            'fsk': { color: '#aa44ff', name: 'FSK', icon: '📡', type: 'wireless', speed: '1 Mbps', desc: 'FSK - Modulação por Frequência', animation: 'packet' },
-            'amt8000': { color: '#ff44aa', name: 'AMT 8000', icon: '🔊', type: 'wireless', speed: '8000 bps', desc: 'AMT 8000 - Rádio Digital', animation: 'wave' },
-            'bluetooth': { color: '#0066cc', name: 'Bluetooth', icon: '📱', type: 'wireless', speed: '24 Mbps', desc: 'Bluetooth - Conexão curta distância', animation: 'wave' },
-            'zigbee': { color: '#00aa66', name: 'ZigBee', icon: '🔵', type: 'wireless', speed: '250 Kbps', desc: 'ZigBee - IoT/M2M', animation: 'packet' },
-            'lora': { color: '#cc8800', name: 'LoRa', icon: '📡', type: 'wireless', speed: '50 Kbps', desc: 'LoRa - Longa distância', animation: 'packet' }
+            'cat5': { color: '#28a745', name: 'CAT5', icon: '🟢', type: 'cable', speed: '100 Mbps' },
+            'cat5e': { color: '#17a2b8', name: 'CAT5e', icon: '🔵', type: 'cable', speed: '1 Gbps' },
+            'cat6': { color: '#ffc107', name: 'CAT6', icon: '🟡', type: 'cable', speed: '10 Gbps' },
+            'fiber': { color: '#20c997', name: 'FIBRA', icon: '🔷', type: 'cable', speed: '10 Gbps' },
+            'coaxial': { color: '#e83e8c', name: 'COAXIAL', icon: '🟣', type: 'cable', speed: '1 Gbps' },
+            'alarme': { color: '#dc3545', name: 'ALARME', icon: '🔴', type: 'cable', speed: 'Baixa' },
+            'ci': { color: '#6f42c1', name: 'CABO CI', icon: '🟣', type: 'cable', speed: 'Média' },
+            'energia': { color: '#fd7e14', name: 'ENERGIA', icon: '🔴', type: 'cable', speed: '-' },
+            'wifi': { color: '#00aaff', name: 'Wi-Fi', icon: '📶', type: 'wireless', speed: '1 Gbps', animation: 'wave' },
+            'ook': { color: '#ff6600', name: 'OOK', icon: '📻', type: 'wireless', speed: '100 Kbps', animation: 'packet' },
+            'fsk': { color: '#aa44ff', name: 'FSK', icon: '📡', type: 'wireless', speed: '1 Mbps', animation: 'packet' },
+            'amt8000': { color: '#ff44aa', name: 'AMT 8000', icon: '🔊', type: 'wireless', speed: '8000 bps', animation: 'wave' },
+            'bluetooth': { color: '#0066cc', name: 'Bluetooth', icon: '📱', type: 'wireless', speed: '24 Mbps', animation: 'wave' },
+            'zigbee': { color: '#00aa66', name: 'ZigBee', icon: '🔵', type: 'wireless', speed: '250 Kbps', animation: 'packet' },
+            'lora': { color: '#cc8800', name: 'LoRa', icon: '📡', type: 'wireless', speed: '50 Kbps', animation: 'packet' }
         };
         
         let cableColors = JSON.parse(JSON.stringify(defaultCableColors));
-        let customConnections = [];
         let connectionCategories = {};
         
         const STORAGE_KEYS = {
@@ -1268,7 +1662,6 @@ HTML_TEMPLATE = r"""
         function renderConnectionIcon(conn) { if (conn.iconFile) { return `<img src="/uploads/icons/${conn.iconFile}" style="width:24px;height:24px;object-fit:contain;">`; } return conn.icon || '🔌'; }
         function renderDeviceIcon(device) { if(device.iconFile) return `<img src="/uploads/icons/${device.iconFile}" style="width:24px;height:24px;object-fit:contain;">`; return device.icon || '📦'; }
         
-        // ==================== RENDER PALETTE ====================
         function renderPalette() {
             const container = document.getElementById('categories-container'); if(!container) return; container.innerHTML = '';
             for(const [catName, catData] of Object.entries(categories)) {
@@ -1282,13 +1675,9 @@ HTML_TEMPLATE = r"""
                         const deviceEl = document.createElement('div'); deviceEl.className = 'component'; deviceEl.setAttribute('draggable', 'true');
                         deviceEl.innerHTML = `<div class="component-icon">${renderDeviceIcon(device)}</div><div class="component-info"><div class="component-name">${device.name}</div><div class="component-desc">${device.desc || ''}</div></div>${(userRole === 'admin' || userRole === 'master') ? `<div class="component-actions"><button onclick="event.stopPropagation(); editDevice('${catName.replace(/'/g, "\\'")}', ${idx})">✏️</button><button onclick="event.stopPropagation(); openDeviceIconModal('${catName.replace(/'/g, "\\'")}', ${idx})">🎨</button><button onclick="event.stopPropagation(); deleteDevice('${catName.replace(/'/g, "\\'")}', ${idx})">🗑</button></div>` : ''}`;
                         deviceEl.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ name: device.name, icon: device.icon, type: device.type, subtype: device.subtype || '', color: device.color, iconFile: device.iconFile || null })); });
-                        // MOBILE: toque adiciona ao canvas
                         deviceEl.addEventListener('click', (e) => {
                             if (e.target.tagName === 'BUTTON') return;
-                            if (isMobile) {
-                                e.preventDefault(); e.stopPropagation();
-                                addDeviceToCanvas(device, catName);
-                            }
+                            if (isMobile) { e.preventDefault(); e.stopPropagation(); addDeviceToCanvas(device, catName); }
                         });
                         devicesContainer.appendChild(deviceEl);
                     });
@@ -1297,7 +1686,6 @@ HTML_TEMPLATE = r"""
         }
         
         function addDeviceToCanvas(device, catName) {
-            // Coloca no centro visível do canvas
             const canvasArea = document.getElementById('canvasArea');
             const scrollLeft = canvasArea.scrollLeft;
             const scrollTop = canvasArea.scrollTop;
@@ -1305,20 +1693,7 @@ HTML_TEMPLATE = r"""
             const viewHeight = canvasArea.clientHeight;
             const centerX = (scrollLeft + viewWidth/2) / zoom + (Math.random() - 0.5) * 80;
             const centerY = (scrollTop + viewHeight/2) / zoom + (Math.random() - 0.5) * 80;
-            
-            const newComp = { 
-                id: Date.now() + Math.floor(Math.random()*1000), 
-                type: device.type || 'custom', 
-                subtype: device.subtype || '', 
-                name: device.name, 
-                x: centerX, 
-                y: centerY, 
-                icon: device.icon || '📦', 
-                iconFile: device.iconFile || null, 
-                color: device.color || '#005f99', 
-                angle: 0, fov: 80, rotation: 0, 
-                ip: '', port: 80, username: '', password: '' 
-            };
+            const newComp = { id: Date.now() + Math.floor(Math.random()*1000), type: device.type || 'custom', subtype: device.subtype || '', name: device.name, x: centerX, y: centerY, icon: device.icon || '📦', iconFile: device.iconFile || null, color: device.color || '#005f99', angle: 0, fov: 80, rotation: 0, ip: '', port: 80 };
             components.push(newComp);
             showToast(`✅ ${device.name} adicionado!`);
             saveUserData();
@@ -1336,16 +1711,11 @@ HTML_TEMPLATE = r"""
                 catData.connections.forEach((conn, idx) => {
                     const connEl = document.createElement('div'); connEl.className = 'component';
                     connEl.innerHTML = `<div class="component-icon">${renderConnectionIcon(conn)}</div><div class="component-info"><div class="component-name">${conn.name}</div><div class="component-desc">${conn.desc || conn.speed || ''}</div></div>`;
-                    connEl.addEventListener('click', () => {
-                        selectedConnectionType = getConnectionKey(conn.name);
-                        showToast(`✅ Tipo: ${conn.name}`);
-                    });
                     connContainer.appendChild(connEl);
                 });
             }
         }
         
-        // ==================== ZOOM ====================
         function applyZoomToCanvas() { canvas.style.transform = `scale(${zoom})`; canvas.style.transformOrigin = '0 0'; }
         function iconZoomIn() { iconSize = Math.min(iconSize + 4, 80); saveUserData(); showToast(`🔍 Ícone: ${iconSize}px`); }
         function iconZoomOut() { iconSize = Math.max(iconSize - 4, 20); saveUserData(); showToast(`🔍 Ícone: ${iconSize}px`); }
@@ -1357,7 +1727,6 @@ HTML_TEMPLATE = r"""
         function showToast(message) { const toast = document.createElement('div'); toast.className = 'toast'; toast.textContent = message; document.body.appendChild(toast); setTimeout(() => toast.remove(), 3000); }
         function closeModal() { if(window.currentModal) { document.body.removeChild(window.currentModal); window.currentModal = null; } }
         
-        // ==================== DRAWING ====================
         function drawGrid() {
             if(!showGrid) return;
             const step = 50; ctx.save(); ctx.strokeStyle = '#e0e0e0'; ctx.lineWidth = 0.5;
@@ -1369,9 +1738,6 @@ HTML_TEMPLATE = r"""
         function drawBackground() {
             if(backgroundImageObj && backgroundImageObj.complete && backgroundImageObj.src && backgroundWidth > 0) {
                 ctx.save(); ctx.globalAlpha = backgroundOpacity; ctx.drawImage(backgroundImageObj, backgroundX, backgroundY, backgroundWidth, backgroundHeight); ctx.globalAlpha = 1;
-                if(isBackgroundSelected) {
-                    ctx.strokeStyle = '#005f99'; ctx.lineWidth = 3; ctx.setLineDash([8, 6]); ctx.strokeRect(backgroundX, backgroundY, backgroundWidth, backgroundHeight); ctx.setLineDash([]);
-                }
                 ctx.restore();
             }
         }
@@ -1400,18 +1766,15 @@ HTML_TEMPLATE = r"""
                 const cableInfo = cableColors[conn.type] || cableColors['cat6']; if (!cableInfo) return;
                 const isWireless = cableInfo.type === 'wireless'; const isSelected = (selectedConnectionIndex === idx);
                 ctx.save();
-                if(isWireless) {
-                    ctx.setLineDash([10, 8]); ctx.strokeStyle = cableInfo.color; ctx.lineWidth = isSelected ? 4 : 2;
-                    ctx.beginPath(); ctx.moveTo(fromComp.x, fromComp.y); ctx.lineTo(toComp.x, toComp.y); ctx.stroke();
-                } else {
-                    ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(fromComp.x, fromComp.y); ctx.lineTo(toComp.x, toComp.y); ctx.strokeStyle = cableInfo.color; ctx.lineWidth = isSelected ? 4 : 2; ctx.stroke();
-                }
-                ctx.fillStyle = '#6c757d'; ctx.font = `${9}px Arial`;
-                ctx.fillText(`${cableInfo.icon} ${cableInfo.name}`, (fromComp.x+toComp.x)/2 - 20, (fromComp.y+toComp.y)/2 - 5);
-                if(isSelected) { ctx.strokeStyle = '#005f99'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.moveTo(fromComp.x, fromComp.y); ctx.lineTo(toComp.x, toComp.y); ctx.stroke(); ctx.setLineDash([]); }
+                if(isWireless) { ctx.setLineDash([10, 8]); } else { ctx.setLineDash([]); }
+                ctx.strokeStyle = cableInfo.color; ctx.lineWidth = isSelected ? 4 : 2;
+                ctx.beginPath(); ctx.moveTo(fromComp.x, fromComp.y); ctx.lineTo(toComp.x, toComp.y); ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = '#6c757d'; ctx.font = `${9}px Arial`; ctx.textAlign = 'center';
+                ctx.fillText(`${cableInfo.icon} ${cableInfo.name}`, (fromComp.x+toComp.x)/2, (fromComp.y+toComp.y)/2 - 5);
+                ctx.textAlign = 'start';
                 ctx.restore();
             });
-            trafficAnimation = (trafficAnimation + 0.015) % 1;
         }
         
         function drawShapes() {
@@ -1447,15 +1810,13 @@ HTML_TEMPLATE = r"""
                 ctx.save(); 
                 if (comp.rotation) { ctx.translate(comp.x, comp.y); ctx.rotate((comp.rotation || 0) * Math.PI / 180); ctx.translate(-comp.x, -comp.y); }
                 const halfSize = iconSize / 2;
-                
                 if(comp.iconFile) {
                     ctx.drawImage(getCachedImage(`/uploads/icons/${comp.iconFile}`), comp.x-halfSize, comp.y-halfSize, iconSize, iconSize);
                 } else {
-                    ctx.fillStyle = comp.color || '#005f99'; ctx.beginPath(); ctx.arc(comp.x, comp.y, iconSize/2, 0, 2*Math.PI); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = `${iconSize/2}px Arial`; ctx.textAlign = 'center'; ctx.fillText(comp.icon || '📦', comp.x, comp.y + iconSize/4); ctx.textAlign = 'start';
+                    ctx.fillStyle = comp.color || '#005f99'; ctx.beginPath(); ctx.arc(comp.x, comp.y, iconSize/2, 0, 2*Math.PI); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = `${iconSize/2}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(comp.icon || '📦', comp.x, comp.y); ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
                 }
                 ctx.setTransform(1, 0, 0, 1, 0, 0); 
                 ctx.fillStyle = '#005f99'; ctx.font = `${12}px Arial`; ctx.textAlign = 'center'; ctx.fillText(comp.name, comp.x, comp.y - (iconSize/2) - 8);
-                if(comp.ip) { ctx.fillStyle = '#6c757d'; ctx.font = `${10}px Arial`; ctx.fillText(comp.ip, comp.x, comp.y - (iconSize/2) - 20); }
                 ctx.textAlign = 'start';
                 if(isSelected) { ctx.strokeStyle = '#005f99'; ctx.lineWidth = 2; ctx.strokeRect(comp.x - halfSize - 4, comp.y - halfSize - 4, iconSize + 8, iconSize + 8); }
                 if(comp.type === 'camera') drawFieldOfView(comp);
@@ -1508,15 +1869,11 @@ HTML_TEMPLATE = r"""
                 if(!url.startsWith('http://') && !url.startsWith('https://')) url = 'http://' + url; 
                 if(comp.port && comp.port !== 80) url += ':' + comp.port; 
                 window.open(url, '_blank'); 
-            } else if(comp) { 
-                showToast(`⚠️ "${comp.name}" sem IP`); 
-            } 
+            } else if(comp) { showToast(`⚠️ "${comp.name}" sem IP`); } 
         }
         
-        // ==================== SHAPE HANDLING ====================
         function endShape(start, end, type) {
             if(!start || !end) return;
-            // Ignorar se a distância for muito pequena (evita criação acidental)
             if (type === 'line') {
                 const dist = Math.hypot(end.x - start.x, end.y - start.y);
                 if (dist < 5) { showToast('⚠️ Linha muito curta'); return; }
@@ -1555,7 +1912,6 @@ HTML_TEMPLATE = r"""
         }
         
         function isPointNearConnection(x, y, fromComp, toComp) { 
-            // Tolerância maior no mobile
             const tolerance = isMobile ? 20 : 12;
             return pointToLineDistance(x, y, fromComp.x, fromComp.y, toComp.x, toComp.y) < tolerance; 
         }
@@ -1569,7 +1925,6 @@ HTML_TEMPLATE = r"""
             return false;
         }
         
-        // ==================== UNIFIED HANDLERS (touch + mouse) ====================
         let longPressTimer = null;
         let touchStartPos = null;
         let touchMoved = false;
@@ -1579,18 +1934,15 @@ HTML_TEMPLATE = r"""
         function handleStart(e) {
             const touch = e.touches ? e.touches[0] : e;
             if (!touch) return;
-            
             const pos = getMousePos(e);
             lastMousePos = pos;
             touchMoved = false;
             touchStartPos = pos;
             
-            // LONG PRESS: prepara para menu de contexto no mobile
             if (e.touches) {
                 clearTimeout(longPressTimer);
                 longPressTimer = setTimeout(() => {
                     if (!touchMoved) {
-                        // Long press - verifica se tocou em algo
                         for(let comp of components) { 
                             if(Math.hypot(pos.x - comp.x, pos.y - comp.y) < iconSize/2) { 
                                 showContextMenu({preventDefault:()=>{}, pageX: touch.clientX, pageY: touch.clientY}, comp); 
@@ -1607,21 +1959,12 @@ HTML_TEMPLATE = r"""
                 }, 700);
             }
             
-            // SHAPE MODE: inicia desenho
-            if(shapeMode) { 
-                shapeStart = {x: pos.x, y: pos.y}; 
-                drawingPreview = true; 
-                if (e.cancelable) e.preventDefault();
-                return; 
-            }
+            if(shapeMode) { shapeStart = {x: pos.x, y: pos.y}; drawingPreview = true; if (e.cancelable) e.preventDefault(); return; }
             
-            // Componente clicado?
             let clickedComp = null;
             for(let i=components.length-1; i>=0; i--) { 
                 const comp = components[i]; 
-                if(Math.hypot(pos.x - comp.x, pos.y - comp.y) < iconSize/2) { 
-                    clickedComp = comp; break; 
-                } 
+                if(Math.hypot(pos.x - comp.x, pos.y - comp.y) < iconSize/2) { clickedComp = comp; break; } 
             }
             
             if(clickedComp) {
@@ -1632,7 +1975,6 @@ HTML_TEMPLATE = r"""
                     selectedComponents = [clickedComp]; 
                     dragging = true; 
                     dragOffset = {x: clickedComp.x - pos.x, y: clickedComp.y - pos.y}; 
-                    isBackgroundSelected = false; 
                     selectedShapes = []; 
                     selectedConnectionIndex = null; 
                 }
@@ -1642,7 +1984,6 @@ HTML_TEMPLATE = r"""
                 return;
             }
             
-            // Forma clicada?
             let clickedShape = null;
             for(let i=shapes.length-1; i>=0; i--) { 
                 const shape = shapes[i]; 
@@ -1661,7 +2002,6 @@ HTML_TEMPLATE = r"""
                 return;
             }
             
-            // Conexão clicada?
             for(let i = 0; i < connections.length; i++) { 
                 const conn = connections[i]; 
                 const fromComp = components.find(c => c.id === conn.from); 
@@ -1677,7 +2017,6 @@ HTML_TEMPLATE = r"""
                 } 
             }
             
-            // Background clicado?
             if(backgroundWidth > 0 && backgroundHeight > 0) {
                 if(pos.x >= backgroundX && pos.x <= backgroundX + backgroundWidth && pos.y >= backgroundY && pos.y <= backgroundY + backgroundHeight) {
                     isBackgroundSelected = true; 
@@ -1688,7 +2027,6 @@ HTML_TEMPLATE = r"""
                 }
             }
             
-            // Deselect
             selectedComponents = []; 
             selectedShapes = []; 
             selectedConnectionIndex = null; 
@@ -1699,7 +2037,6 @@ HTML_TEMPLATE = r"""
         function handleMove(e) {
             if (e.cancelable) e.preventDefault();
             
-            // PINCH ZOOM
             if (e.touches && e.touches.length === 2) {
                 clearTimeout(longPressTimer);
                 const dx = e.touches[0].clientX - e.touches[1].clientX;
@@ -1712,10 +2049,8 @@ HTML_TEMPLATE = r"""
             
             const touch = e.touches ? e.touches[0] : e;
             if (!touch) return;
-            
             const pos = getMousePos(e);
             
-            // Detecta movimento para cancelar long press
             if (touchStartPos && Math.hypot(pos.x - touchStartPos.x, pos.y - touchStartPos.y) > 10) {
                 touchMoved = true;
                 clearTimeout(longPressTimer);
@@ -1757,17 +2092,12 @@ HTML_TEMPLATE = r"""
         
         function handleEnd(e) {
             clearTimeout(longPressTimer);
-            
-            // Se mudou muito, não foi long press
             if (touchStartPos && lastMousePos) {
                 const dist = Math.hypot(lastMousePos.x - touchStartPos.x, lastMousePos.y - touchStartPos.y);
                 if (dist > 15) touchMoved = true;
             }
-            
-            // Reset pinch
             pinchStartDist = 0;
             
-            // FINALIZA SHAPE
             if(shapeMode && shapeStart) { 
                 let endPos;
                 if (e.changedTouches && e.changedTouches.length > 0) {
@@ -1782,12 +2112,9 @@ HTML_TEMPLATE = r"""
             
             dragging = false; 
             isDraggingBackgroundImage = false;
-            isDrawingConnection = false; 
-            connectionStart = null;
             touchStartPos = null;
         }
         
-        // ==================== PROPERTIES PANEL (COMPLETO) ====================
         function showProperties(comp) {
             const div = document.getElementById('props-content');
             if(!comp) { 
@@ -1888,7 +2215,6 @@ HTML_TEMPLATE = r"""
             `;
         }
         
-        // ==================== AÇÕES ====================
         window.updateSelectedConnection = (idx) => { 
             const cableType = document.getElementById('conn-cable-type').value; 
             connections[idx].type = cableType; 
@@ -1914,12 +2240,9 @@ HTML_TEMPLATE = r"""
             const cableType = document.getElementById('prop-cable-type').value; 
             if(toId) { 
                 connections.push({from: fromId, to: parseInt(toId), type: cableType}); 
-                const cableInfo = cableColors[cableType]; 
-                showToast(`✅ Conexão ${cableInfo ? cableInfo.name : cableType} adicionada!`); 
+                showToast(`✅ Conexão adicionada!`); 
                 saveUserData(); 
-            } else { 
-                showToast('⚠️ Selecione um equipamento'); 
-            } 
+            } else { showToast('⚠️ Selecione um equipamento'); } 
         };
         
         window.rotateLeft = (id) => { const comp = components.find(c => c.id === id); if(comp) { comp.rotation = (comp.rotation || 0) - 15; saveUserData(); showToast(`🔄 ${comp.name} girado`); } };
@@ -1993,17 +2316,15 @@ HTML_TEMPLATE = r"""
             }
         };
         
-        // ==================== CONTEXT MENUS ====================
         function showContextMenu(e, comp) {
             if (e.preventDefault) e.preventDefault(); 
             contextMenuComponent = comp;
             const menu = document.getElementById('contextMenu');
             menu.innerHTML = `
-                <div class="context-menu-item" onclick="accessDeviceFromMenu()">🌐 Acessar Dispositivo</div>
+                <div class="context-menu-item" onclick="accessDeviceFromMenu()">🌐 Acessar</div>
                 <div class="context-menu-item" onclick="copyIpFromMenu()">📋 Copiar IP</div>
-                <div class="context-menu-item" onclick="rotateLeftFromMenu()">🔄 Rotacionar Esquerda</div>
-                <div class="context-menu-item" onclick="rotateRightFromMenu()">🔄 Rotacionar Direita</div>
-                <div class="context-menu-item" onclick="flipComponentFromMenu()">🔁 Inverter Posição</div>
+                <div class="context-menu-item" onclick="rotateLeftFromMenu()">🔄 Girar -</div>
+                <div class="context-menu-item" onclick="rotateRightFromMenu()">🔄 Girar +</div>
                 <div class="context-menu-item" onclick="duplicateComponentFromMenu()">📋 Duplicar</div>
                 <div class="context-menu-item" onclick="openPermanentIconModalFromMenu()">🎨 Alterar Ícone</div>
                 <div class="context-menu-item" onclick="deleteComponentFromMenu()" style="color:#dc3545;">🗑 Remover</div>
@@ -2035,7 +2356,6 @@ HTML_TEMPLATE = r"""
         window.copyIpFromMenu = () => { if(contextMenuComponent && contextMenuComponent.ip) { navigator.clipboard.writeText(contextMenuComponent.ip).catch(()=>{}); showToast(`📋 IP copiado!`); } else { showToast('Sem IP'); } closeContextMenu(); };
         window.rotateLeftFromMenu = () => { if(contextMenuComponent) { contextMenuComponent.rotation = (contextMenuComponent.rotation || 0) - 15; saveUserData(); } closeContextMenu(); };
         window.rotateRightFromMenu = () => { if(contextMenuComponent) { contextMenuComponent.rotation = (contextMenuComponent.rotation || 0) + 15; saveUserData(); } closeContextMenu(); };
-        window.flipComponentFromMenu = () => { if(contextMenuComponent) { contextMenuComponent.rotation = (contextMenuComponent.rotation || 0) + 180; saveUserData(); } closeContextMenu(); };
         window.duplicateComponentFromMenu = () => { 
             if(contextMenuComponent) { 
                 const newComp = JSON.parse(JSON.stringify(contextMenuComponent)); 
@@ -2083,7 +2403,6 @@ HTML_TEMPLATE = r"""
             closeContextMenu(); 
         };
         
-        // ==================== PERMANENT ICON ====================
         function openPermanentIconModal(comp) {
             const modal = document.createElement('div'); 
             modal.className = 'modal';
@@ -2101,7 +2420,6 @@ HTML_TEMPLATE = r"""
                 showToast(`✅ Ícone aplicado a ${comp.name}`); 
                 closeModal(); 
                 saveUserData(); 
-                const permModal = document.getElementById('permIconModal');
             }
             else if(comp) showToast('⚠️ Selecione uma imagem');
             window.permIconFilename = null;
@@ -2109,7 +2427,6 @@ HTML_TEMPLATE = r"""
         
         window.openPermanentIconModalById = (id) => { const comp = components.find(c => c.id === id); if(comp) openPermanentIconModal(comp); };
         
-        // ==================== PROPERTIES OPEN/CLOSE ====================
         function openProperties() { 
             document.getElementById('propertiesPanel').classList.add('open');
             if (isMobile) document.getElementById('mobileOverlay').classList.add('active');
@@ -2122,11 +2439,10 @@ HTML_TEMPLATE = r"""
         
         function readImageAsBase64(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.readAsDataURL(file); }); }
         
-        // ==================== BACKGROUND ====================
         function openBackgroundModal() {
             const modal = document.createElement('div'); 
             modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🖼️ Planta Baixa</h3><div class="background-controls" style="background:var(--bg-tertiary); padding:12px; border-radius:8px; margin-bottom:15px;"><label><strong>📁 Importar Imagem</strong></label><input type="file" id="bgImageUpload" accept="image/*" style="margin-top:8px;"><button class="btn btn-primary" style="margin-top:8px; width:100%;" onclick="importLocalImage()">📤 Importar</button></div><div class="background-controls" style="background:var(--bg-tertiary); padding:12px; border-radius:8px; margin-bottom:15px;"><label><strong>🎨 Opacidade</strong></label><input type="range" id="bgOpacity" min="0.1" max="1" step="0.01" value="${backgroundOpacity}" onchange="updateBackgroundOpacity(this.value)" style="margin-top:8px;"><span id="opacityValue">${Math.round(backgroundOpacity * 100)}%</span></div>${backgroundImage ? `<div style="margin-bottom:15px;"><button class="btn btn-secondary" style="width:100%; margin-bottom:8px;" onclick="selectBackgroundImage()">🔍 Selecionar Imagem</button><button class="btn btn-danger" style="width:100%;" onclick="removeBackground()">🗑 Remover Imagem</button></div>` : ''}<div class="modal-buttons"><button class="btn btn-danger" style="width:100%;" onclick="closeModal()">❌ Fechar</button></div></div>`;
+            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🖼️ Planta Baixa</h3><div style="background:var(--bg-tertiary); padding:12px; border-radius:8px; margin-bottom:15px;"><label><strong>📁 Importar Imagem</strong></label><input type="file" id="bgImageUpload" accept="image/*" style="margin-top:8px;"><button class="btn btn-primary" style="margin-top:8px; width:100%;" onclick="importLocalImage()">📤 Importar</button></div><div style="background:var(--bg-tertiary); padding:12px; border-radius:8px; margin-bottom:15px;"><label><strong>🎨 Opacidade</strong></label><input type="range" id="bgOpacity" min="0.1" max="1" step="0.01" value="${backgroundOpacity}" onchange="updateBackgroundOpacity(this.value)" style="margin-top:8px;"><span id="opacityValue">${Math.round(backgroundOpacity * 100)}%</span></div>${backgroundImage ? `<div style="margin-bottom:15px;"><button class="btn btn-secondary" style="width:100%; margin-bottom:8px;" onclick="selectBackgroundImage()">🔍 Selecionar</button><button class="btn btn-danger" style="width:100%;" onclick="removeBackground()">🗑 Remover</button></div>` : ''}<div class="modal-buttons"><button class="btn btn-danger" style="width:100%;" onclick="closeModal()">❌ Fechar</button></div></div>`;
             document.body.appendChild(modal); 
             window.currentModal = modal;
         }
@@ -2169,7 +2485,6 @@ HTML_TEMPLATE = r"""
             } catch(e) { showToast('Erro ao enviar'); }
         }
         
-        // ==================== PROJECT ACTIONS ====================
         function newProject() { 
             if (confirm('Novo projeto? Dados não salvos serão perdidos.')) { 
                 components = []; connections = []; shapes = []; selectedComponents = []; selectedShapes = []; selectedConnectionIndex = null; 
@@ -2258,7 +2573,7 @@ HTML_TEMPLATE = r"""
             shapeMode = mode; 
             document.querySelectorAll('.shape-btn').forEach(btn => btn.classList.remove('active')); 
             if (event && event.target) event.target.classList.add('active'); 
-            showToast(`✏️ Modo: ${getShapeName(mode)} - Desenhe no canvas`); 
+            showToast(`✏️ Modo: ${getShapeName(mode)}`); 
         }
         function cancelShapeMode() { shapeMode = null; drawingPreview = null; document.querySelectorAll('.shape-btn').forEach(btn => btn.classList.remove('active')); showToast('❌ Cancelado'); }
         function toggleShapesToolbar() { const toolbar = document.getElementById('shapesToolbar'); toolbar.style.display = toolbar.style.display === 'none' ? 'flex' : 'none'; }
@@ -2274,6 +2589,12 @@ HTML_TEMPLATE = r"""
             if (data.success) {
                 currentUser = username; userRole = data.role;
                 document.getElementById('loginModal').style.display = 'none';
+                document.getElementById('loginSettingsBtn').style.display = 'none';
+                // Esconde fundo do login
+                document.getElementById('loginBgVideo').style.display = 'none';
+                document.getElementById('loginBgGif').style.display = 'none';
+                document.getElementById('loginBgOverlay').style.display = 'none';
+                
                 document.getElementById('loadingOverlay').style.display = 'flex';
                 document.getElementById('toolbar').style.display = 'flex';
                 document.getElementById('userInfo').innerHTML = `<span>👤 ${username}</span><span class="user-role">${data.role.toUpperCase()}</span>`;
@@ -2293,7 +2614,6 @@ HTML_TEMPLATE = r"""
         
         function logout() { fetch('/api/logout', { method: 'POST' }).then(() => location.reload()); }
         
-        // ==================== USERS ====================
         async function openUserManagement() {
             const response = await fetch('/api/users'); 
             const users = await response.json();
@@ -2347,7 +2667,6 @@ HTML_TEMPLATE = r"""
             }
         }
         
-        // ==================== DEV / BG IMAGE ====================
         function openDevImageModal() {
             if (userRole !== 'admin' && userRole !== 'master') return;
             const modal = document.createElement('div'); modal.className = 'modal';
@@ -2367,181 +2686,6 @@ HTML_TEMPLATE = r"""
             window.tempDevImage = null; closeModal();
         };
         
-        function openDynamicBgModal() {
-            const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🎬 Fundo Dinâmico</h3><input type="file" id="newBgFile" accept="image/gif, video/mp4"><div class="image-preview" id="newBgPreview"></div><div class="property-group" style="margin-top:10px;"><label>Opacidade</label><input type="range" id="dynamicBgOpacity" min="0.05" max="1" step="0.05" value="0.3" oninput="document.getElementById('bgVideo').style.opacity = this.value; document.getElementById('bgGif').style.opacity = this.value;"></div><div class="modal-buttons"><button class="btn btn-primary" onclick="applyDynamicBg()">✅ Aplicar</button><button class="btn btn-danger" onclick="closeModal()">❌ Cancelar</button></div></div>`;
-            document.body.appendChild(modal); window.currentModal = modal;
-            const fileInput = document.getElementById('newBgFile');
-            if (fileInput) { fileInput.onchange = (e) => { const file = e.target.files[0]; if (file) { const preview = document.getElementById('newBgPreview'); const url = URL.createObjectURL(file); if (file.type.startsWith('image')) { preview.innerHTML = `<img src="${url}" style="max-width:100px;max-height:100px;">`; } else { preview.innerHTML = `<video src="${url}" style="max-width:100px;max-height:100px;" autoplay loop muted></video>`; } window.tempBgFile = file; } }; }
-        }
-        window.applyDynamicBg = () => {
-            if (!window.tempBgFile) { showToast('Selecione um arquivo'); return; }
-            const url = URL.createObjectURL(window.tempBgFile);
-            if (window.tempBgFile.type.startsWith('image')) {
-                document.getElementById('bgVideo').style.display = 'none';
-                document.getElementById('bgGif').src = url;
-                document.getElementById('bgGif').style.display = 'block';
-            } else {
-                document.getElementById('bgGif').style.display = 'none';
-                document.getElementById('bgVideo').src = url;
-                document.getElementById('bgVideo').style.display = 'block';
-            }
-            showToast('✅ Fundo aplicado!'); closeModal();
-        };
-        
-        // ==================== CATEGORY/DEVICE MANAGEMENT ====================
-        function openAddCategoryModal() {
-            const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">📁 Nova Categoria</h3><input type="text" id="catName" placeholder="Nome"><input type="text" id="catIcon" placeholder="Ícone" value="📁"><div class="modal-buttons"><button class="btn btn-primary" onclick="addCategory()">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
-            document.body.appendChild(modal); window.currentModal = modal;
-        }
-        window.addCategory = () => {
-            const name = document.getElementById('catName')?.value; 
-            const icon = document.getElementById('catIcon')?.value;
-            if (!name) { showToast('Digite um nome'); return; }
-            if (categories[name]) { showToast('Categoria já existe'); return; }
-            categories[name] = { icon: icon || '📁', devices: [] }; 
-            saveUserData(); saveGlobalLibrary(); closeModal(); renderPalette(); 
-            showToast(`✅ Categoria "${name}" adicionada!`);
-        };
-        
-        window.editCategory = (catName) => {
-            const catData = categories[catName];
-            const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">✏️ Editar Categoria</h3><input type="text" id="catName" value="${catName}"><input type="text" id="catIcon" value="${catData.icon}"><div class="modal-buttons"><button class="btn btn-primary" onclick="updateCategory('${catName.replace(/'/g, "\\'")}')">Salvar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
-            document.body.appendChild(modal); window.currentModal = modal;
-        };
-        window.updateCategory = (oldName) => {
-            const newName = document.getElementById('catName')?.value; 
-            const icon = document.getElementById('catIcon')?.value;
-            if (!newName) return;
-            const catData = categories[oldName]; 
-            delete categories[oldName]; 
-            categories[newName] = { ...catData, icon: icon };
-            saveUserData(); saveGlobalLibrary(); closeModal(); renderPalette(); 
-            showToast(`✅ Atualizada!`);
-        };
-        window.deleteCategory = (catName) => {
-            if (confirm(`Excluir "${catName}" e todos os dispositivos?`)) { 
-                delete categories[catName]; 
-                saveUserData(); saveGlobalLibrary(); renderPalette(); 
-                showToast(`🗑 Removida!`); 
-            }
-        };
-        
-        window.addDeviceToCategory = (catName) => {
-            const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">➕ Novo Equipamento em ${catName}</h3><input type="text" id="devName" placeholder="Nome"><input type="text" id="devIcon" placeholder="Ícone" value="📦"><input type="text" id="devDesc" placeholder="Descrição"><input type="color" id="devColor" value="#005f99"><input type="text" id="devType" placeholder="Tipo (camera, switch...)"><div class="modal-buttons"><button class="btn btn-primary" onclick="addDevice('${catName.replace(/'/g, "\\'")}')">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
-            document.body.appendChild(modal); window.currentModal = modal;
-        };
-        window.addDevice = (catName) => {
-            const name = document.getElementById('devName')?.value; 
-            const icon = document.getElementById('devIcon')?.value; 
-            const desc = document.getElementById('devDesc')?.value; 
-            const color = document.getElementById('devColor')?.value; 
-            const type = document.getElementById('devType')?.value;
-            if (!name) { showToast('Digite um nome'); return; }
-            categories[catName].devices.push({ name, icon: icon || '📦', desc: desc || '', type: type || 'custom', color: color || '#005f99', iconFile: null });
-            saveUserData(); saveGlobalLibrary(); closeModal(); renderPalette(); 
-            showToast(`✅ "${name}" adicionado!`);
-        };
-        
-        window.editDevice = (catName, idx) => {
-            const device = categories[catName].devices[idx];
-            const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">✏️ Editar</h3><input type="text" id="devName" value="${device.name.replace(/"/g, '&quot;')}"><input type="text" id="devIcon" value="${device.icon || '📦'}"><input type="text" id="devDesc" value="${device.desc || ''}"><input type="color" id="devColor" value="${device.color || '#005f99'}"><div class="modal-buttons"><button class="btn btn-primary" onclick="updateDevice('${catName.replace(/'/g, "\\'")}', ${idx})">Salvar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
-            document.body.appendChild(modal); window.currentModal = modal;
-        };
-        window.updateDevice = (catName, idx) => {
-            const name = document.getElementById('devName')?.value; 
-            const icon = document.getElementById('devIcon')?.value; 
-            const desc = document.getElementById('devDesc')?.value; 
-            const color = document.getElementById('devColor')?.value;
-            if (!name) return;
-            categories[catName].devices[idx] = { ...categories[catName].devices[idx], name, icon: icon || '📦', desc: desc || '', color: color };
-            saveUserData(); saveGlobalLibrary(); closeModal(); renderPalette(); 
-            showToast(`✅ Atualizado!`);
-        };
-        window.deleteDevice = (catName, idx) => {
-            if (confirm('Excluir?')) { 
-                categories[catName].devices.splice(idx, 1); 
-                saveUserData(); saveGlobalLibrary(); renderPalette(); 
-                showToast(`🗑 Removido!`); 
-            }
-        };
-        
-        function openAddDeviceModal() {
-            const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🔧 Novo Equipamento</h3><input type="text" id="devName" placeholder="Nome"><input type="text" id="devIcon" placeholder="Ícone" value="📦"><input type="text" id="devDesc" placeholder="Descrição"><input type="color" id="devColor" value="#005f99"><div class="modal-buttons"><button class="btn btn-primary" onclick="addCustomDevice()">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
-            document.body.appendChild(modal); window.currentModal = modal;
-        }
-        window.addCustomDevice = () => {
-            const name = document.getElementById('devName')?.value; 
-            const icon = document.getElementById('devIcon')?.value; 
-            const desc = document.getElementById('devDesc')?.value; 
-            const color = document.getElementById('devColor')?.value;
-            if (!name) { showToast('Digite um nome'); return; }
-            customDevices.push({ id: Date.now(), name, icon: icon || '📦', desc: desc || '', type: 'custom', color: color || '#005f99' });
-            saveUserData(); saveGlobalLibrary(); closeModal(); renderPalette(); 
-            showToast(`✅ Adicionado!`);
-        };
-        
-        function openAddConnectionModal() {
-            const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🔌 Nova Conexão</h3><input type="text" id="connName" placeholder="Nome"><input type="text" id="connIcon" placeholder="Ícone" value="🔌"><input type="color" id="connColor" value="#005f99"><input type="text" id="connSpeed" placeholder="Velocidade" value="N/A"><select id="connType"><option value="cable">Cabeado</option><option value="wireless">Sem Fio</option></select><div class="modal-buttons"><button class="btn btn-primary" onclick="addNewConnection()">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
-            document.body.appendChild(modal); window.currentModal = modal;
-        }
-        window.addNewConnection = () => {
-            const name = document.getElementById('connName')?.value; 
-            const icon = document.getElementById('connIcon')?.value; 
-            const color = document.getElementById('connColor')?.value; 
-            const speed = document.getElementById('connSpeed')?.value; 
-            const type = document.getElementById('connType')?.value;
-            if (!name) { showToast('Digite um nome'); return; }
-            const key = getConnectionKey(name);
-            if (!connectionCategories['Personalizadas']) connectionCategories['Personalizadas'] = { icon: '🔌', connections: [] };
-            connectionCategories['Personalizadas'].connections.push({ name, icon: icon || '🔌', color, speed: speed || 'N/A', type, desc: '' });
-            cableColors[key] = { name, icon: icon || '🔌', color, speed, type, desc: '' };
-            saveUserData(); saveGlobalLibrary(); closeModal(); renderConnectionsPalette(); 
-            showToast(`✅ Conexão "${name}" adicionada!`);
-        };
-        
-        // ==================== ICON MODALS (CATEGORY/CONNECTION/DEVICE) ====================
-        function openCategoryIconModal(catName) {
-            const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🎨 Ícone da Categoria</h3><p>${catName}</p><input type="text" id="catEmoji" value="${categories[catName]?.icon || '📁'}" maxlength="2"><div class="property-group"><label>OU upload</label><input type="file" id="catIconImage" accept="image/*"><div class="image-preview" id="catIconPreview"></div></div><div class="modal-buttons"><button class="btn btn-primary" onclick="applyCategoryIcon('${catName.replace(/'/g, "\\'")}')">Aplicar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
-            document.body.appendChild(modal); window.currentModal = modal;
-            const imageInput = document.getElementById('catIconImage');
-            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'category' }) }); const data = await response.json(); if (data.success) { window.tempCategoryIconFile = data.filename; } } }; }
-        }
-        window.applyCategoryIcon = (catName) => {
-            const emoji = document.getElementById('catEmoji').value; 
-            const iconFile = window.tempCategoryIconFile || null;
-            if (emoji) { categories[catName].icon = emoji; categories[catName].iconFile = null; }
-            else if (iconFile) { categories[catName].iconFile = iconFile; categories[catName].icon = null; }
-            window.tempCategoryIconFile = null; saveUserData(); saveGlobalLibrary(); closeModal(); renderPalette(); 
-            showToast(`✅ Ícone atualizado!`);
-        };
-        
-        function openDeviceIconModal(catName, idx) {
-            const device = categories[catName].devices[idx];
-            const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🎨 Ícone do Dispositivo</h3><p>${device.name}</p><input type="text" id="devEmoji" value="${device.icon || '📦'}" maxlength="2"><div class="property-group"><label>OU upload</label><input type="file" id="devIconImage" accept="image/*"><div class="image-preview" id="devIconPreview"></div></div><div class="modal-buttons"><button class="btn btn-primary" onclick="applyDeviceIcon('${catName.replace(/'/g, "\\'")}', ${idx})">Aplicar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
-            document.body.appendChild(modal); window.currentModal = modal;
-            const imageInput = document.getElementById('devIconImage');
-            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'equipment' }) }); const data = await response.json(); if (data.success) { window.tempDeviceIconFile = data.filename; } } }; }
-        }
-        window.applyDeviceIcon = (catName, idx) => {
-            const emoji = document.getElementById('devEmoji').value; 
-            const iconFile = window.tempDeviceIconFile || null;
-            const device = categories[catName].devices[idx];
-            if (emoji) { device.icon = emoji; device.iconFile = null; }
-            else if (iconFile) { device.iconFile = iconFile; device.icon = null; }
-            window.tempDeviceIconFile = null; saveUserData(); saveGlobalLibrary(); closeModal(); renderPalette(); 
-            showToast(`✅ Ícone atualizado!`);
-        };
-        
-        // ==================== MATRIX/INTRO ====================
         function createMatrixAnimation(containerId) {
             const container = document.getElementById(containerId); if (!container) return; container.innerHTML = '';
             const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン'; 
@@ -2576,10 +2720,14 @@ HTML_TEMPLATE = r"""
         window.nextSlide = () => showSlide(slideIndex + 1); 
         window.prevSlide = () => showSlide(slideIndex - 1); 
         window.currentSlide = (index) => showSlide(index);
+        
         function closeIntroAndShowLogin() { 
             document.getElementById('introScreen').style.display = 'none'; 
             document.getElementById('loginModal').style.display = 'flex'; 
-            createMatrixAnimation('matrixBg'); 
+            document.getElementById('loginSettingsBtn').style.display = 'flex';
+            createMatrixAnimation('matrixBg');
+            // Aplica fundo dinâmico ao login
+            applyLoginBgToScreen(currentLoginBgConfig);
         }
         
         function loadDevImages() {
@@ -2609,8 +2757,34 @@ HTML_TEMPLATE = r"""
             img.src = devImageBase64 ? 'data:image/png;base64,' + devImageBase64 : '/static/dev.png?v=2';
         }
         
-        // ==================== EVENT LISTENERS ====================
-        // Drag drop (desktop)
+        // ==================== LISTENERS DE ARQUIVO DE FUNDO ====================
+        document.getElementById('loginBgFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            selectedLoginBgFile = file;
+            const preview = document.getElementById('loginBgPreview');
+            
+            if (file.type.startsWith('video/')) {
+                selectedLoginBgType = 'video';
+                const url = URL.createObjectURL(file);
+                preview.innerHTML = `<video src="${url}" autoplay loop muted playsinline style="max-width:100%; max-height:100%;"></video>`;
+            } else if (file.type.startsWith('image/')) {
+                selectedLoginBgType = 'image';
+                const url = URL.createObjectURL(file);
+                preview.innerHTML = `<img src="${url}" style="max-width:100%; max-height:100%;">`;
+            } else {
+                showToast('⚠️ Formato não suportado. Use imagem, GIF ou MP4.');
+                selectedLoginBgFile = null;
+                return;
+            }
+        });
+        
+        document.getElementById('loginBgOpacityRange').addEventListener('input', function(e) {
+            document.getElementById('loginBgOpacityValue').textContent = Math.round(parseFloat(e.target.value) * 100) + '%';
+        });
+        
+        // ==================== EVENT LISTENERS DO CANVAS ====================
         canvas.addEventListener('dragover', (e) => e.preventDefault());
         canvas.addEventListener('drop', (e) => {
             e.preventDefault(); 
@@ -2622,12 +2796,10 @@ HTML_TEMPLATE = r"""
             saveUserData();
         });
         
-        // Unified handlers - touch and mouse
         canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleStart(e); }, { passive: false });
         canvas.addEventListener('touchmove', (e) => { e.preventDefault(); handleMove(e); }, { passive: false });
         canvas.addEventListener('touchend', (e) => { handleEnd(e); });
         canvas.addEventListener('touchcancel', (e) => { handleEnd(e); });
-        
         canvas.addEventListener('mousedown', handleStart);
         canvas.addEventListener('mousemove', handleMove);
         canvas.addEventListener('mouseup', handleEnd);
@@ -2648,7 +2820,6 @@ HTML_TEMPLATE = r"""
             }
         });
         
-        // Previne zoom do navegador em double-tap
         let lastTap = 0;
         canvas.addEventListener('touchend', (e) => {
             const now = Date.now();
@@ -2658,6 +2829,7 @@ HTML_TEMPLATE = r"""
         
         // ==================== INIT ====================
         (async function init() {
+            await loadLoginBgConfig();
             await loadDefaultConfig();
             await loadDefaultConnections();
             categories = JSON.parse(JSON.stringify(defaultCategories));
@@ -2670,7 +2842,6 @@ HTML_TEMPLATE = r"""
         closeProperties();
         setTimeout(() => { const splash = document.getElementById('splashScreen'); if (splash) splash.style.display = 'none'; }, 3000);
         
-        // Expor funções
         window.newProject = newProject; window.saveProjectToFile = saveProjectToFile; window.loadProjectFromFile = loadProjectFromFile; window.exportPDF = exportPDF; window.exportPDFWithList = exportPDFWithList; window.generateBudget = generateBudget;
         window.zoomIn = zoomIn; window.zoomOut = zoomOut; window.resetZoom = resetZoom; window.iconZoomIn = iconZoomIn; window.iconZoomOut = iconZoomOut; window.resetIconSize = resetIconSize;
         window.togglePalette = togglePalette; window.closeModal = closeModal; window.openAddCategoryModal = openAddCategoryModal; window.openAddDeviceModal = openAddDeviceModal; window.openAddConnectionModal = openAddConnectionModal;
@@ -2679,9 +2850,19 @@ HTML_TEMPLATE = r"""
         window.openBackgroundModal = openBackgroundModal; window.updateBackgroundOpacity = updateBackgroundOpacity; window.removeBackground = removeBackground; window.importLocalImage = importLocalImage; window.selectBackgroundImage = selectBackgroundImage;
         window.closeIntroAndShowLogin = closeIntroAndShowLogin; window.closePropertiesPanel = closePropertiesPanel;
         window.nextSlide = nextSlide; window.prevSlide = prevSlide; window.currentSlide = currentSlide; window.deleteSelectedItems = deleteSelectedItems;
-        window.openDevImageModal = openDevImageModal; window.uploadNewDevImage = uploadNewDevImage; window.openDynamicBgModal = openDynamicBgModal; window.applyDynamicBg = applyDynamicBg;
+        window.openDevImageModal = openDevImageModal; window.uploadNewDevImage = uploadNewDevImage;
+        window.openLoginBgConfig = openLoginBgConfig; window.closeLoginBgConfig = closeLoginBgConfig; window.applyLoginBg = applyLoginBg; window.resetLoginBg = resetLoginBg;
         window.mobileTab = mobileTab; window.closeMobilePanels = closeMobilePanels;
-        window.openCategoryIconModal = openCategoryIconModal; window.applyCategoryIcon = applyCategoryIcon; window.openDeviceIconModal = openDeviceIconModal; window.applyDeviceIcon = applyDeviceIcon;
+        
+        // NOVAS FUNÇÕES DE ADMIN (necessárias)
+        window.openAddCategoryModal = openAddCategoryModal;
+        window.openAddDeviceModal = openAddDeviceModal;
+        window.openAddConnectionModal = openAddConnectionModal;
+        
+        // Fecha o modal de config com ESC ou clique fora
+        document.getElementById('bgConfigModal').addEventListener('click', function(e) {
+            if (e.target === this) closeLoginBgConfig();
+        });
     </script>
 </body>
 </html>
