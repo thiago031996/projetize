@@ -187,7 +187,6 @@ def delete_background_image(filename):
         except: pass
     return False
 
-# ============ CARREGAR CONFIGURAÇÃO DO FUNDO DO LOGIN ============
 def load_login_bg_config():
     if os.path.exists(LOGIN_BG_CONFIG_FILE):
         try:
@@ -399,25 +398,22 @@ def upload_dev_image():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-# ============ NOVAS ROTAS PARA FUNDO DO LOGIN ============
+# ============ ROTAS PARA FUNDO DO LOGIN ============
 @app.route('/api/login_bg_config', methods=['GET'])
 def get_login_bg_config():
     return jsonify({'success': True, 'config': load_login_bg_config()})
 
 @app.route('/api/upload_login_bg', methods=['POST'])
 def upload_login_bg():
-    """Rota para upload de GIF ou vídeo de fundo do login (SEM precisar estar logado)"""
     data = request.json
-    file_type = data.get('type', 'image')  # 'image' ou 'video'
+    file_type = data.get('type', 'image')
     file_data = data.get('data', '')
     
     if not file_data:
         return jsonify({'success': False, 'error': 'Dados vazios'}), 400
     
     try:
-        # Se for vídeo, salva direto (base64 de arquivo binário)
         if file_type == 'video':
-            # data é base64 puro do arquivo
             if ',' in file_data:
                 file_data = file_data.split(',')[1]
             ext = data.get('ext', '.mp4')
@@ -426,14 +422,12 @@ def upload_login_bg():
             with open(filepath, 'wb') as f:
                 f.write(base64.b64decode(file_data))
         else:
-            # Imagem/GIF - usa a função existente
             filename = save_background_image(file_data, f"login_bg_{uuid.uuid4().hex}")
             if not filename:
                 return jsonify({'success': False, 'error': 'Erro ao processar imagem'}), 500
         
         url = f'/uploads/backgrounds/{filename}'
         
-        # Salva configuração no servidor
         config = load_login_bg_config()
         config['url'] = url
         config['type'] = file_type
@@ -461,8 +455,7 @@ def reset_login_bg():
     config = {'type': 'gradient', 'url': '', 'opacity': 0.6}
     save_login_bg_config(config)
     return jsonify({'success': True})
-
-# ============================================================
+# ====================================================
 
 @app.route('/api/save_global_categories', methods=['POST'])
 @admin_required
@@ -633,26 +626,18 @@ HTML_TEMPLATE = r"""
             --mobile-nav-height: 65px; --mobile-toolbar-height: 52px;
         }
         
-        .rgb-line { position: fixed; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, #005f99, #0099cc, #00ccff, #005f99); background-size: 300% 100%; animation: rgbMove 3s linear infinite; z-index: 10000; }
+        .rgb-line { position: fixed; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, #005f99, #0099cc, #00ccff, #005f99); background-size: 300% 100%; animation: rgbMove 3s linear infinite; z-index: 99999; }
         @keyframes rgbMove { 0% { background-position: 0% 0%; } 100% { background-position: 300% 100%; } }
         
         /* ============ FUNDO DINÂMICO DO LOGIN ============ */
         .login-bg-dynamic {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            object-fit: cover;
-            z-index: 0;
-            pointer-events: none;
-            display: none;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            object-fit: cover; z-index: 0; pointer-events: none; display: none;
         }
         .login-bg-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: linear-gradient(135deg, rgba(0,26,46,0.85), rgba(0,38,77,0.85));
-            z-index: 1;
-            pointer-events: none;
+            z-index: 1; pointer-events: none;
         }
         
         /* ============ TELA DE INTRO ============ */
@@ -695,170 +680,61 @@ HTML_TEMPLATE = r"""
         .login-footer { margin-top: 25px; padding-top: 15px; border-top: 1px solid #ffffff; font-size: 11px; color: #ccccff; }
         .login-footer a { color: #ffffff; text-decoration: none; }
         
-        /* ============ BOTÃO FLUTUANTE CONFIG BG (na tela de login) ============ */
+        /* ============ BOTÃO FLUTUANTE CONFIG BG ============ */
         .login-settings-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.15);
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            z-index: 20001;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s;
-            box-shadow: 0 0 20px rgba(255,255,255,0.3);
+            position: fixed; top: 20px; right: 20px; width: 55px; height: 55px;
+            border-radius: 50%; background: rgba(0, 204, 255, 0.9); border: 3px solid #ffffff;
+            color: white; font-size: 26px; cursor: pointer; z-index: 99999;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 20px rgba(0, 204, 255, 0.8);
+            transition: all 0.3s; animation: pulseBtn 2s infinite;
         }
-        .login-settings-btn:hover, .login-settings-btn:active {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.1) rotate(45deg);
-            box-shadow: 0 0 30px rgba(0, 204, 255, 0.6);
+        @keyframes pulseBtn {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 204, 255, 0.8); }
+            50% { box-shadow: 0 0 40px rgba(0, 204, 255, 1); }
         }
+        .login-settings-btn:hover { background: #00ccff; transform: scale(1.1); }
         
         /* ============ MODAL CONFIG BG ============ */
         .bg-config-modal {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 30000;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            overflow-y: auto;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 999999; display: none;
+            justify-content: center; align-items: center; padding: 20px; overflow-y: auto;
         }
         .bg-config-modal.active { display: flex; }
         .bg-config-content {
             background: linear-gradient(135deg, #00264d, #001a2e);
-            border: 2px solid #00ccff;
-            border-radius: 20px;
-            padding: 30px;
-            width: 100%;
-            max-width: 550px;
-            color: white;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 0 40px rgba(0, 204, 255, 0.5);
+            border: 2px solid #00ccff; border-radius: 20px; padding: 30px;
+            width: 100%; max-width: 550px; color: white; max-height: 90vh;
+            overflow-y: auto; box-shadow: 0 0 40px rgba(0, 204, 255, 0.5);
         }
-        .bg-config-content h2 {
-            color: #00ccff;
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 22px;
-            text-shadow: 0 0 15px #00ccff;
-        }
-        .bg-config-content .form-group {
-            margin-bottom: 18px;
-        }
-        .bg-config-content label {
-            display: block;
-            color: #ccccff;
-            font-size: 13px;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
+        .bg-config-content h2 { color: #00ccff; margin-bottom: 20px; text-align: center; font-size: 22px; }
+        .bg-config-content .form-group { margin-bottom: 18px; }
+        .bg-config-content label { display: block; color: #ccccff; font-size: 13px; margin-bottom: 8px; font-weight: 600; }
         .bg-config-content input[type="file"] {
-            width: 100%;
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px dashed #00ccff;
-            border-radius: 8px;
-            color: white;
-            font-size: 13px;
-            cursor: pointer;
+            width: 100%; padding: 12px; background: rgba(0, 0, 0, 0.4);
+            border: 1px dashed #00ccff; border-radius: 8px; color: white; font-size: 13px; cursor: pointer;
         }
         .bg-config-content input[type="file"]::file-selector-button {
-            background: #00ccff;
-            color: #001a2e;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-right: 10px;
+            background: #00ccff; color: #001a2e; border: none; padding: 8px 15px;
+            border-radius: 6px; font-weight: bold; cursor: pointer; margin-right: 10px;
         }
-        .bg-config-content input[type="range"] {
-            width: 100%;
-            margin-top: 8px;
-        }
+        .bg-config-content input[type="range"] { width: 100%; margin-top: 8px; }
         .bg-config-content .preview-box {
-            width: 100%;
-            height: 180px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid #00ccff;
-            border-radius: 10px;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 10px;
-            position: relative;
+            width: 100%; height: 180px; background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #00ccff; border-radius: 10px; overflow: hidden;
+            display: flex; align-items: center; justify-content: center; margin-top: 10px;
         }
-        .bg-config-content .preview-box img,
-        .bg-config-content .preview-box video {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-        .bg-config-content .preview-box .empty-preview {
-            color: #88aacc;
-            font-size: 13px;
-            text-align: center;
-            padding: 20px;
-        }
-        .bg-config-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 25px;
-            flex-wrap: wrap;
-        }
-        .bg-config-btn {
-            flex: 1;
-            padding: 14px;
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            min-width: 120px;
-            transition: all 0.3s;
-        }
-        .bg-config-btn-primary {
-            background: #00ccff;
-            color: #001a2e;
-        }
-        .bg-config-btn-primary:hover { background: #ffffff; transform: scale(1.02); }
-        .bg-config-btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-        .bg-config-btn-danger:hover { background: #c82333; transform: scale(1.02); }
-        .bg-config-btn-secondary {
-            background: rgba(255,255,255,0.15);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.3);
-        }
-        .bg-config-btn-secondary:hover { background: rgba(255,255,255,0.25); }
-        .bg-config-tip {
-            background: rgba(0, 204, 255, 0.1);
-            border-left: 3px solid #00ccff;
-            padding: 10px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            color: #b3e6ff;
-            margin-bottom: 15px;
-            line-height: 1.5;
-        }
+        .bg-config-content .preview-box img, .bg-config-content .preview-box video { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .bg-config-content .preview-box .empty-preview { color: #88aacc; font-size: 13px; text-align: center; padding: 20px; }
+        .bg-config-buttons { display: flex; gap: 10px; margin-top: 25px; flex-wrap: wrap; }
+        .bg-config-btn { flex: 1; padding: 14px; border: none; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; min-width: 120px; }
+        .bg-config-btn-primary { background: #00ccff; color: #001a2e; }
+        .bg-config-btn-danger { background: #dc3545; color: white; }
+        .bg-config-btn-secondary { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); }
+        .bg-config-tip { background: rgba(0, 204, 255, 0.1); border-left: 3px solid #00ccff; padding: 10px 12px; border-radius: 6px; font-size: 12px; color: #b3e6ff; margin-bottom: 15px; line-height: 1.5; }
         
-        /* ============ RESTO DO SISTEMA (mesmo de antes) ============ */
+        /* ============ RESTO DO SISTEMA ============ */
         .splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #001a2e, #00264d); display: flex; justify-content: center; align-items: center; z-index: 15000; animation: fadeOut 3s ease-in-out forwards; pointer-events: none; }
         @keyframes fadeOut { 0% { opacity: 1; visibility: visible; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
         .splash-content { text-align: center; z-index: 2; }
@@ -922,9 +798,9 @@ HTML_TEMPLATE = r"""
         .modal-content input, .modal-content select, .modal-content textarea { width: 100%; padding: 8px; margin: 8px 0; background: var(--bg-tertiary); border: none; border-radius: 5px; color: var(--text-primary); }
         .modal-buttons { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
         
-        .toast { position: fixed; bottom: 20px; right: 20px; background: var(--button-primary); color: #fff; padding: 10px 20px; border-radius: 5px; z-index: 4000; max-width: 90%; }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: var(--button-primary); color: #fff; padding: 10px 20px; border-radius: 5px; z-index: 40000; max-width: 90%; }
         
-        .context-menu { position: fixed; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 5px 0; z-index: 2000; display: none; min-width: 200px; }
+        .context-menu { position: fixed; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 5px 0; z-index: 40000; display: none; min-width: 200px; }
         .context-menu-item { padding: 12px 18px; cursor: pointer; color: var(--text-primary); font-size: 13px; }
         .context-menu-item:hover { background: var(--button-primary); color: #fff; }
         
@@ -933,12 +809,10 @@ HTML_TEMPLATE = r"""
         .shape-btn:hover, .shape-btn.active { background: var(--button-primary); color: #fff; }
         
         .dynamic-background { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; object-fit: cover; pointer-events: none; opacity: 0.3; display: none; }
-        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 26, 46, 0.95); z-index: 30000; display: none; flex-direction: column; justify-content: center; align-items: center; color: white; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 26, 46, 0.95); z-index: 50000; display: none; flex-direction: column; justify-content: center; align-items: center; color: white; }
         .loading-spinner { border: 8px solid #f3f3f3; border-top: 8px solid #00ccff; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .loading-text { font-size: 18px; font-weight: bold; }
-        
-        .delete-shape-btn { position: fixed; background: #dc3545; color: white; border: none; border-radius: 20px; padding: 8px 16px; font-size: 12px; cursor: pointer; z-index: 250; display: none; }
         
         /* ============ MOBILE STYLES ============ */
         body.mobile-mode .dev-badge { display: none; }
@@ -984,7 +858,6 @@ HTML_TEMPLATE = r"""
     </style>
 </head>
 <body>
-    <!-- FUNDO DINÂMICO DO LOGIN (GIF ou vídeo) -->
     <video id="loginBgVideo" class="login-bg-dynamic" autoplay loop muted playsinline></video>
     <img id="loginBgGif" class="login-bg-dynamic" src="" alt="">
     <div id="loginBgOverlay" class="login-bg-overlay"></div>
@@ -1061,6 +934,9 @@ HTML_TEMPLATE = r"""
         </div>
     </div>
     
+    <!-- BOTÃO PARA CONFIGURAR FUNDO DO LOGIN (NA TELA DE INTRO) -->
+    <button class="login-settings-btn" id="loginSettingsBtnIntro" onclick="openLoginBgConfig()" title="Alterar fundo" style="display:flex;">⚙️</button>
+    
     <div class="splash-screen" id="splashScreen">
         <div class="splash-content">
             <div class="splash-logo">🎥🔒🌐</div>
@@ -1092,36 +968,31 @@ HTML_TEMPLATE = r"""
         </div>
     </div>
     
-    <!-- BOTÃO PARA CONFIGURAR FUNDO DO LOGIN -->
-    <button class="login-settings-btn" id="loginSettingsBtn" onclick="openLoginBgConfig()" title="Alterar fundo do login" style="display:none;">⚙️</button>
+    <!-- BOTÃO PARA CONFIGURAR FUNDO DO LOGIN (NA TELA DE LOGIN) -->
+    <button class="login-settings-btn" id="loginSettingsBtnLogin" onclick="openLoginBgConfig()" title="Alterar fundo" style="display:none;">⚙️</button>
     
     <!-- MODAL DE CONFIGURAÇÃO DO FUNDO DO LOGIN -->
     <div class="bg-config-modal" id="bgConfigModal">
         <div class="bg-config-content">
             <h2>🎬 Fundo do Login</h2>
-            
             <div class="bg-config-tip">
                 💡 <strong>Dica:</strong> Você pode usar uma <strong>imagem</strong>, <strong>GIF animado</strong> ou <strong>vídeo MP4</strong> como fundo da tela de login.
                 <br>O arquivo será salvo no servidor e aplicado para todos os usuários.
             </div>
-            
             <div class="form-group">
                 <label>📁 Escolha o arquivo (Imagem, GIF ou Vídeo MP4)</label>
                 <input type="file" id="loginBgFileInput" accept="image/*,video/mp4,video/webm">
             </div>
-            
             <div class="form-group">
                 <label>👁️ Pré-visualização</label>
                 <div class="preview-box" id="loginBgPreview">
                     <div class="empty-preview">Nenhum arquivo selecionado</div>
                 </div>
             </div>
-            
             <div class="form-group">
                 <label>🎨 Opacidade do Fundo: <span id="loginBgOpacityValue">60%</span></label>
                 <input type="range" id="loginBgOpacityRange" min="0.1" max="1" step="0.05" value="0.6">
             </div>
-            
             <div class="bg-config-buttons">
                 <button class="bg-config-btn bg-config-btn-primary" onclick="applyLoginBg()">✅ Aplicar</button>
                 <button class="bg-config-btn bg-config-btn-danger" onclick="resetLoginBg()">🔄 Padrão</button>
@@ -1292,7 +1163,6 @@ HTML_TEMPLATE = r"""
             const modal = document.getElementById('bgConfigModal');
             modal.classList.add('active');
             
-            // Reset
             selectedLoginBgFile = null;
             selectedLoginBgType = null;
             document.getElementById('loginBgFileInput').value = '';
@@ -1301,7 +1171,6 @@ HTML_TEMPLATE = r"""
             document.getElementById('loginBgOpacityRange').value = currentLoginBgConfig.opacity || 0.6;
             document.getElementById('loginBgOpacityValue').textContent = Math.round((currentLoginBgConfig.opacity || 0.6) * 100) + '%';
             
-            // Se já tem fundo, mostra preview
             if (currentLoginBgConfig.url) {
                 if (currentLoginBgConfig.type === 'video') {
                     preview.innerHTML = `<video src="${currentLoginBgConfig.url}" autoplay loop muted playsinline style="max-width:100%; max-height:100%;"></video>`;
@@ -1332,7 +1201,6 @@ HTML_TEMPLATE = r"""
         async function applyLoginBg() {
             const opacity = parseFloat(document.getElementById('loginBgOpacityRange').value);
             
-            // Se não tem arquivo novo selecionado, só atualiza opacidade
             if (!selectedLoginBgFile && currentLoginBgConfig.url) {
                 try {
                     const response = await fetch('/api/save_login_bg_config', {
@@ -1356,7 +1224,6 @@ HTML_TEMPLATE = r"""
                 return;
             }
             
-            // Upload do arquivo
             showToast('📤 Enviando arquivo...');
             
             try {
@@ -1366,13 +1233,9 @@ HTML_TEMPLATE = r"""
                 if (file.type.startsWith('video/')) {
                     fileType = 'video';
                     ext = '.' + file.name.split('.').pop();
-                    // Lê arquivo como base64 (sem prefixo data:)
                     fileData = await new Promise((resolve, reject) => {
                         const reader = new FileReader();
-                        reader.onload = (e) => {
-                            const result = e.target.result;
-                            resolve(result.split(',')[1]); // Remove data:video/...;base64,
-                        };
+                        reader.onload = (e) => resolve(e.target.result.split(',')[1]);
                         reader.onerror = reject;
                         reader.readAsDataURL(file);
                     });
@@ -1395,7 +1258,6 @@ HTML_TEMPLATE = r"""
                 const data = await response.json();
                 
                 if (data.success) {
-                    // Salva opacidade
                     await fetch('/api/save_login_bg_config', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -2589,8 +2451,8 @@ HTML_TEMPLATE = r"""
             if (data.success) {
                 currentUser = username; userRole = data.role;
                 document.getElementById('loginModal').style.display = 'none';
-                document.getElementById('loginSettingsBtn').style.display = 'none';
-                // Esconde fundo do login
+                document.getElementById('loginSettingsBtnLogin').style.display = 'none';
+                document.getElementById('loginSettingsBtnIntro').style.display = 'none';
                 document.getElementById('loginBgVideo').style.display = 'none';
                 document.getElementById('loginBgGif').style.display = 'none';
                 document.getElementById('loginBgOverlay').style.display = 'none';
@@ -2724,9 +2586,9 @@ HTML_TEMPLATE = r"""
         function closeIntroAndShowLogin() { 
             document.getElementById('introScreen').style.display = 'none'; 
             document.getElementById('loginModal').style.display = 'flex'; 
-            document.getElementById('loginSettingsBtn').style.display = 'flex';
+            document.getElementById('loginSettingsBtnIntro').style.display = 'none';
+            document.getElementById('loginSettingsBtnLogin').style.display = 'flex';
             createMatrixAnimation('matrixBg');
-            // Aplica fundo dinâmico ao login
             applyLoginBgToScreen(currentLoginBgConfig);
         }
         
@@ -2854,12 +2716,10 @@ HTML_TEMPLATE = r"""
         window.openLoginBgConfig = openLoginBgConfig; window.closeLoginBgConfig = closeLoginBgConfig; window.applyLoginBg = applyLoginBg; window.resetLoginBg = resetLoginBg;
         window.mobileTab = mobileTab; window.closeMobilePanels = closeMobilePanels;
         
-        // NOVAS FUNÇÕES DE ADMIN (necessárias)
         window.openAddCategoryModal = openAddCategoryModal;
         window.openAddDeviceModal = openAddDeviceModal;
         window.openAddConnectionModal = openAddConnectionModal;
         
-        // Fecha o modal de config com ESC ou clique fora
         document.getElementById('bgConfigModal').addEventListener('click', function(e) {
             if (e.target === this) closeLoginBgConfig();
         });
