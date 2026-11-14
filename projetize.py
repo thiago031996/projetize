@@ -711,104 +711,107 @@ HTML_TEMPLATE = """
         @keyframes btnPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); } 50% { box-shadow: 0 0 0 12px rgba(255, 255, 255, 0); } }
         .intro-footer-note { text-align: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); font-size: 11px; color: rgba(255,255,255,0.6); }
         
+        /* ==================== LOGIN MODERNO ==================== */
         .login-modal { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: #000814;
+            background: #060d1a;
             display: none; justify-content: center; align-items: center; 
             z-index: 20000; overflow: hidden; padding: 20px; 
         }
-        #loginBgMedia { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            object-fit: cover; z-index: 0; opacity: 0.35; pointer-events: none; 
-            display: none;
-        }
+        #loginBgMedia { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; opacity: 0.35; pointer-events: none; display: none; }
         #loginBgVideo { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; opacity: 0.35; pointer-events: none; display: none; }
         .login-overlay-gradient { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; 
-            background: linear-gradient(135deg, rgba(0,26,46,0.92) 0%, rgba(0,38,77,0.75) 50%, rgba(0,26,46,0.92) 100%);
+            background: radial-gradient(ellipse at top left, rgba(0,153,204,0.12), transparent 50%), radial-gradient(ellipse at bottom right, rgba(0,95,153,0.18), transparent 50%), linear-gradient(180deg, rgba(6,13,26,0.85), rgba(6,13,26,0.95));
             pointer-events: none;
         }
-        .login-orb {
-            position: absolute; border-radius: 50%; filter: blur(80px); z-index: 0; pointer-events: none;
-            animation: orbFloat 12s ease-in-out infinite;
-        }
-        .login-orb-1 { width: 400px; height: 400px; background: rgba(0, 153, 204, 0.35); top: -100px; left: -100px; }
-        .login-orb-2 { width: 350px; height: 350px; background: rgba(0, 95, 153, 0.4); bottom: -80px; right: -80px; animation-delay: -4s; }
-        .login-orb-3 { width: 250px; height: 250px; background: rgba(0, 204, 255, 0.25); top: 50%; right: 10%; animation-delay: -8s; }
-        @keyframes orbFloat { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(30px, -40px) scale(1.1); } 66% { transform: translate(-20px, 30px) scale(0.95); } }
-        
-        .login-dev-container { 
-            position: relative; z-index: 2; width: 100%; max-width: 460px; 
-            background: rgba(10, 25, 45, 0.65); backdrop-filter: blur(24px); 
-            -webkit-backdrop-filter: blur(24px);
-            border-radius: 24px; padding: 42px 40px; text-align: center; 
-            border: 1px solid rgba(0, 204, 255, 0.25); 
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 80px rgba(0, 153, 204, 0.15), inset 0 1px 0 rgba(255,255,255,0.1);
-            animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1); 
-        }
-        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.92) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         
         .login-bg-toggle {
             position: absolute; top: 20px; right: 20px; z-index: 5;
-            background: rgba(10, 25, 45, 0.75); backdrop-filter: blur(10px);
-            color: #00ccff; border: 1px solid rgba(0, 204, 255, 0.4); 
-            border-radius: 50%; width: 44px; height: 44px; font-size: 18px;
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px);
+            color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); 
+            border-radius: 10px; width: 42px; height: 42px; font-size: 18px;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: all 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            transition: all 0.3s; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
         }
-        .login-bg-toggle:hover { background: rgba(0, 153, 204, 0.3); transform: scale(1.08) rotate(15deg); color: white; }
+        .login-bg-toggle:hover { background: rgba(56, 189, 248, 0.15); transform: translateY(-2px); color: #7dd3fc; }
         
-        .login-dev-image { 
-            width: 130px; height: 130px; border-radius: 50%; 
-            margin: 0 auto 20px; overflow: hidden; 
-            border: 3px solid rgba(0, 204, 255, 0.6); 
-            box-shadow: 0 0 30px rgba(0, 204, 255, 0.4), 0 0 0 8px rgba(0, 204, 255, 0.08); 
-            animation: borderGlow 3s ease-in-out infinite; 
-            display: flex; align-items: center; justify-content: center; 
-            background: #005f99; position: relative; 
+        .login-split {
+            position: relative; z-index: 2; width: 100%; max-width: 980px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+            background: rgba(10, 18, 32, 0.65); backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
+            border: 1px solid rgba(56, 189, 248, 0.18); border-radius: 20px; overflow: hidden;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.75), 0 0 100px rgba(0,153,204,0.08), inset 0 1px 0 rgba(255,255,255,0.06);
+            animation: loginFadeIn 0.7s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        @media (max-width: 768px) { .login-dev-image { width: 100px; height: 100px; } }
-        @keyframes borderGlow { 0%, 100% { border-color: rgba(0,204,255,0.6); box-shadow: 0 0 30px rgba(0,204,255,0.4), 0 0 0 8px rgba(0,204,255,0.08); } 50% { border-color: rgba(255,255,255,0.9); box-shadow: 0 0 40px rgba(0,204,255,0.7), 0 0 0 10px rgba(0,204,255,0.12); } }
-        .login-dev-image img { width: 100%; height: 100%; object-fit: cover; }
+        @keyframes loginFadeIn { from { opacity: 0; transform: translateY(24px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @media (max-width: 820px) { .login-split { grid-template-columns: 1fr; max-width: 420px; } .login-brand-panel { display: none; } }
         
-        .login-dev-name { font-size: 22px; color: #ffffff; margin-bottom: 4px; font-weight: 700; letter-spacing: 0.3px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        .login-dev-role { font-size: 11px; color: #88c8e8; margin-bottom: 22px; letter-spacing: 0.5px; text-transform: uppercase; font-weight: 600; }
-        
-        .login-brand { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 6px; }
-        .login-logo { font-size: 34px; filter: drop-shadow(0 0 15px rgba(0,204,255,0.6)); }
-        .login-title { font-size: 30px; color: #ffffff; font-weight: 800; letter-spacing: 2px; background: linear-gradient(135deg, #ffffff, #00ccff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px; }
-        .login-subtitle { color: #7ba8c4; font-size: 11px; margin-bottom: 28px; letter-spacing: 1px; text-transform: uppercase; }
-        
-        .login-input { 
-            width: 100%; padding: 14px 18px; margin: 8px 0; 
-            background: rgba(0, 20, 40, 0.6); 
-            border: 1.5px solid rgba(0, 204, 255, 0.2); 
-            border-radius: 12px; color: #fff; font-size: 14px; 
-            transition: all 0.3s ease; 
+        .login-brand-panel {
+            padding: 48px 40px; display: flex; flex-direction: column; justify-content: center;
+            background: linear-gradient(160deg, rgba(0, 95, 153, 0.20), rgba(0, 40, 80, 0.30));
+            border-right: 1px solid rgba(56, 189, 248, 0.12); position: relative; overflow: hidden;
         }
-        .login-input:focus { outline: none; border-color: #00ccff; background: rgba(0, 30, 55, 0.85); box-shadow: 0 0 0 4px rgba(0, 204, 255, 0.12), 0 0 20px rgba(0, 204, 255, 0.2); transform: translateY(-1px); }
-        .login-input::placeholder { color: #4d7a99; font-weight: 500; }
+        .login-brand-logo { width: 84px; height: 84px; margin-bottom: 24px; position: relative; z-index: 1; filter: drop-shadow(0 0 24px rgba(0, 204, 255, 0.5)); }
+        .login-brand-name { font-size: 32px; font-weight: 800; letter-spacing: 3px; color: #ffffff; margin-bottom: 8px; position: relative; z-index: 1; }
+        .login-brand-tagline { font-size: 12px; color: #7dd3fc; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600; position: relative; z-index: 1; }
+        .login-brand-divider { width: 60px; height: 2px; background: linear-gradient(90deg, #00ccff, transparent); margin: 28px 0; position: relative; z-index: 1; }
+        .login-brand-features { display: flex; flex-direction: column; gap: 14px; position: relative; z-index: 1; }
+        .feature-item { display: flex; align-items: center; gap: 12px; color: #b8c9dd; font-size: 13px; font-weight: 500; }
+        .feature-item svg { color: #38bdf8; flex-shrink: 0; }
         
-        .login-btn { 
-            width: 100%; padding: 14px; 
-            background: linear-gradient(135deg, #0099cc, #00ccff); 
-            border: none; border-radius: 12px; color: #001a2e; 
-            font-size: 15px; font-weight: 800; cursor: pointer; margin-top: 18px; 
-            transition: all 0.3s; letter-spacing: 1px; text-transform: uppercase;
-            box-shadow: 0 8px 25px rgba(0, 153, 204, 0.4); 
+        .login-form-panel {
+            padding: 48px 44px; display: flex; flex-direction: column; justify-content: center;
+            background: rgba(6, 13, 26, 0.4);
         }
-        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 35px rgba(0, 153, 204, 0.6); filter: brightness(1.1); }
-        .login-btn:active { transform: translateY(0); }
-        .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .login-form-header { text-align: center; margin-bottom: 32px; }
+        .login-avatar {
+            width: 78px; height: 78px; border-radius: 50%; margin: 0 auto 18px;
+            overflow: hidden; border: 2px solid rgba(56, 189, 248, 0.4);
+            box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.06), 0 8px 24px rgba(0,0,0,0.4);
+            display: flex; align-items: center; justify-content: center;
+            background: #0f172a; position: relative;
+        }
+        .login-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .login-avatar svg { width: 78px; height: 78px; }
+        .login-form-title { font-size: 22px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
+        .login-form-subtitle { font-size: 12px; color: #64748b; letter-spacing: 0.5px; }
         
-        .login-error { color: #ff6b6b; font-size: 12px; margin-top: 14px; display: none; padding: 10px; background: rgba(255, 107, 107, 0.1); border-radius: 8px; border: 1px solid rgba(255,107,107,0.3); }
+        .login-form-body { display: flex; flex-direction: column; gap: 16px; }
+        .login-input-group { display: flex; flex-direction: column; gap: 7px; }
+        .login-input-group label { font-size: 11px; color: #7dd3fc; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+        .login-input-wrapper { position: relative; }
+        .login-input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #475569; pointer-events: none; transition: color 0.2s; }
+        .login-input-field {
+            width: 100%; padding: 13px 14px 13px 44px;
+            background: rgba(15, 23, 42, 0.75);
+            border: 1.5px solid rgba(56, 189, 248, 0.15);
+            border-radius: 10px; color: #f1f5f9; font-size: 14px; font-weight: 500;
+            transition: all 0.25s ease;
+        }
+        .login-input-field:focus {
+            outline: none; border-color: #38bdf8; background: rgba(15, 23, 42, 0.95);
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.12), 0 0 24px rgba(56, 189, 248, 0.15);
+        }
+        .login-input-wrapper:focus-within .login-input-icon { color: #38bdf8; }
+        .login-input-field::placeholder { color: #475569; font-weight: 400; }
         
-        .login-footer { margin-top: 24px; padding-top: 18px; border-top: 1px solid rgba(0, 204, 255, 0.15); font-size: 11px; color: #6a96b8; line-height: 1.7; }
-        .login-footer a { color: #00ccff; text-decoration: none; transition: all 0.3s; font-weight: 600; }
-        .login-footer a:hover { text-shadow: 0 0 12px #00ccff; }
-        
-        .login-btn .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(0,26,46,0.3); border-top-color: #001a2e; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
+        .login-submit-btn {
+            width: 100%; padding: 14px; margin-top: 8px;
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            border: none; border-radius: 10px; color: #ffffff;
+            font-size: 14px; font-weight: 700; letter-spacing: 0.8px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: all 0.25s; box-shadow: 0 8px 24px rgba(2, 132, 199, 0.35);
+        }
+        .login-submit-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(2, 132, 199, 0.5); background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+        .login-submit-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+        .login-submit-btn .spinner { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .login-error { color: #f87171; font-size: 12px; padding: 10px 14px; background: rgba(248, 113, 113, 0.08); border: 1px solid rgba(248,113,113,0.25); border-radius: 8px; display: none; text-align: center; font-weight: 500; }
+        .login-form-footer { margin-top: 28px; padding-top: 20px; border-top: 1px solid rgba(56, 189, 248, 0.08); text-align: center; font-size: 11px; color: #475569; line-height: 1.8; }
+        .login-form-footer strong { color: #7dd3fc; font-weight: 700; }
         
         .splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #001a2e, #00264d); display: flex; justify-content: center; align-items: center; z-index: 15000; animation: fadeOut 3s ease-in-out forwards; pointer-events: none; }
         @keyframes fadeOut { 0% { opacity: 1; visibility: visible; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
@@ -949,118 +952,38 @@ HTML_TEMPLATE = """
             .btn { padding: 8px 12px; }
         }
 
-        .dynamic-background {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: -1;
-            object-fit: cover;
-            pointer-events: none;
-            opacity: 0.3;
-            display: none;
-        }
+        .dynamic-background { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; object-fit: cover; pointer-events: none; opacity: 0.3; display: none; }
 
-        .loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 26, 46, 0.95);
-            z-index: 30000;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-        }
-        .loading-spinner {
-            border: 8px solid #f3f3f3;
-            border-top: 8px solid #00ccff;
-            border-radius: 50%;
-            width: 60px; height: 60px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 26, 46, 0.95); z-index: 30000; display: none; flex-direction: column; justify-content: center; align-items: center; color: white; }
+        .loading-spinner { border: 8px solid #f3f3f3; border-top: 8px solid #00ccff; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin-bottom: 20px; }
         .loading-text { font-size: 18px; font-weight: bold; animation: pulseText 1.5s infinite; }
         @keyframes pulseText { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
         
         /* ==================== 3D SIMULATOR STYLES ==================== */
-        #sim3d-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 15000; background: #080b13; display: none;
-            overflow: hidden;
-        }
+        #sim3d-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 15000; background: #080b13; display: none; overflow: hidden; }
         #sim3d-overlay.active { display: block; }
         #sim3d-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
-        .sim3d-glass {
-            background: rgba(15, 23, 42, 0.88);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(56, 189, 248, 0.25);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-        .sim3d-header {
-            position: absolute; top: 0; left: 0; width: 100%; padding: 12px 16px;
-            z-index: 20; display: flex; flex-wrap: wrap; justify-content: space-between;
-            align-items: center; gap: 10px; pointer-events: none;
-        }
+        .sim3d-glass { background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(56, 189, 248, 0.25); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
+        .sim3d-header { position: absolute; top: 0; left: 0; width: 100%; padding: 12px 16px; z-index: 20; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; pointer-events: none; }
         .sim3d-header > * { pointer-events: auto; }
-        .sim3d-brand {
-            display: flex; align-items: center; gap: 10px;
-            padding: 8px 14px; border-radius: 14px; color: #e2e8f0;
-        }
-        .sim3d-brand-icon {
-            width: 38px; height: 38px; border-radius: 10px;
-            background: linear-gradient(135deg, #06b6d4, #3b82f6, #6366f1);
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 20px;
-            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
-        }
-        .sim3d-brand h1 {
-            font-size: 14px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
-            background: linear-gradient(90deg, #67e8f9, #bae6fd, #c7d2fe);
-            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-        }
+        .sim3d-brand { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 14px; color: #e2e8f0; }
+        .sim3d-brand-icon { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #06b6d4, #3b82f6, #6366f1); display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4); }
+        .sim3d-brand h1 { font-size: 14px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; background: linear-gradient(90deg, #67e8f9, #bae6fd, #c7d2fe); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
         .sim3d-brand p { font-size: 10px; color: #94a3b8; display: flex; align-items: center; gap: 5px; }
         .sim3d-brand p::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #34d399; box-shadow: 0 0 8px #34d399; }
         
-        .sim3d-btn {
-            padding: 8px 14px; border-radius: 10px; font-size: 11px; font-weight: 700;
-            display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
-            border: 1px solid rgba(56, 189, 248, 0.4); color: #67e8f9;
-            background: rgba(15, 23, 42, 0.6); transition: all 0.2s;
-        }
+        .sim3d-btn { padding: 8px 14px; border-radius: 10px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; border: 1px solid rgba(56, 189, 248, 0.4); color: #67e8f9; background: rgba(15, 23, 42, 0.6); transition: all 0.2s; }
         .sim3d-btn:hover { color: white; background: rgba(6, 182, 212, 0.3); border-color: #22d3ee; }
-        .sim3d-btn-primary {
-            background: linear-gradient(90deg, #059669, #0d9488); color: white;
-            border: none; box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
-        }
+        .sim3d-btn-primary { background: linear-gradient(90deg, #059669, #0d9488); color: white; border: none; box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4); }
         .sim3d-btn-primary:hover { background: linear-gradient(90deg, #10b981, #14b8a6); }
-        .sim3d-btn-close {
-            width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.4);
-            background: rgba(15, 23, 42, 0.6); color: #f87171; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; font-size: 16px;
-            transition: all 0.2s;
-        }
+        .sim3d-btn-close { width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(15, 23, 42, 0.6); color: #f87171; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.2s; }
         .sim3d-btn-close:hover { background: rgba(239, 68, 68, 0.2); color: #fecaca; }
         
-        .sim3d-drawer {
-            position: absolute; left: 16px; top: 80px; bottom: 16px; width: 300px;
-            max-width: calc(100vw - 32px); z-index: 15; border-radius: 16px;
-            padding: 14px; display: flex; flex-direction: column;
-            transition: transform 0.3s ease;
-        }
+        .sim3d-drawer { position: absolute; left: 16px; top: 80px; bottom: 16px; width: 320px; max-width: calc(100vw - 32px); z-index: 15; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; transition: transform 0.3s ease; }
         .sim3d-drawer.closed { transform: translateX(calc(-100% - 30px)); }
-        .sim3d-drawer-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding-bottom: 10px; border-bottom: 1px solid #1e293b;
-        }
-        .sim3d-drawer-header h2 {
-            font-size: 11px; font-weight: 800; color: #67e8f9;
-            text-transform: uppercase; letter-spacing: 1px;
-        }
-        .sim3d-drawer-close {
-            width: 26px; height: 26px; border-radius: 7px; border: none;
-            background: #1e293b; color: #cbd5e1; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; font-size: 12px;
-        }
+        .sim3d-drawer-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #1e293b; }
+        .sim3d-drawer-header h2 { font-size: 11px; font-weight: 800; color: #67e8f9; text-transform: uppercase; letter-spacing: 1px; }
+        .sim3d-drawer-close { width: 26px; height: 26px; border-radius: 7px; border: none; background: #1e293b; color: #cbd5e1; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; }
         .sim3d-drawer-close:hover { background: #334155; color: white; }
         .sim3d-drawer-list { flex: 1; overflow-y: auto; padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
         .sim3d-drawer-hint { font-size: 10px; color: #64748b; padding: 4px 0 8px; }
@@ -1068,40 +991,22 @@ HTML_TEMPLATE = """
         .sim3d-drawer-list::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
         .sim3d-drawer-list::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.5); border-radius: 4px; }
         
-        .sim3d-eq-item {
-            padding: 10px; border-radius: 10px; border: 1px solid #1e293b;
-            background: rgba(15, 23, 42, 0.5); display: flex; justify-content: space-between;
-            align-items: center; gap: 8px; transition: all 0.2s;
-        }
+        .sim3d-eq-item { padding: 10px; border-radius: 10px; border: 1px solid #1e293b; background: rgba(15, 23, 42, 0.5); display: flex; justify-content: space-between; align-items: center; gap: 8px; transition: all 0.2s; }
         .sim3d-eq-item.mounted { border-color: rgba(6, 182, 212, 0.5); background: rgba(15, 23, 42, 0.9); box-shadow: 0 4px 15px rgba(6, 182, 212, 0.15); }
         .sim3d-eq-item:hover { border-color: rgba(56, 189, 248, 0.5); }
         .sim3d-eq-info { flex: 1; min-width: 0; cursor: pointer; }
         .sim3d-eq-name { font-size: 11px; font-weight: 700; color: #f1f5f9; display: flex; align-items: center; gap: 5px; }
-        .sim3d-eq-unit { font-size: 9px; padding: 1px 5px; border-radius: 4px; background: #083344; color: #67e8f9; border: 1px solid #0e7490; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+        .sim3d-eq-unit { font-size: 9px; padding: 1px 5px; border-radius: 4px; background: #083344; color: #67e8f9; border: 1px solid #0e7490; font-family: monospace; font-weight: 700; }
         .sim3d-eq-desc { font-size: 9px; color: #64748b; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .sim3d-eq-actions { display: flex; gap: 4px; flex-shrink: 0; }
-        .sim3d-eq-btn {
-            padding: 4px 8px; border-radius: 6px; border: none; font-size: 10px;
-            font-weight: 700; cursor: pointer; transition: all 0.2s;
-            background: #06b6d4; color: white;
-        }
+        .sim3d-eq-btn { padding: 4px 8px; border-radius: 6px; border: none; font-size: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s; background: #06b6d4; color: white; }
         .sim3d-eq-btn:hover { background: #22d3ee; }
-        .sim3d-eq-btn-small {
-            width: 22px; height: 22px; padding: 0; display: flex; align-items: center; justify-content: center;
-            background: #1e293b; color: #cbd5e1; font-size: 10px;
-        }
+        .sim3d-eq-btn-small { width: 22px; height: 22px; padding: 0; display: flex; align-items: center; justify-content: center; background: #1e293b; color: #cbd5e1; font-size: 10px; }
         .sim3d-eq-btn-small:hover { background: #334155; }
-        .sim3d-eq-btn-remove {
-            width: 22px; height: 22px; padding: 0; display: flex; align-items: center; justify-content: center;
-            background: rgba(239, 68, 68, 0.2); color: #f87171; font-size: 11px;
-        }
+        .sim3d-eq-btn-remove { width: 22px; height: 22px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.2); color: #f87171; font-size: 11px; }
         .sim3d-eq-btn-remove:hover { background: #ef4444; color: white; }
         
-        .sim3d-connections-panel {
-            position: absolute; left: 16px; bottom: 16px; width: 300px;
-            max-width: calc(100vw - 32px); border-radius: 12px; padding: 12px;
-            max-height: 200px; display: flex; flex-direction: column; z-index: 10;
-        }
+        .sim3d-connections-panel { position: absolute; left: 16px; bottom: 16px; width: 320px; max-width: calc(100vw - 32px); border-radius: 12px; padding: 12px; max-height: 200px; display: flex; flex-direction: column; z-index: 10; }
         .sim3d-connections-title { font-size: 10px; font-weight: 800; color: #67e8f9; text-transform: uppercase; margin-bottom: 8px; display: flex; justify-content: space-between; }
         .sim3d-connections-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
         .sim3d-connections-list::-webkit-scrollbar { width: 3px; }
@@ -1111,80 +1016,36 @@ HTML_TEMPLATE = """
         .sim3d-connection-remove { padding: 2px 6px; border-radius: 4px; border: none; background: rgba(239, 68, 68, 0.2); color: #f87171; cursor: pointer; font-size: 9px; font-weight: 700; }
         .sim3d-connection-remove:hover { background: #ef4444; color: white; }
         
-        .sim3d-patch-modal {
-            position: fixed; inset: 0; z-index: 60; background: rgba(2, 6, 23, 0.85);
-            backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 16px;
-        }
+        .sim3d-patch-modal { position: fixed; inset: 0; z-index: 60; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 16px; }
         .sim3d-patch-modal.open { display: flex; }
-        .sim3d-patch-content {
-            width: 100%; max-width: 440px; border-radius: 16px; padding: 18px;
-            border: 1px solid rgba(6, 182, 212, 0.4); position: relative;
-        }
+        .sim3d-patch-content { width: 100%; max-width: 440px; border-radius: 16px; padding: 18px; border: 1px solid rgba(6, 182, 212, 0.4); position: relative; }
         .sim3d-patch-title { font-size: 13px; font-weight: 800; color: white; }
         .sim3d-patch-sub { font-size: 10px; color: #22d3ee; margin-bottom: 12px; }
         .sim3d-patch-section-label { font-size: 10px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
         .sim3d-cable-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px; }
-        .sim3d-cable-btn {
-            padding: 8px; border-radius: 10px; border: 2px solid #334155; background: #0f172a;
-            color: #cbd5e1; font-size: 10px; font-weight: 700; cursor: pointer;
-            display: flex; align-items: center; gap: 6px; transition: all 0.2s;
-        }
+        .sim3d-cable-btn { padding: 8px; border-radius: 10px; border: 2px solid #334155; background: #0f172a; color: #cbd5e1; font-size: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
         .sim3d-cable-btn:hover { border-color: #64748b; }
         .sim3d-cable-btn.active { border-color: #22d3ee; color: white; }
         .sim3d-cable-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-        .sim3d-dest-list {
-            max-height: 140px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
-            padding: 6px; background: rgba(2, 6, 23, 0.6); border-radius: 10px; border: 1px solid #1e293b;
-            margin-bottom: 12px;
-        }
+        .sim3d-dest-list { max-height: 140px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding: 6px; background: rgba(2, 6, 23, 0.6); border-radius: 10px; border: 1px solid #1e293b; margin-bottom: 12px; }
         .sim3d-dest-list::-webkit-scrollbar { width: 3px; }
         .sim3d-dest-list::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.5); border-radius: 3px; }
-        .sim3d-dest-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 6px 8px; border-radius: 6px; background: rgba(15, 23, 42, 0.6);
-            border: 1px solid #1e293b; cursor: pointer; font-size: 10px; color: #cbd5e1;
-        }
+        .sim3d-dest-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; border-radius: 6px; background: rgba(15, 23, 42, 0.6); border: 1px solid #1e293b; cursor: pointer; font-size: 10px; color: #cbd5e1; }
         .sim3d-dest-item:hover { background: rgba(30, 41, 59, 0.6); }
         .sim3d-dest-item input { accent-color: #06b6d4; width: 14px; height: 14px; cursor: pointer; }
-        .sim3d-patch-confirm {
-            width: 100%; padding: 10px; border-radius: 10px; border: none;
-            background: linear-gradient(90deg, #0891b2, #2563eb); color: white;
-            font-weight: 800; font-size: 11px; cursor: pointer;
-            box-shadow: 0 6px 20px rgba(8, 145, 178, 0.4); transition: all 0.2s;
-            display: flex; align-items: center; justify-content: center; gap: 6px;
-        }
+        .sim3d-patch-confirm { width: 100%; padding: 10px; border-radius: 10px; border: none; background: linear-gradient(90deg, #0891b2, #2563eb); color: white; font-weight: 800; font-size: 11px; cursor: pointer; box-shadow: 0 6px 20px rgba(8, 145, 178, 0.4); transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .sim3d-patch-confirm:hover { background: linear-gradient(90deg, #06b6d4, #3b82f6); }
         
-        .sim3d-terminal {
-            position: fixed; inset: 0; z-index: 60; background: rgba(2, 6, 23, 0.9);
-            backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 16px;
-        }
+        .sim3d-terminal { position: fixed; inset: 0; z-index: 60; background: rgba(2, 6, 23, 0.9); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 16px; }
         .sim3d-terminal.open { display: flex; }
-        .sim3d-terminal-content {
-            width: 100%; max-width: 560px; border-radius: 16px; padding: 16px;
-            border: 1px solid rgba(16, 185, 129, 0.4);
-        }
+        .sim3d-terminal-content { width: 100%; max-width: 560px; border-radius: 16px; padding: 16px; border: 1px solid rgba(16, 185, 129, 0.4); }
         .sim3d-terminal-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #1e293b; margin-bottom: 10px; }
-        .sim3d-terminal-title { font-size: 12px; font-weight: 800; color: white; font-family: 'JetBrains Mono', monospace; display: flex; align-items: center; gap: 8px; }
-        .sim3d-terminal-output {
-            background: #020617; padding: 12px; border-radius: 10px;
-            font-family: 'JetBrains Mono', monospace; font-size: 11px;
-            color: #34d399; height: 240px; overflow-y: auto; border: 1px solid #0f172a;
-            line-height: 1.6;
-        }
+        .sim3d-terminal-title { font-size: 12px; font-weight: 800; color: white; font-family: monospace; display: flex; align-items: center; gap: 8px; }
+        .sim3d-terminal-output { background: #020617; padding: 12px; border-radius: 10px; font-family: monospace; font-size: 11px; color: #34d399; height: 240px; overflow-y: auto; border: 1px solid #0f172a; line-height: 1.6; }
         .sim3d-terminal-output::-webkit-scrollbar { width: 4px; }
         .sim3d-terminal-output::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.5); border-radius: 4px; }
         
-        .sim3d-toast {
-            position: fixed; bottom: 24px; right: 24px; z-index: 70;
-            padding: 12px 18px; border-radius: 12px;
-            border: 1px solid rgba(16, 185, 129, 0.5);
-            color: white; font-size: 11px; font-weight: 700;
-            display: flex; align-items: center; gap: 8px;
-            transform: translateY(80px); opacity: 0;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            pointer-events: none;
-        }
+        .sim3d-toast { position: fixed; bottom: 24px; right: 24px; z-index: 70; padding: 12px 18px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.5); color: white; font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 8px; transform: translateY(80px); opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none; }
         .sim3d-toast.show { transform: translateY(0); opacity: 1; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -1220,7 +1081,7 @@ HTML_TEMPLATE = """
                         <li>✅ Desenhe formas, portas, janelas e textos no canvas</li>
                         <li>✅ Exporte projetos em PDF com lista de equipamentos</li>
                         <li>✅ Gere orçamento automático</li>
-                        <li>✅ <strong>NOVO:</strong> Simulador 3D de Rack Datacenter</li>
+                        <li>✅ <strong>NOVO:</strong> Simulador 3D de Rack (categoria Rede)</li>
                     </ul>
                 </div>
             </div>
@@ -1234,7 +1095,7 @@ HTML_TEMPLATE = """
                         <li><strong>🖼️ Planta:</strong> Importe uma imagem para usar como planta baixa (PNG, JPG)</li>
                         <li><strong>📦 Equipamentos:</strong> Arraste os ícones da barra lateral para o canvas</li>
                         <li><strong>🔌 Conexões:</strong> Shift + clique em dois equipamentos para conectá-los</li>
-                        <li><strong>🏢 3D Rack:</strong> Abra o simulador 3D para montar o rack datacenter</li>
+                        <li><strong>🏢 3D Rack:</strong> Abra o simulador 3D para montar o rack de rede</li>
                         <li><strong>📐 Formas:</strong> Ative o modo de desenho para adicionar formas geométricas</li>
                         <li><strong>🔍 Zoom:</strong> Use os botões de zoom para ampliar o canvas ou aumentar ícones</li>
                     </ul>
@@ -1267,7 +1128,7 @@ HTML_TEMPLATE = """
                 <button class="access-btn" onclick="closeIntroAndShowLogin()">🔓 Acessar Sistema</button>
             </div>
             <div class="intro-footer-note">
-                <span>Versão 2.2 | Desenvolvido com 💙 por Thiago Souza</span>
+                <span>Versão 2.4 | Desenvolvido com 💙 por Thiago Souza</span>
             </div>
         </div>
     </div>
@@ -1280,42 +1141,103 @@ HTML_TEMPLATE = """
         </div>
     </div>
     
+    <!-- ==================== TELA DE LOGIN MODERNA ==================== -->
     <div class="login-modal" id="loginModal">
         <img id="loginBgMedia" alt="">
         <video id="loginBgVideo" autoplay loop muted playsinline></video>
         <div class="login-overlay-gradient"></div>
-        <div class="login-orb login-orb-1"></div>
-        <div class="login-orb login-orb-2"></div>
-        <div class="login-orb login-orb-3"></div>
         <div class="matrix-bg" id="matrixBg"></div>
-        <button class="login-bg-toggle" id="loginBgToggle" onclick="openLoginBgModal()" title="Trocar fundo da tela de login (Admin)" style="display:none;">🎬</button>
+        <button class="login-bg-toggle" id="loginBgToggle" onclick="openLoginBgModal()" title="Trocar fundo da tela de login (Admin)" style="display:none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+            </svg>
+        </button>
         
-        <div class="login-dev-container">
-            <div class="login-dev-image" id="loginDevImageContainer">
-                <img id="loginDevImage" src="" alt="Thiago Souza" style="display:none;">
+        <div class="login-split">
+            <div class="login-brand-panel">
+                <div class="login-brand-logo">
+                    <svg viewBox="0 0 64 64" width="84" height="84">
+                        <defs>
+                            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#00ccff"/>
+                                <stop offset="100%" stop-color="#005f99"/>
+                            </linearGradient>
+                        </defs>
+                        <circle cx="32" cy="32" r="28" fill="none" stroke="url(#logoGrad)" stroke-width="2"/>
+                        <circle cx="32" cy="32" r="20" fill="none" stroke="url(#logoGrad)" stroke-width="1" opacity="0.5"/>
+                        <path d="M 32 16 L 32 48 M 16 32 L 48 32" stroke="url(#logoGrad)" stroke-width="2"/>
+                        <circle cx="32" cy="32" r="4" fill="url(#logoGrad)"/>
+                        <circle cx="20" cy="20" r="3" fill="#00ccff"/>
+                        <circle cx="44" cy="20" r="3" fill="#00ccff"/>
+                        <circle cx="20" cy="44" r="3" fill="#00ccff"/>
+                        <circle cx="44" cy="44" r="3" fill="#00ccff"/>
+                    </svg>
+                </div>
+                <h1 class="login-brand-name">PROJETIZE</h1>
+                <p class="login-brand-tagline">Infraestrutura · CFTV · Datacenter</p>
+                <div class="login-brand-divider"></div>
+                <div class="login-brand-features">
+                    <div class="feature-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        <span>Projetos 2D completos</span>
+                    </div>
+                    <div class="feature-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                        <span>Simulador 3D de Rack</span>
+                    </div>
+                    <div class="feature-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        <span>Exportação PDF & Orçamento</span>
+                    </div>
+                </div>
             </div>
-            <div class="login-dev-name">Thiago Souza</div>
-            <div class="login-dev-role">Analista de Tecnologia • São José do Rio Preto</div>
             
-            <div class="login-brand">
-                <div class="login-logo">🎥🔒</div>
-                <div class="login-title">PROJETIZE</div>
-            </div>
-            <div class="login-subtitle">Sistema Para CFTV, Redes e muito mais...</div>
-            
-            <input type="text" id="loginUsername" class="login-input" placeholder="Usuário" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()">
-            <input type="password" id="loginPassword" class="login-input" placeholder="Senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
-            <button class="login-btn" id="loginBtn" onclick="doLogin()">Entrar no Sistema</button>
-            
-            <div class="login-error" id="loginError">Usuário ou senha inválidos</div>
-            
-            <div class="login-footer">
-                Desenvolvido por <strong style="color:#00ccff;">Thiago Souza</strong><br>
-                Todos os direitos reservados © 2026<br>
-                <a href="https://wa.me/5517996009537" target="_blank">📱 (17) 99600-9537</a>
+            <div class="login-form-panel">
+                <div class="login-form-header">
+                    <div class="login-avatar">
+                        <img id="loginDevImage" src="" alt="Desenvolvedor" style="display:none;">
+                        <svg id="loginAvatarFallback" viewBox="0 0 64 64" width="78" height="78">
+                            <circle cx="32" cy="32" r="30" fill="#0f172a"/>
+                            <circle cx="32" cy="26" r="10" fill="#38bdf8" opacity="0.85"/>
+                            <path d="M 14 52 Q 14 38 32 38 Q 50 38 50 52" fill="#38bdf8" opacity="0.85"/>
+                        </svg>
+                    </div>
+                    <h2 class="login-form-title">Bem-vindo de volta</h2>
+                    <p class="login-form-subtitle">Faça login para continuar</p>
+                </div>
+                
+                <div class="login-form-body">
+                    <div class="login-input-group">
+                        <label for="loginUsername">Usuário</label>
+                        <div class="login-input-wrapper">
+                            <svg class="login-input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <input type="text" id="loginUsername" class="login-input-field" placeholder="Digite seu usuário" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()">
+                        </div>
+                    </div>
+                    <div class="login-input-group">
+                        <label for="loginPassword">Senha</label>
+                        <div class="login-input-wrapper">
+                            <svg class="login-input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            <input type="password" id="loginPassword" class="login-input-field" placeholder="Digite sua senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+                        </div>
+                    </div>
+                    <button class="login-submit-btn" id="loginBtn" onclick="doLogin()">
+                        <span>Acessar Sistema</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </button>
+                    <div class="login-error" id="loginError"></div>
+                </div>
+                
+                <div class="login-form-footer">
+                    <p><strong>Thiago Souza</strong> · Analista de Tecnologia</p>
+                    <p>São José do Rio Preto · © 2026 Projetize</p>
+                </div>
             </div>
         </div>
     </div>
+    <!-- ============================================================ -->
     
     <div class="dev-badge" id="devBadge">
         <img class="dev-badge-img" id="badgeDevImage" src="" alt="TS">
@@ -1404,18 +1326,17 @@ HTML_TEMPLATE = """
     <div id="sim3d-overlay">
         <div id="sim3d-container"></div>
         
-        <!-- Header -->
         <div class="sim3d-header">
             <div class="sim3d-brand sim3d-glass">
                 <div class="sim3d-brand-icon">🖥️</div>
                 <div>
-                    <h1>Simulador Datacenter 3D</h1>
-                    <p>Montagem • Cabeamento • Automação</p>
+                    <h1>Rack 3D · Rede</h1>
+                    <p>Dispositivos de rede com modelos realistas</p>
                 </div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
                 <button id="sim3d-toggle-drawer" class="sim3d-btn">
-                    📦 Gerenciar Rack (<span id="sim3d-mounted-count">0</span>/11)
+                    📦 Gerenciar Rack (<span id="sim3d-mounted-count">0</span>)
                 </button>
                 <button id="sim3d-run-script" class="sim3d-btn sim3d-btn-primary">
                     ⚡ Executar Script
@@ -1424,22 +1345,20 @@ HTML_TEMPLATE = """
             </div>
         </div>
         
-        <!-- Equipment Drawer -->
         <div id="sim3d-equipment-drawer" class="sim3d-drawer sim3d-glass closed">
             <div class="sim3d-drawer-header">
-                <h2>🔧 Equipamentos do Datacenter</h2>
+                <h2>🌐 Dispositivos de Rede</h2>
                 <button id="sim3d-close-drawer" class="sim3d-drawer-close">✕</button>
             </div>
-            <p class="sim3d-drawer-hint">Clique para montar/desmontar no Rack 3D. Use ▲▼ para reordenar.</p>
+            <p class="sim3d-drawer-hint">Somente equipamentos da categoria <strong>Rede</strong>. Cada tipo tem modelo 3D realista.</p>
             <div id="sim3d-equipment-list" class="sim3d-drawer-list"></div>
             <div style="padding-top:10px;border-top:1px solid #1e293b;margin-top:10px;text-align:center;">
                 <button id="sim3d-reset-btn" class="sim3d-btn" style="font-size:10px;background:none;border:none;color:#94a3b8;">
-                    🔄 Resetar Datacenter
+                    🔄 Resetar Rack
                 </button>
             </div>
         </div>
         
-        <!-- Connections Panel -->
         <div id="sim3d-connections-panel" class="sim3d-connections-panel sim3d-glass" style="display:none;">
             <div class="sim3d-connections-title">
                 <span>🔗 Conexões Ativas (<span id="sim3d-connections-count">0</span>)</span>
@@ -1447,7 +1366,6 @@ HTML_TEMPLATE = """
             <div id="sim3d-connections-list" class="sim3d-connections-list"></div>
         </div>
         
-        <!-- Patch Modal -->
         <div id="sim3d-patch-modal" class="sim3d-patch-modal">
             <div class="sim3d-patch-content sim3d-glass">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
@@ -1480,13 +1398,12 @@ HTML_TEMPLATE = """
             </div>
         </div>
         
-        <!-- Terminal Modal -->
         <div id="sim3d-terminal" class="sim3d-terminal">
             <div class="sim3d-terminal-content sim3d-glass">
                 <div class="sim3d-terminal-header">
                     <div class="sim3d-terminal-title">
                         <span style="width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 8px #34d399;"></span>
-                        CLI Terminal // Datacenter Automation
+                        CLI Terminal // Network Automation
                     </div>
                     <button id="sim3d-terminal-close" class="sim3d-btn-close" style="width:28px;height:28px;font-size:12px;">✕</button>
                 </div>
@@ -1496,7 +1413,6 @@ HTML_TEMPLATE = """
             </div>
         </div>
         
-        <!-- Toast -->
         <div id="sim3d-toast" class="sim3d-toast sim3d-glass">
             <span style="color:#34d399;">✅</span>
             <span id="sim3d-toast-message">Notificação</span>
@@ -1550,6 +1466,7 @@ HTML_TEMPLATE = """
         let resizeStart = {x:0, y:0, width:0, height:0, x:0, y:0};
         let selectedConnectionType = null;
         let loginBgConfig = { type: 'matrix', filename: null, opacity: 0.35, mime: null };
+        let lastMousePos = null;
         
         function getDeviceType() {
             const ua = navigator.userAgent;
@@ -1592,8 +1509,6 @@ HTML_TEMPLATE = """
         let cableColors = JSON.parse(JSON.stringify(defaultCableColors));
         let customConnections = [];
         let connectionCategories = {};
-        let customCategoryIcons = {};
-        let customConnectionIcons = {};
         
         const STORAGE_KEYS = {
             ICON_SIZE: 'projetize_icon_size',
@@ -1648,10 +1563,7 @@ HTML_TEMPLATE = """
                         url: backgroundImage, opacity: backgroundOpacity, width: backgroundWidth,
                         height: backgroundHeight, x: backgroundX, y: backgroundY
                     }));
-                    // Salva estado do simulador 3D
-                    if (typeof window.saveSim3DState === 'function') {
-                        window.saveSim3DState();
-                    }
+                    if (typeof window.saveSim3DState === 'function') window.saveSim3DState();
                 }
             }, 300);
         }
@@ -1679,26 +1591,18 @@ HTML_TEMPLATE = """
             if (results[0].success) customDevices = results[0].devices;
             
             if (currentUser && results.length > 1) {
-                const savedComponents = results[1];
-                const savedConnectionsData = results[2];
-                const savedShapes = results[3];
-                const savedBackground = results[4];
-                
-                if(savedComponents) components = JSON.parse(savedComponents);
-                if(savedConnectionsData) connections = JSON.parse(savedConnectionsData);
-                if(savedShapes) shapes = JSON.parse(savedShapes);
-                if(savedBackground) {
-                    const bgData = JSON.parse(savedBackground);
+                if(results[1]) components = JSON.parse(results[1]);
+                if(results[2]) connections = JSON.parse(results[2]);
+                if(results[3]) shapes = JSON.parse(results[3]);
+                if(results[4]) {
+                    const bgData = JSON.parse(results[4]);
                     backgroundImage = bgData.url;
                     backgroundOpacity = bgData.opacity || 0.8;
                     backgroundWidth = bgData.width || 0;
                     backgroundHeight = bgData.height || 0;
                     backgroundX = bgData.x || canvas.width/2 - (bgData.width || 0)/2;
                     backgroundY = bgData.y || canvas.height/2 - (bgData.height || 0)/2;
-                    if(backgroundImage) {
-                        backgroundImageObj = new Image();
-                        backgroundImageObj.src = backgroundImage;
-                    }
+                    if(backgroundImage) { backgroundImageObj = new Image(); backgroundImageObj.src = backgroundImage; }
                 }
             }
             
@@ -1719,8 +1623,8 @@ HTML_TEMPLATE = """
         function getConnectionKey(name) { return name.toLowerCase().replace(/[^a-z0-9]/g, ''); }
         function getIconUrl(filename) { if (!filename) return null; return `/uploads/icons/${filename}`; }
         function renderConnectionIcon(conn) { if (conn.iconFile) { return `<img src="/uploads/icons/${conn.iconFile}" style="width:24px;height:24px;object-fit:contain;">`; } return conn.icon || '🔌'; }
-        
-        function addCustomConnection(category, connData) {
+        function renderDeviceIcon(device) { if(device.iconFile) return `<img src="/uploads/icons/${device.iconFile}" style="width:24px;height:24px;object-fit:contain;">`; return device.icon || '📦'; }
+                function addCustomConnection(category, connData) {
             if (!connectionCategories[category]) connectionCategories[category] = { icon: '🔌', connections: [] };
             const key = getConnectionKey(connData.name);
             connectionCategories[category].connections.push(connData);
@@ -1744,8 +1648,7 @@ HTML_TEMPLATE = """
         function editCustomConnection(category, idx) {
             if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem editar conexões'); return; }
             const conn = connectionCategories[category].connections[idx];
-            const modal = document.createElement('div');
-            modal.className = 'modal';
+            const modal = document.createElement('div'); modal.className = 'modal';
             modal.innerHTML = `
                 <div class="modal-content">
                     <h3 style="color:var(--text-accent);">✏️ Editar Conexão</h3>
@@ -1761,7 +1664,7 @@ HTML_TEMPLATE = """
                 </div>`;
             document.body.appendChild(modal); window.currentModal = modal;
             const imageInput = document.getElementById('connIconImage');
-            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('connIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;max-height:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'connection' }) }); const data = await response.json(); if (data.success) { window.tempConnectionIconFile = data.filename; showToast('✅ Ícone da conexão enviado com sucesso!'); } } }; }
+            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('connIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;max-height:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'connection' }) }); const data = await response.json(); if (data.success) { window.tempConnectionIconFile = data.filename; showToast('✅ Ícone da conexão enviado!'); } } }; }
         }
         
         window.updateCustomConnection = async (category, idx) => {
@@ -1778,47 +1681,33 @@ HTML_TEMPLATE = """
         function openCategoryIconModal(catName) {
             if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem alterar ícones de categorias'); return; }
             const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <h3 style="color:var(--text-accent);">🎨 Ícone da Categoria: ${catName}</h3>
-                    <p>Escolha um novo ícone para a categoria. Isso será visível para todos os usuários.</p>
-                    <div class="property-group"><label>Use um emoji</label><input type="text" id="catEmoji" placeholder="🎥" value="${categories[catName]?.icon || '📁'}" maxlength="2"></div>
-                    <div class="property-group"><label>OU faça upload de uma imagem</label><input type="file" id="catIconImage" accept="image/*"><div class="image-preview" id="catIconPreview">${categories[catName]?.iconFile ? `<img src="/uploads/icons/${categories[catName].iconFile}" style="max-width:50px;max-height:50px;">` : ''}</div></div>
-                    <div class="modal-buttons"><button class="btn btn-primary" onclick="applyCategoryIcon('${catName.replace(/'/g, "\\'")}')">✅ Aplicar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div>
-                </div>`;
-            document.body.appendChild(modal); window.currentModal = modal; window.currentCategory = catName;
+            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🎨 Ícone da Categoria: ${catName}</h3><div class="property-group"><label>Use um emoji</label><input type="text" id="catEmoji" placeholder="🎥" value="${categories[catName]?.icon || '📁'}" maxlength="2"></div><div class="property-group"><label>OU faça upload de uma imagem</label><input type="file" id="catIconImage" accept="image/*"><div class="image-preview" id="catIconPreview">${categories[catName]?.iconFile ? `<img src="/uploads/icons/${categories[catName].iconFile}" style="max-width:50px;max-height:50px;">` : ''}</div></div><div class="modal-buttons"><button class="btn btn-primary" onclick="applyCategoryIcon('${catName.replace(/'/g, "\\'")}')">✅ Aplicar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
+            document.body.appendChild(modal); window.currentModal = modal;
             const imageInput = document.getElementById('catIconImage');
-            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('catIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;max-height:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'category' }) }); const data = await response.json(); if (data.success) { window.tempCategoryIconFile = data.filename; showToast('✅ Ícone da categoria enviado com sucesso!'); } } }; }
+            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('catIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;max-height:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'category' }) }); const data = await response.json(); if (data.success) { window.tempCategoryIconFile = data.filename; showToast('✅ Ícone enviado!'); } } }; }
         }
         
         window.applyCategoryIcon = async (catName) => {
             const emoji = document.getElementById('catEmoji').value; const iconFile = window.tempCategoryIconFile || categories[catName]?.iconFile || null;
             if (emoji) { categories[catName].icon = emoji; categories[catName].iconFile = null; } else if (iconFile) { categories[catName].iconFile = iconFile; categories[catName].icon = null; }
-            window.tempCategoryIconFile = null; saveUserData(); await saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ Ícone da categoria "${catName}" atualizado!`);
+            window.tempCategoryIconFile = null; saveUserData(); await saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ Ícone atualizado!`);
         };
         
         function openConnectionIconModal(category, idx) {
-            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem alterar ícones de conexões'); return; }
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores'); return; }
             const conn = connectionCategories[category].connections[idx];
             const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <h3 style="color:var(--text-accent);">🎨 Ícone da Conexão: ${conn.name}</h3>
-                    <p>Escolha um novo ícone para a conexão. Isso será visível para todos os usuários.</p>
-                    <div class="property-group"><label>Use um emoji</label><input type="text" id="connEmoji" placeholder="🔌" value="${conn.icon || '🔌'}" maxlength="2"></div>
-                    <div class="property-group"><label>OU faça upload de uma imagem</label><input type="file" id="connIconImage" accept="image/*"><div class="image-preview" id="connIconPreview">${conn.iconFile ? `<img src="/uploads/icons/${conn.iconFile}" style="max-width:50px;max-height:50px;">` : ''}</div></div>
-                    <div class="modal-buttons"><button class="btn btn-primary" onclick="applyConnectionIcon('${category.replace(/'/g, "\\'")}', ${idx})">✅ Aplicar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div>
-                </div>`;
-            document.body.appendChild(modal); window.currentModal = modal; window.currentConnCategory = category; window.currentConnIdx = idx;
+            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🎨 Ícone: ${conn.name}</h3><div class="property-group"><label>Emoji</label><input type="text" id="connEmoji" value="${conn.icon || '🔌'}" maxlength="2"></div><div class="property-group"><label>OU Imagem</label><input type="file" id="connIconImage" accept="image/*"><div class="image-preview" id="connIconPreview">${conn.iconFile ? `<img src="/uploads/icons/${conn.iconFile}" style="max-width:50px;">` : ''}</div></div><div class="modal-buttons"><button class="btn btn-primary" onclick="applyConnectionIcon('${category.replace(/'/g, "\\'")}', ${idx})">✅ Aplicar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
+            document.body.appendChild(modal); window.currentModal = modal;
             const imageInput = document.getElementById('connIconImage');
-            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('connIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;max-height:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'connection' }) }); const data = await response.json(); if (data.success) { window.tempConnectionIconFile = data.filename; showToast('✅ Ícone da conexão enviado com sucesso!'); } } }; }
+            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('connIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'connection' }) }); const data = await response.json(); if (data.success) { window.tempConnectionIconFile = data.filename; } } }; }
         }
         
         window.applyConnectionIcon = async (category, idx) => {
             const emoji = document.getElementById('connEmoji').value; const iconFile = window.tempConnectionIconFile || connectionCategories[category].connections[idx].iconFile || null; const conn = connectionCategories[category].connections[idx];
             if (emoji) { conn.icon = emoji; conn.iconFile = null; } else if (iconFile) { conn.iconFile = iconFile; conn.icon = null; }
             const key = getConnectionKey(conn.name); if (cableColors[key]) { cableColors[key].icon = conn.icon || '🔌'; cableColors[key].iconFile = conn.iconFile; }
-            window.tempConnectionIconFile = null; saveUserData(); await saveGlobalLibrary(); closeModal(); renderConnectionsPalette(); showToast(`✅ Ícone da conexão "${conn.name}" atualizado!`);
+            window.tempConnectionIconFile = null; saveUserData(); await saveGlobalLibrary(); closeModal(); renderConnectionsPalette(); showToast(`✅ Ícone atualizado!`);
         };
         
         function renderConnectionsPalette() {
@@ -1833,29 +1722,26 @@ HTML_TEMPLATE = """
                 const connContainer = document.getElementById(`conn-category-${catName.replace(/[^a-zA-Z0-9]/g, '_')}`);
                 catData.connections.forEach((conn, idx) => {
                     const connEl = document.createElement('div'); connEl.className = 'component'; connEl.style.cursor = 'pointer';
-                    connEl.onclick = () => { selectedConnectionType = getConnectionKey(conn.name); showToast(`✅ Tipo de conexão selecionado: ${conn.name}`); };
-                    connEl.innerHTML = `<div class="component-icon">${renderConnectionIcon(conn)}</div><div class="component-info"><div class="component-name">${conn.name}</div><div class="component-desc">${conn.desc || conn.speed || ''}</div></div>${(userRole === 'admin' || userRole === 'master') ? `<div class="component-actions"><button onclick="editCustomConnection('${catName.replace(/'/g, "\\'")}', ${idx})" title="Editar">✏️</button><button onclick="openConnectionIconModal('${catName.replace(/'/g, "\\'")}', ${idx})" title="Alterar Ícone">🎨</button><button onclick="deleteCustomConnection('${catName.replace(/'/g, "\\'")}', ${idx})" title="Excluir">🗑</button></div>` : ''}`;
+                    connEl.onclick = () => { selectedConnectionType = getConnectionKey(conn.name); showToast(`✅ Tipo de conexão: ${conn.name}`); };
+                    connEl.innerHTML = `<div class="component-icon">${renderConnectionIcon(conn)}</div><div class="component-info"><div class="component-name">${conn.name}</div><div class="component-desc">${conn.desc || conn.speed || ''}</div></div>${(userRole === 'admin' || userRole === 'master') ? `<div class="component-actions"><button onclick="editCustomConnection('${catName.replace(/'/g, "\\'")}', ${idx})" title="Editar">✏️</button><button onclick="openConnectionIconModal('${catName.replace(/'/g, "\\'")}', ${idx})" title="Ícone">🎨</button><button onclick="deleteCustomConnection('${catName.replace(/'/g, "\\'")}', ${idx})" title="Excluir">🗑</button></div>` : ''}`;
                     connContainer.appendChild(connEl);
                 });
             }
         }
-        
-        function renderDeviceIcon(device) { if(device.iconFile) return `<img src="/uploads/icons/${device.iconFile}" style="width:24px;height:24px;object-fit:contain;">`; return device.icon || '📦'; }
         
         function renderPalette() {
             const container = document.getElementById('categories-container'); if(!container) return; container.innerHTML = '';
             for(const [catName, catData] of Object.entries(categories)) {
                 const categoryDiv = document.createElement('div'); categoryDiv.className = 'category';
                 const catIcon = catData.iconFile ? `<img src="/uploads/icons/${catData.iconFile}" style="width:16px;height:16px;">` : (catData.icon || '📁');
-                categoryDiv.innerHTML = `<div class="category-header"><h3>${catIcon} ${catName}</h3>${(userRole === 'admin' || userRole === 'master') ? `<div class="category-actions"><button onclick="editCategory('${catName.replace(/'/g, "\\'")}')" title="Editar">✏️</button><button onclick="openCategoryIconModal('${catName.replace(/'/g, "\\'")}')" title="Alterar Ícone">🎨</button><button onclick="deleteCategory('${catName.replace(/'/g, "\\'")}')" title="Excluir">🗑</button><button onclick="addDeviceToCategory('${catName.replace(/'/g, "\\'")}')" title="Adicionar">➕</button></div>` : ''}</div><div id="category-${catName.replace(/[^a-zA-Z0-9]/g, '_')}"></div>`;
+                categoryDiv.innerHTML = `<div class="category-header"><h3>${catIcon} ${catName}</h3>${(userRole === 'admin' || userRole === 'master') ? `<div class="category-actions"><button onclick="editCategory('${catName.replace(/'/g, "\\'")}')" title="Editar">✏️</button><button onclick="openCategoryIconModal('${catName.replace(/'/g, "\\'")}')" title="Ícone">🎨</button><button onclick="deleteCategory('${catName.replace(/'/g, "\\'")}')" title="Excluir">🗑</button><button onclick="addDeviceToCategory('${catName.replace(/'/g, "\\'")}')" title="Adicionar">➕</button></div>` : ''}</div><div id="category-${catName.replace(/[^a-zA-Z0-9]/g, '_')}"></div>`;
                 container.appendChild(categoryDiv);
                 const devicesContainer = document.getElementById(`category-${catName.replace(/[^a-zA-Z0-9]/g, '_')}`);
                 if (catData.devices) {
                     catData.devices.forEach((device, idx) => {
                         const deviceEl = document.createElement('div'); deviceEl.className = 'component'; deviceEl.setAttribute('draggable', 'true');
-                        deviceEl.setAttribute('data-device-name', device.name); deviceEl.setAttribute('data-device-icon', device.icon); deviceEl.setAttribute('data-device-type', device.type); deviceEl.setAttribute('data-device-subtype', device.subtype || ''); deviceEl.setAttribute('data-device-color', device.color); deviceEl.setAttribute('data-device-iconfile', device.iconFile || '');
                         if (!device.id) device.id = Date.now() + idx;
-                        deviceEl.innerHTML = `<div class="component-icon">${renderDeviceIcon(device)}</div><div class="component-info"><div class="component-name">${device.name}</div><div class="component-desc">${device.desc || ''}</div></div>${(userRole === 'admin' || userRole === 'master') ? `<div class="component-actions"><button onclick="editDevice('${catName.replace(/'/g, "\\'")}', ${idx})" title="Editar">✏️</button><button onclick="openDeviceIconModal('${catName.replace(/'/g, "\\'")}', ${idx})" title="Alterar Ícone">🎨</button><button onclick="deleteDevice('${catName.replace(/'/g, "\\'")}', ${idx})" title="Excluir">🗑</button></div>` : ''}`;
+                        deviceEl.innerHTML = `<div class="component-icon">${renderDeviceIcon(device)}</div><div class="component-info"><div class="component-name">${device.name}</div><div class="component-desc">${device.desc || ''}</div></div>${(userRole === 'admin' || userRole === 'master') ? `<div class="component-actions"><button onclick="editDevice('${catName.replace(/'/g, "\\'")}', ${idx})" title="Editar">✏️</button><button onclick="openDeviceIconModal('${catName.replace(/'/g, "\\'")}', ${idx})" title="Ícone">🎨</button><button onclick="deleteDevice('${catName.replace(/'/g, "\\'")}', ${idx})" title="Excluir">🗑</button></div>` : ''}`;
                         deviceEl.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ name: device.name, icon: device.icon, type: device.type, subtype: device.subtype || '', color: device.color, iconFile: device.iconFile || null })); });
                         devicesContainer.appendChild(deviceEl);
                     });
@@ -1868,7 +1754,7 @@ HTML_TEMPLATE = """
                 const customContainer = document.getElementById('custom-devices-container');
                 customDevices.forEach((device, idx) => {
                     const deviceEl = document.createElement('div'); deviceEl.className = 'component'; deviceEl.setAttribute('draggable', 'true');
-                    deviceEl.innerHTML = `<div class="component-icon">${renderDeviceIcon(device)}</div><div class="component-info"><div class="component-name">${device.name}</div><div class="component-desc">${device.desc || 'Personalizado'}</div></div>${(userRole === 'admin' || userRole === 'master') ? `<div class="component-actions"><button onclick="editCustomDevice(${idx})" title="Editar">✏️</button><button onclick="openCustomDeviceIconModal(${idx})" title="Alterar Ícone">🎨</button><button onclick="deleteCustomDevice(${idx})" title="Excluir">🗑</button></div>` : ''}`;
+                    deviceEl.innerHTML = `<div class="component-icon">${renderDeviceIcon(device)}</div><div class="component-info"><div class="component-name">${device.name}</div><div class="component-desc">${device.desc || 'Personalizado'}</div></div>${(userRole === 'admin' || userRole === 'master') ? `<div class="component-actions"><button onclick="editCustomDevice(${idx})" title="Editar">✏️</button><button onclick="openCustomDeviceIconModal(${idx})" title="Ícone">🎨</button><button onclick="deleteCustomDevice(${idx})" title="Excluir">🗑</button></div>` : ''}`;
                     deviceEl.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ name: device.name, icon: device.icon, type: device.type || 'custom', subtype: 'custom', color: device.color || '#005f99', iconFile: device.iconFile || null })); });
                     customContainer.appendChild(deviceEl);
                 });
@@ -1876,62 +1762,50 @@ HTML_TEMPLATE = """
         }
         
         function openDeviceIconModal(catName, idx) {
-            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem alterar ícones de dispositivos'); return; }
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores'); return; }
             const device = categories[catName].devices[idx];
             const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <h3 style="color:var(--text-accent);">🎨 Ícone do Dispositivo: ${device.name}</h3>
-                    <p>Escolha um novo ícone para o dispositivo. Isso será visível para todos os usuários.</p>
-                    <div class="property-group"><label>Use um emoji</label><input type="text" id="devEmoji" placeholder="📹" value="${device.icon || '📦'}" maxlength="2"></div>
-                    <div class="property-group"><label>OU faça upload de uma imagem</label><input type="file" id="devIconImage" accept="image/*"><div class="image-preview" id="devIconPreview">${device.iconFile ? `<img src="/uploads/icons/${device.iconFile}" style="max-width:50px;max-height:50px;">` : ''}</div></div>
-                    <div class="modal-buttons"><button class="btn btn-primary" onclick="applyDeviceIcon('${catName.replace(/'/g, "\\'")}', ${idx})">✅ Aplicar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div>
-                </div>`;
-            document.body.appendChild(modal); window.currentModal = modal; window.currentDeviceCat = catName; window.currentDeviceIdx = idx;
+            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🎨 Ícone: ${device.name}</h3><div class="property-group"><label>Emoji</label><input type="text" id="devEmoji" value="${device.icon || '📦'}" maxlength="2"></div><div class="property-group"><label>OU Imagem</label><input type="file" id="devIconImage" accept="image/*"><div class="image-preview" id="devIconPreview">${device.iconFile ? `<img src="/uploads/icons/${device.iconFile}" style="max-width:50px;">` : ''}</div></div><div class="modal-buttons"><button class="btn btn-primary" onclick="applyDeviceIcon('${catName.replace(/'/g, "\\'")}', ${idx})">✅ Aplicar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
+            document.body.appendChild(modal); window.currentModal = modal;
             const imageInput = document.getElementById('devIconImage');
-            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('devIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;max-height:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'equipment' }) }); const data = await response.json(); if (data.success) { window.tempDeviceIconFile = data.filename; showToast('✅ Ícone do dispositivo enviado com sucesso!'); } } }; }
+            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('devIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'equipment' }) }); const data = await response.json(); if (data.success) { window.tempDeviceIconFile = data.filename; } } }; }
         }
         
         window.applyDeviceIcon = async (catName, idx) => {
             const emoji = document.getElementById('devEmoji').value; const iconFile = window.tempDeviceIconFile || categories[catName].devices[idx].iconFile || null; const device = categories[catName].devices[idx];
             if (emoji) { device.icon = emoji; device.iconFile = null; } else if (iconFile) { device.iconFile = iconFile; device.icon = null; }
-            window.tempDeviceIconFile = null; saveUserData(); await saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ Ícone do dispositivo "${device.name}" atualizado!`);
+            window.tempDeviceIconFile = null; saveUserData(); await saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ Ícone atualizado!`);
         };
         
         function openCustomDeviceIconModal(idx) {
-            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem alterar ícones de dispositivos'); return; }
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores'); return; }
             const device = customDevices[idx];
             const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <h3 style="color:var(--text-accent);">🎨 Ícone do Dispositivo: ${device.name}</h3>
-                    <p>Escolha um novo ícone para o dispositivo. Isso será visível para todos os usuários.</p>
-                    <div class="property-group"><label>Use um emoji</label><input type="text" id="devEmoji" placeholder="📹" value="${device.icon || '📦'}" maxlength="2"></div>
-                    <div class="property-group"><label>OU faça upload de uma imagem</label><input type="file" id="devIconImage" accept="image/*"><div class="image-preview" id="devIconPreview">${device.iconFile ? `<img src="/uploads/icons/${device.iconFile}" style="max-width:50px;max-height:50px;">` : ''}</div></div>
-                    <div class="modal-buttons"><button class="btn btn-primary" onclick="applyCustomDeviceIcon(${idx})">✅ Aplicar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div>
-                </div>`;
-            document.body.appendChild(modal); window.currentModal = modal; window.currentCustomDeviceIdx = idx;
+            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🎨 Ícone: ${device.name}</h3><div class="property-group"><label>Emoji</label><input type="text" id="devEmoji" value="${device.icon || '📦'}" maxlength="2"></div><div class="property-group"><label>OU Imagem</label><input type="file" id="devIconImage" accept="image/*"><div class="image-preview" id="devIconPreview">${device.iconFile ? `<img src="/uploads/icons/${device.iconFile}" style="max-width:50px;">` : ''}</div></div><div class="modal-buttons"><button class="btn btn-primary" onclick="applyCustomDeviceIcon(${idx})">✅ Aplicar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
+            document.body.appendChild(modal); window.currentModal = modal;
             const imageInput = document.getElementById('devIconImage');
-            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('devIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;max-height:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'equipment' }) }); const data = await response.json(); if (data.success) { window.tempDeviceIconFile = data.filename; showToast('✅ Ícone do dispositivo enviado com sucesso!'); } } }; }
+            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('devIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'equipment' }) }); const data = await response.json(); if (data.success) { window.tempDeviceIconFile = data.filename; } } }; }
         }
         
         window.applyCustomDeviceIcon = async (idx) => {
             const emoji = document.getElementById('devEmoji').value; const iconFile = window.tempDeviceIconFile || customDevices[idx].iconFile || null; const device = customDevices[idx];
             if (emoji) { device.icon = emoji; device.iconFile = null; } else if (iconFile) { device.iconFile = iconFile; device.icon = null; }
-            window.tempDeviceIconFile = null; saveUserData(); await saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ Ícone do dispositivo "${device.name}" atualizado!`);
+            window.tempDeviceIconFile = null; saveUserData(); await saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ Ícone atualizado!`);
         };
         
         function applyZoomToCanvas() { canvas.style.transform = `scale(${zoom})`; canvas.style.transformOrigin = '0 0'; }
-        function iconZoomIn() { iconSize = Math.min(iconSize + 4, 80); saveUserData(); showToast(`🔍 Tamanho do ícone: ${iconSize}px`); }
-        function iconZoomOut() { iconSize = Math.max(iconSize - 4, 20); saveUserData(); showToast(`🔍 Tamanho do ícone: ${iconSize}px`); }
-        function resetIconSize() { iconSize = 36; saveUserData(); showToast(`🔄 Tamanho do ícone restaurado: ${iconSize}px`); }
+        function iconZoomIn() { iconSize = Math.min(iconSize + 4, 80); saveUserData(); showToast(`🔍 Ícone: ${iconSize}px`); }
+        function iconZoomOut() { iconSize = Math.max(iconSize - 4, 20); saveUserData(); showToast(`🔍 Ícone: ${iconSize}px`); }
+        function resetIconSize() { iconSize = 36; saveUserData(); showToast(`🔄 Ícone: ${iconSize}px`); }
         function zoomIn() { zoom = Math.min(zoom + 0.1, 3); applyZoomToCanvas(); saveUserData(); showToast(`🔍 Zoom: ${Math.round(zoom * 100)}%`); }
         function zoomOut() { zoom = Math.max(zoom - 0.1, 0.3); applyZoomToCanvas(); saveUserData(); showToast(`🔍 Zoom: ${Math.round(zoom * 100)}%`); }
-        function resetZoom() { zoom = 1; applyZoomToCanvas(); saveUserData(); showToast(`🔄 Zoom restaurado: 100%`); }
+        function resetZoom() { zoom = 1; applyZoomToCanvas(); saveUserData(); showToast(`🔄 Zoom: 100%`); }
         
         function showToast(message) { const toast = document.createElement('div'); toast.className = 'toast'; toast.textContent = message; document.body.appendChild(toast); setTimeout(() => toast.remove(), 3000); }
         function closeModal() { if(window.currentModal) { document.body.removeChild(window.currentModal); window.currentModal = null; } }
+        function readImageAsBase64(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.readAsDataURL(file); }); }
         
+        // ==================== CANVAS DRAW ====================
         function drawGrid() {
             if(!showGrid) return;
             const step = 50; ctx.save(); ctx.strokeStyle = '#e0e0e0'; ctx.lineWidth = 0.5;
@@ -1945,8 +1819,8 @@ HTML_TEMPLATE = """
                 ctx.save(); ctx.globalAlpha = backgroundOpacity; ctx.drawImage(backgroundImageObj, backgroundX, backgroundY, backgroundWidth, backgroundHeight); ctx.globalAlpha = 1;
                 if(isBackgroundSelected) {
                     ctx.strokeStyle = '#005f99'; ctx.lineWidth = 3; ctx.setLineDash([8, 6]); ctx.strokeRect(backgroundX, backgroundY, backgroundWidth, backgroundHeight); ctx.setLineDash([]);
-                    const handleSize = 10; const handles = [{x: backgroundX, y: backgroundY},{x: backgroundX + backgroundWidth, y: backgroundY},{x: backgroundX, y: backgroundY + backgroundHeight},{x: backgroundX + backgroundWidth, y: backgroundY + backgroundHeight}];
-                    handles.forEach(h => { ctx.fillStyle = '#005f99'; ctx.fillRect(h.x - handleSize/2, h.y - handleSize/2, handleSize, handleSize); ctx.fillStyle = 'white'; ctx.fillRect(h.x - handleSize/3, h.y - handleSize/3, handleSize/1.5, handleSize/1.5); });
+                    const hs = 10; const handles = [{x: backgroundX, y: backgroundY},{x: backgroundX + backgroundWidth, y: backgroundY},{x: backgroundX, y: backgroundY + backgroundHeight},{x: backgroundX + backgroundWidth, y: backgroundY + backgroundHeight}];
+                    handles.forEach(h => { ctx.fillStyle = '#005f99'; ctx.fillRect(h.x - hs/2, h.y - hs/2, hs, hs); ctx.fillStyle = 'white'; ctx.fillRect(h.x - hs/3, h.y - hs/3, hs/1.5, hs/1.5); });
                 }
                 ctx.restore();
             }
@@ -1996,11 +1870,8 @@ HTML_TEMPLATE = """
                 if(isWireless) {
                     ctx.setLineDash(cableInfo.dashPattern || [10, 8]); ctx.strokeStyle = cableInfo.color; ctx.lineWidth = isSelected ? 4 : 2;
                     ctx.beginPath(); ctx.moveTo(fromComp.x, fromComp.y); ctx.lineTo(toComp.x, toComp.y); ctx.stroke();
-                    if (cableInfo.animation === 'wave') {
-                        for(let i = 0; i < 2; i++) { const t = (trafficAnimation + i * 0.4) % 1; drawWirelessAnimationOnLine(fromComp.x, fromComp.y, toComp.x, toComp.y, conn.type, t); }
-                    } else {
-                        for(let i = 0; i < 3; i++) { const t = (trafficAnimation + i * 0.25) % 1; drawWirelessAnimationOnLine(fromComp.x, fromComp.y, toComp.x, toComp.y, conn.type, t); }
-                    }
+                    if (cableInfo.animation === 'wave') { for(let i = 0; i < 2; i++) { const t = (trafficAnimation + i * 0.4) % 1; drawWirelessAnimationOnLine(fromComp.x, fromComp.y, toComp.x, toComp.y, conn.type, t); } }
+                    else { for(let i = 0; i < 3; i++) { const t = (trafficAnimation + i * 0.25) % 1; drawWirelessAnimationOnLine(fromComp.x, fromComp.y, toComp.x, toComp.y, conn.type, t); } }
                 } else {
                     ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(fromComp.x, fromComp.y); ctx.lineTo(toComp.x, toComp.y); ctx.strokeStyle = cableInfo.color; ctx.lineWidth = isSelected ? 4 : 2; ctx.stroke();
                     const t = trafficAnimation; const x = fromComp.x + (toComp.x - fromComp.x) * t; const y = fromComp.y + (toComp.y - fromComp.y) * t;
@@ -2043,15 +1914,12 @@ HTML_TEMPLATE = """
                 if(comp.type === 'sensor') drawSensorAnimation(comp.x, comp.y, sensorAnimationTime);
                 ctx.save(); ctx.translate(comp.x, comp.y); ctx.rotate((comp.rotation || 0) * Math.PI / 180); ctx.translate(-comp.x, -comp.y);
                 const halfSize = iconSize / 2;
-                
-                if(comp.iconFile) {
-                    ctx.drawImage(getCachedImage(`/uploads/icons/${comp.iconFile}`), comp.x-halfSize, comp.y-halfSize, iconSize, iconSize);
-                } else if(comp.customImage && comp.customImage.startsWith('data:image')) {
-                    ctx.drawImage(getCachedImage(comp.customImage), comp.x-halfSize, comp.y-halfSize, iconSize, iconSize);
-                } else if(comp.customImageTemp && comp.customImageTemp.startsWith('data:image')) {
-                    ctx.drawImage(getCachedImage(comp.customImageTemp), comp.x-halfSize, comp.y-halfSize, iconSize, iconSize);
-                } else {
-                    ctx.fillStyle = comp.color || '#005f99'; ctx.beginPath(); ctx.arc(comp.x, comp.y, iconSize/2, 0, 2*Math.PI); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = `${iconSize/2}px Arial`; const iconToShow = comp.customIconTemp || comp.icon || '📦'; ctx.fillText(iconToShow, comp.x-12, comp.y+8);
+                if(comp.iconFile) { ctx.drawImage(getCachedImage(`/uploads/icons/${comp.iconFile}`), comp.x-halfSize, comp.y-halfSize, iconSize, iconSize); }
+                else if(comp.customImage && comp.customImage.startsWith('data:image')) { ctx.drawImage(getCachedImage(comp.customImage), comp.x-halfSize, comp.y-halfSize, iconSize, iconSize); }
+                else if(comp.customImageTemp && comp.customImageTemp.startsWith('data:image')) { ctx.drawImage(getCachedImage(comp.customImageTemp), comp.x-halfSize, comp.y-halfSize, iconSize, iconSize); }
+                else {
+                    ctx.fillStyle = comp.color || '#005f99'; ctx.beginPath(); ctx.arc(comp.x, comp.y, iconSize/2, 0, 2*Math.PI); ctx.fill();
+                    ctx.fillStyle = '#fff'; ctx.font = `${iconSize/2}px Arial`; const iconToShow = comp.customIconTemp || comp.icon || '📦'; ctx.fillText(iconToShow, comp.x-12, comp.y+8);
                 }
                 ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#005f99'; ctx.font = `${12}px Arial`; ctx.fillText(comp.name, comp.x-30, comp.y - (iconSize/2) - 5);
                 if(comp.ip) { ctx.fillStyle = '#6c757d'; ctx.font = `${10}px Arial`; ctx.fillText(comp.ip, comp.x-25, comp.y - (iconSize/2) - 15); }
@@ -2088,7 +1956,6 @@ HTML_TEMPLATE = """
         }
         draw();
         
-        let lastMousePos = null;
         function getMousePos(e) {
             const rect = canvas.getBoundingClientRect(); const scaleX = canvas.width / rect.width; const scaleY = canvas.height / rect.height;
             let clientX, clientY;
@@ -2098,7 +1965,7 @@ HTML_TEMPLATE = """
         }
         
         function rotateComponent(comp, angle) { comp.rotation = (comp.rotation || 0) + angle; }
-        function accessDevice(comp) { if(comp && comp.ip && comp.ip.trim()) { let url = comp.ip; if(!url.startsWith('http://') && !url.startsWith('https://')) url = 'http://' + url; if(comp.port && comp.port !== 80) url += ':' + comp.port; window.open(url, '_blank'); showToast(`🌐 Abrindo ${comp.name} em ${comp.ip}`); } else if(comp) { showToast(`⚠️ O equipamento "${comp.name}" não possui IP configurado.`); } }
+        function accessDevice(comp) { if(comp && comp.ip && comp.ip.trim()) { let url = comp.ip; if(!url.startsWith('http://') && !url.startsWith('https://')) url = 'http://' + url; if(comp.port && comp.port !== 80) url += ':' + comp.port; window.open(url, '_blank'); showToast(`🌐 Abrindo ${comp.name}`); } else if(comp) { showToast(`⚠️ "${comp.name}" sem IP.`); } }
         
         function endShape(start, end, type) {
             if(!start || !end) return;
@@ -2131,7 +1998,7 @@ HTML_TEMPLATE = """
             const dx = px - xx; const dy = py - yy; return Math.sqrt(dx * dx + dy * dy);
         }
         
-        function isPointNearConnection(x, y, fromComp, toComp) { const dist = pointToLineDistance(x, y, fromComp.x, fromComp.y, toComp.x, toComp.y); return dist < 12; }
+        function isPointNearConnection(x, y, fromComp, toComp) { return pointToLineDistance(x, y, fromComp.x, fromComp.y, toComp.x, toComp.y) < 12; }
         
         function isPointOnShape(x, y, shape) {
             if(shape.type === 'line') { return pointToLineDistance(x, y, shape.x1, shape.y1, shape.x2, shape.y2) < 8; }
@@ -2161,28 +2028,26 @@ HTML_TEMPLATE = """
             let clickedConnection = null;
             for(let i = 0; i < connections.length; i++) { const conn = connections[i]; const fromComp = components.find(c => c.id === conn.from); const toComp = components.find(c => c.id === conn.to); if(fromComp && toComp) { if(isPointNearConnection(x, y, fromComp, toComp)) { clickedConnection = { index: i, conn: conn }; break; } } }
             if(clickedConnection) {
-                if(e.ctrlKey || e.metaKey || (e.touches && e.touches.length > 1)) { if(selectedConnectionIndex === clickedConnection.index) { selectedConnectionIndex = null; } else { selectedConnectionIndex = clickedConnection.index; } selectedComponents = []; selectedShapes = []; }
-                else { selectedConnectionIndex = clickedConnection.index; selectedComponents = []; selectedShapes = []; }
-                if(selectedConnectionIndex !== null) { showConnectionProperties(selectedConnectionIndex); openProperties(); } else { showProperties(null); closeProperties(); }
-                e.preventDefault(); return;
+                selectedConnectionIndex = clickedConnection.index; selectedComponents = []; selectedShapes = [];
+                showConnectionProperties(selectedConnectionIndex); openProperties(); e.preventDefault(); return;
             }
             if(backgroundWidth > 0 && backgroundHeight > 0) {
-                const handleSize = 12;
-                const isOnNW = (x >= backgroundX - handleSize && x <= backgroundX + handleSize && y >= backgroundY - handleSize && y <= backgroundY + handleSize);
-                const isOnNE = (x >= backgroundX + backgroundWidth - handleSize && x <= backgroundX + backgroundWidth + handleSize && y >= backgroundY - handleSize && y <= backgroundY + handleSize);
-                const isOnSW = (x >= backgroundX - handleSize && x <= backgroundX + handleSize && y >= backgroundY + backgroundHeight - handleSize && y <= backgroundY + backgroundHeight + handleSize);
-                const isOnSE = (x >= backgroundX + backgroundWidth - handleSize && x <= backgroundX + backgroundWidth + handleSize && y >= backgroundY + backgroundHeight - handleSize && y <= backgroundY + backgroundHeight + handleSize);
+                const hs = 12;
+                const isOnNW = (x >= backgroundX - hs && x <= backgroundX + hs && y >= backgroundY - hs && y <= backgroundY + hs);
+                const isOnNE = (x >= backgroundX + backgroundWidth - hs && x <= backgroundX + backgroundWidth + hs && y >= backgroundY - hs && y <= backgroundY + hs);
+                const isOnSW = (x >= backgroundX - hs && x <= backgroundX + hs && y >= backgroundY + backgroundHeight - hs && y <= backgroundY + backgroundHeight + hs);
+                const isOnSE = (x >= backgroundX + backgroundWidth - hs && x <= backgroundX + backgroundWidth + hs && y >= backgroundY + backgroundHeight - hs && y <= backgroundY + backgroundHeight + hs);
                 if(isOnNW || isOnNE || isOnSW || isOnSE) {
                     if(isOnNW) { isResizingBackground = true; resizeHandle = 'nw'; } else if(isOnNE) { isResizingBackground = true; resizeHandle = 'ne'; } else if(isOnSW) { isResizingBackground = true; resizeHandle = 'sw'; } else if(isOnSE) { isResizingBackground = true; resizeHandle = 'se'; }
                     resizeStart = { x: e.clientX || e.touches[0].clientX, y: e.clientY || e.touches[0].clientY, width: backgroundWidth, height: backgroundHeight, bgX: backgroundX, bgY: backgroundY };
                     isBackgroundSelected = true; e.preventDefault(); return;
                 } else if(x >= backgroundX && x <= backgroundX + backgroundWidth && y >= backgroundY && y <= backgroundY + backgroundHeight) {
                     isBackgroundSelected = true; isDraggingBackgroundImage = true; dragBackgroundStart = { x: (e.clientX || e.touches[0].clientX) - backgroundX, y: (e.clientY || e.touches[0].clientY) - backgroundY };
-                    showToast('✅ Imagem selecionada! Arraste para mover ou redimensione pelos cantos.'); e.preventDefault(); return;
+                    showToast('✅ Imagem selecionada!'); e.preventDefault(); return;
                 } else { isBackgroundSelected = false; }
             }
             for(let comp of components) { if(selectedComponents.includes(comp)) { const handleX = comp.x + (iconSize/2) + 8; const handleY = comp.y - (iconSize/2) - 8; if(Math.hypot(x - handleX, y - handleY) < 10) { rotateComponent(comp, 15); saveUserData(); return; } } }
-            for(let comp of components) { if(comp.type === 'camera') { const angleRad = comp.angle * Math.PI / 180; const distance = 100; const handleX = comp.x + Math.cos(angleRad) * distance; const handleY = comp.y + Math.sin(angleRad) * distance; if(Math.hypot(x - handleX, y - handleY) < 10) { currentAngleHandle = comp; return; } } }
+            for(let comp of components) { if(comp.type === 'camera') { const angleRad = (comp.angle || 0) * Math.PI / 180; const distance = 100; const handleX = comp.x + Math.cos(angleRad) * distance; const handleY = comp.y + Math.sin(angleRad) * distance; if(Math.hypot(x - handleX, y - handleY) < 10) { currentAngleHandle = comp; return; } } }
             if(e.ctrlKey || e.metaKey || (e.touches && e.touches.length > 1)) { startSelection(e); selectedComponents = []; selectedShapes = []; selectedConnectionIndex = null; showProperties(null); }
             else { selectedComponents = []; selectedShapes = []; selectedConnectionIndex = null; dragging = false; showProperties(null); }
             if(e.shiftKey) { for(let comp of components) { if(Math.hypot(x - comp.x, y - comp.y) < iconSize/2) { isDrawingConnection = true; connectionStart = comp; return; } } }
@@ -2219,7 +2084,7 @@ HTML_TEMPLATE = """
             if(shapeMode && shapeStart) { const {x, y} = getMousePos(e); endShape(shapeStart, {x, y}, shapeMode); shapeStart = null; drawingPreview = false; return; }
             currentAngleHandle = null; dragging = false; isDraggingBackgroundImage = false; isResizingBackground = false; resizeHandle = null;
             if(isSelecting) endSelection();
-            if(isDrawingConnection && connectionStart) { showToast('Clique em um equipamento para conectar'); }
+            if(isDrawingConnection && connectionStart) { showToast('Clique em outro equipamento para conectar'); }
             isDrawingConnection = false; connectionStart = null;
         }
         
@@ -2232,7 +2097,7 @@ HTML_TEMPLATE = """
             e.preventDefault(); const {x, y} = getMousePos(e);
             if(isBackgroundSelected && backgroundWidth > 0 && backgroundHeight > 0 && x >= backgroundX && x <= backgroundX + backgroundWidth && y >= backgroundY && y <= backgroundY + backgroundHeight) {
                 const menu = document.getElementById('contextMenu');
-                menu.innerHTML = `<div class="context-menu-item" onclick="openBackgroundModal()">✏️ Editar Imagem</div><div class="context-menu-item" onclick="removeBackground()">🗑 Remover Imagem</div><div class="context-menu-item" onclick="isBackgroundSelected=false; showToast('Imagem desselecionada');">🔲 Desselecionar</div>`;
+                menu.innerHTML = `<div class="context-menu-item" onclick="openBackgroundModal()">✏️ Editar Imagem</div><div class="context-menu-item" onclick="removeBackground()">🗑 Remover Imagem</div><div class="context-menu-item" onclick="isBackgroundSelected=false; showToast('Desselecionada');">🔲 Desselecionar</div>`;
                 menu.style.display = 'block'; menu.style.left = e.pageX + 'px'; menu.style.top = e.pageY + 'px';
                 setTimeout(() => document.addEventListener('click', () => menu.style.display = 'none', {once: true}), 100); return;
             }
@@ -2251,17 +2116,17 @@ HTML_TEMPLATE = """
         
         window.openPermanentIconModalFromMenu = () => { if(contextMenuComponent) openPermanentIconModal(contextMenuComponent); document.getElementById('contextMenu').style.display = 'none'; };
         window.accessDeviceFromMenu = () => { if(contextMenuComponent) accessDevice(contextMenuComponent); document.getElementById('contextMenu').style.display = 'none'; };
-        window.copyIpFromMenu = () => { if(contextMenuComponent && contextMenuComponent.ip) { navigator.clipboard.writeText(contextMenuComponent.ip); showToast(`📋 IP ${contextMenuComponent.ip} copiado!`); } else { showToast('Nenhum IP configurado'); } document.getElementById('contextMenu').style.display = 'none'; };
+        window.copyIpFromMenu = () => { if(contextMenuComponent && contextMenuComponent.ip) { navigator.clipboard.writeText(contextMenuComponent.ip); showToast(`📋 IP copiado!`); } else { showToast('Nenhum IP'); } document.getElementById('contextMenu').style.display = 'none'; };
         window.rotateLeftFromMenu = () => { if(contextMenuComponent) rotateComponent(contextMenuComponent, -15); document.getElementById('contextMenu').style.display = 'none'; };
         window.rotateRightFromMenu = () => { if(contextMenuComponent) rotateComponent(contextMenuComponent, 15); document.getElementById('contextMenu').style.display = 'none'; };
         window.flipComponentFromMenu = () => { if(contextMenuComponent) flipComponent(contextMenuComponent); document.getElementById('contextMenu').style.display = 'none'; };
-        window.deleteComponentFromMenu = () => { if(contextMenuComponent) { connections = connections.filter(c => c.from !== contextMenuComponent.id && c.to !== contextMenuComponent.id); components = components.filter(c => c.id !== contextMenuComponent.id); selectedComponents = selectedComponents.filter(c => c.id !== contextMenuComponent.id); showProperties(null); if(selectedComponents.length === 0 && selectedShapes.length === 0 && selectedConnectionIndex === null) closeProperties(); showToast(`🗑 ${contextMenuComponent.name} removido!`); saveUserData(); } document.getElementById('contextMenu').style.display = 'none'; };
-        window.duplicateComponentFromMenu = () => { if(contextMenuComponent) { const newComp = JSON.parse(JSON.stringify(contextMenuComponent)); newComp.id = Date.now(); newComp.x += 30; newComp.y += 30; if(newComp.type === 'camera') { newComp.angle = newComp.angle || 0; newComp.fov = newComp.fov || 80; } components.push(newComp); showToast(`📋 ${contextMenuComponent.name} duplicado!`); saveUserData(); } document.getElementById('contextMenu').style.display = 'none'; };
+        window.deleteComponentFromMenu = () => { if(contextMenuComponent) { connections = connections.filter(c => c.from !== contextMenuComponent.id && c.to !== contextMenuComponent.id); components = components.filter(c => c.id !== contextMenuComponent.id); selectedComponents = selectedComponents.filter(c => c.id !== contextMenuComponent.id); showProperties(null); if(selectedComponents.length === 0 && selectedShapes.length === 0 && selectedConnectionIndex === null) closeProperties(); showToast(`🗑 Removido!`); saveUserData(); } document.getElementById('contextMenu').style.display = 'none'; };
+        window.duplicateComponentFromMenu = () => { if(contextMenuComponent) { const newComp = JSON.parse(JSON.stringify(contextMenuComponent)); newComp.id = Date.now(); newComp.x += 30; newComp.y += 30; components.push(newComp); showToast(`📋 Duplicado!`); saveUserData(); } document.getElementById('contextMenu').style.display = 'none'; };
         
         function showShapeContextMenu(e, shape) {
             e.preventDefault(); contextMenuShape = shape;
             const menu = document.getElementById('contextMenu');
-            menu.innerHTML = `<div class="context-menu-item" onclick="editShapeFromMenu()">✏️ Editar</div><div class="context-menu-item" onclick="rotateShapeLeftFromMenu()">🔄 Girar Esquerda</div><div class="context-menu-item" onclick="rotateShapeRightFromMenu()">🔄 Girar Direita</div><div class="context-menu-item" onclick="flipShapeFromMenu()">🔁 Inverter Posição</div><div class="context-menu-item" onclick="deleteShapeFromMenu()">🗑 Excluir</div><div class="context-menu-item" onclick="duplicateShapeFromMenu()">📋 Duplicar</div>`;
+            menu.innerHTML = `<div class="context-menu-item" onclick="editShapeFromMenu()">✏️ Editar</div><div class="context-menu-item" onclick="rotateShapeLeftFromMenu()">🔄 Girar Esquerda</div><div class="context-menu-item" onclick="rotateShapeRightFromMenu()">🔄 Girar Direita</div><div class="context-menu-item" onclick="flipShapeFromMenu()">🔁 Inverter</div><div class="context-menu-item" onclick="deleteShapeFromMenu()">🗑 Excluir</div><div class="context-menu-item" onclick="duplicateShapeFromMenu()">📋 Duplicar</div>`;
             menu.style.display = 'block'; menu.style.left = e.pageX + 'px'; menu.style.top = e.pageY + 'px';
             setTimeout(() => document.addEventListener('click', () => menu.style.display = 'none', {once: true}), 100);
         }
@@ -2269,9 +2134,9 @@ HTML_TEMPLATE = """
         window.editShapeFromMenu = () => { if(contextMenuShape) { showShapeProperties(contextMenuShape); openProperties(); } document.getElementById('contextMenu').style.display = 'none'; };
         window.rotateShapeLeftFromMenu = () => { if(contextMenuShape && (contextMenuShape.type === 'door' || contextMenuShape.type === 'window')) { contextMenuShape.rotation = (contextMenuShape.rotation || 0) - 15; saveUserData(); } document.getElementById('contextMenu').style.display = 'none'; };
         window.rotateShapeRightFromMenu = () => { if(contextMenuShape && (contextMenuShape.type === 'door' || contextMenuShape.type === 'window')) { contextMenuShape.rotation = (contextMenuShape.rotation || 0) + 15; saveUserData(); } document.getElementById('contextMenu').style.display = 'none'; };
-        window.flipShapeFromMenu = () => { if(contextMenuShape) { if(contextMenuShape.type === 'line') { const tempX = contextMenuShape.x1; const tempY = contextMenuShape.y1; contextMenuShape.x1 = contextMenuShape.x2; contextMenuShape.y1 = contextMenuShape.y2; contextMenuShape.x2 = tempX; contextMenuShape.y2 = tempY; } else { contextMenuShape.rotation = (contextMenuShape.rotation || 0) + 180; } showToast(`🔄 Forma invertida!`); saveUserData(); } document.getElementById('contextMenu').style.display = 'none'; };
-        window.deleteShapeFromMenu = () => { if(contextMenuShape) { shapes = shapes.filter(s => s.id !== contextMenuShape.id); selectedShapes = selectedShapes.filter(s => s.id !== contextMenuShape.id); showProperties(null); if(selectedShapes.length === 0 && selectedComponents.length === 0 && selectedConnectionIndex === null) closeProperties(); document.getElementById('deleteShapeBtn').style.display = 'none'; showToast('🗑 Forma removida!'); saveUserData(); } document.getElementById('contextMenu').style.display = 'none'; };
-        window.duplicateShapeFromMenu = () => { if(contextMenuShape) { const newShape = JSON.parse(JSON.stringify(contextMenuShape)); newShape.id = Date.now(); if(newShape.type === 'line') { newShape.x1 += 30; newShape.y1 += 30; newShape.x2 += 30; newShape.y2 += 30; } else if(newShape.type === 'text') { newShape.x += 30; newShape.y += 30; } else { newShape.x += 30; newShape.y += 30; } shapes.push(newShape); showToast(`📋 Forma duplicada!`); saveUserData(); } document.getElementById('contextMenu').style.display = 'none'; };
+        window.flipShapeFromMenu = () => { if(contextMenuShape) { if(contextMenuShape.type === 'line') { const tX = contextMenuShape.x1; const tY = contextMenuShape.y1; contextMenuShape.x1 = contextMenuShape.x2; contextMenuShape.y1 = contextMenuShape.y2; contextMenuShape.x2 = tX; contextMenuShape.y2 = tY; } else { contextMenuShape.rotation = (contextMenuShape.rotation || 0) + 180; } showToast(`🔄 Invertida!`); saveUserData(); } document.getElementById('contextMenu').style.display = 'none'; };
+        window.deleteShapeFromMenu = () => { if(contextMenuShape) { shapes = shapes.filter(s => s.id !== contextMenuShape.id); selectedShapes = selectedShapes.filter(s => s.id !== contextMenuShape.id); showProperties(null); if(selectedShapes.length === 0 && selectedComponents.length === 0 && selectedConnectionIndex === null) closeProperties(); document.getElementById('deleteShapeBtn').style.display = 'none'; showToast('🗑 Removida!'); saveUserData(); } document.getElementById('contextMenu').style.display = 'none'; };
+        window.duplicateShapeFromMenu = () => { if(contextMenuShape) { const newShape = JSON.parse(JSON.stringify(contextMenuShape)); newShape.id = Date.now(); if(newShape.type === 'line') { newShape.x1 += 30; newShape.y1 += 30; newShape.x2 += 30; newShape.y2 += 30; } else { newShape.x += 30; newShape.y += 30; } shapes.push(newShape); showToast(`📋 Duplicada!`); saveUserData(); } document.getElementById('contextMenu').style.display = 'none'; };
         
         function showConnectionContextMenu(e, conn, idx) {
             e.preventDefault(); contextMenuConnection = { conn, idx };
@@ -2319,9 +2184,9 @@ HTML_TEMPLATE = """
                 <div class="property-group"><label>👤 Usuário</label><input type="text" id="prop-user" value="${comp.username || ''}" placeholder="admin"></div>
                 <div class="property-group"><label>🔑 Senha</label><input type="password" id="prop-pass" value="${comp.password || ''}"></div>
                 ${comp.type === 'camera' ? `<div class="property-group"><label>Ângulo (graus)</label><input type="range" id="prop-angle" min="0" max="360" value="${comp.angle || 0}"><span id="angle-val">${Math.round(comp.angle || 0)}°</span></div><div class="property-group"><label>Campo Visão (graus)</label><input type="range" id="prop-fov" min="20" max="120" value="${comp.fov || 80}"><span id="fov-val">${Math.round(comp.fov || 80)}°</span></div>` : ''}
-                <div class="property-group"><label>🖼️ Ícone Personalizado (Permanente - visível para todos)</label><input type="file" id="prop-image" accept="image/*"><div class="image-preview" id="prop-image-preview">${comp.iconFile ? `<img src="/uploads/icons/${comp.iconFile}" style="max-width:50px;max-height:50px;">` : ''}</div></div>
+                <div class="property-group"><label>🖼️ Ícone Personalizado (Permanente)</label><input type="file" id="prop-image" accept="image/*"><div class="image-preview" id="prop-image-preview">${comp.iconFile ? `<img src="/uploads/icons/${comp.iconFile}" style="max-width:50px;max-height:50px;">` : ''}</div></div>
                 <div class="property-group"><label>🔌 Conectar a</label><select id="prop-connect"><option value="">-- Selecione --</option>${components.filter(c => c.id !== comp.id).map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select><select id="prop-cable-type">${Object.entries(cableColors).map(([key, value]) => `<option value="${key}">${value.icon} ${value.name} - ${value.speed}</option>`).join('')}</select><button class="btn btn-primary" style="margin-top:5px;" onclick="addConnection(${comp.id})">➕ Conectar</button></div>
-                <div class="modal-buttons"><button class="btn btn-info" onclick="accessDeviceById(${comp.id})">🌐 Acessar</button><button class="btn btn-warning" onclick="rotateLeft(${comp.id})">🔄 Girar Esquerda</button><button class="btn btn-warning" onclick="rotateRight(${comp.id})">🔄 Girar Direita</button><button class="btn btn-secondary" onclick="flipComponentById(${comp.id})">🔁 Inverter Posição</button><button class="btn btn-danger" onclick="deleteComponent(${comp.id})">🗑 Remover</button><button class="btn btn-secondary" onclick="openPermanentIconModalById(${comp.id})">🎨 Ícone Permanente</button></div>
+                <div class="modal-buttons"><button class="btn btn-info" onclick="accessDeviceById(${comp.id})">🌐 Acessar</button><button class="btn btn-warning" onclick="rotateLeft(${comp.id})">🔄 Girar Esq</button><button class="btn btn-warning" onclick="rotateRight(${comp.id})">🔄 Girar Dir</button><button class="btn btn-danger" onclick="deleteComponent(${comp.id})">🗑 Remover</button><button class="btn btn-secondary" onclick="openPermanentIconModalById(${comp.id})">🎨 Ícone Permanente</button></div>
             `;
             const rotationSlider = document.getElementById('prop-rotation'); if(rotationSlider) { rotationSlider.oninput = (e) => { comp.rotation = parseInt(e.target.value); document.getElementById('rotation-val').innerText = comp.rotation + '°'; saveUserData(); }; }
             if(comp.type === 'camera') { const angleSlider = document.getElementById('prop-angle'); const fovSlider = document.getElementById('prop-fov'); if(angleSlider) { angleSlider.oninput = (e) => { comp.angle = parseInt(e.target.value); document.getElementById('angle-val').innerText = comp.angle + '°'; saveUserData(); }; } if(fovSlider) { fovSlider.oninput = (e) => { comp.fov = parseInt(e.target.value); document.getElementById('fov-val').innerText = comp.fov + '°'; saveUserData(); }; } }
@@ -2333,7 +2198,7 @@ HTML_TEMPLATE = """
             document.getElementById('prop-user')?.addEventListener('change', (e) => { comp.username = e.target.value; saveUserData(); });
             document.getElementById('prop-pass')?.addEventListener('change', (e) => { comp.password = e.target.value; saveUserData(); });
             const imageInput = document.getElementById('prop-image');
-            if(imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if(file) { const base64 = await readImageAsBase64(file); const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'equipment' }) }); const data = await response.json(); if(data.success) { comp.iconFile = data.filename; comp.customImage = null; const preview = document.getElementById('prop-image-preview'); if(preview) preview.innerHTML = `<img src="/uploads/icons/${data.filename}" style="max-width:50px;max-height:50px;">`; showToast(`✅ Ícone permanente aplicado a ${comp.name}`); saveUserData(); } } }; }
+            if(imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if(file) { const base64 = await readImageAsBase64(file); const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'equipment' }) }); const data = await response.json(); if(data.success) { comp.iconFile = data.filename; const preview = document.getElementById('prop-image-preview'); if(preview) preview.innerHTML = `<img src="/uploads/icons/${data.filename}" style="max-width:50px;max-height:50px;">`; showToast(`✅ Aplicado a ${comp.name}`); saveUserData(); } } }; }
         }
         
         function showShapeProperties(shape) {
@@ -2342,11 +2207,11 @@ HTML_TEMPLATE = """
             div.innerHTML = `
                 <div class="property-group"><label>Tipo</label><input type="text" value="${getShapeName(shape.type)}" disabled></div>
                 <div class="property-group"><label>Cor da Linha</label><input type="color" id="shape-stroke" value="${shape.strokeColor || '#005f99'}"></div>
-                <div class="property-group"><label>Espessura da Linha</label><input type="range" id="shape-linewidth" min="1" max="10" value="${shape.lineWidth || 2}"></div>
-                ${shape.type === 'text' ? `<div class="property-group"><label>Texto</label><input type="text" id="shape-text" value="${shape.text || ''}"></div><div class="property-group"><label>Tamanho da Fonte</label><input type="number" id="shape-fontsize" value="${shape.fontSize || 14}"></div><div class="property-group"><label>Cor do Texto</label><input type="color" id="shape-textcolor" value="${shape.textColor || '#212529'}"></div>` : `<div class="property-group"><label>🔄 Rotação</label><input type="range" id="shape-rotation" min="0" max="360" value="${shape.rotation || 0}"><span id="rotation-val">${Math.round(shape.rotation || 0)}°</span></div><div class="property-group"><label>🔁 Inverter Posição</label><button class="btn btn-secondary" onclick="flipShape(${shape.id})" style="width:100%;">🔄 Inverter (180°)</button></div>`}
+                <div class="property-group"><label>Espessura</label><input type="range" id="shape-linewidth" min="1" max="10" value="${shape.lineWidth || 2}"></div>
+                ${shape.type === 'text' ? `<div class="property-group"><label>Texto</label><input type="text" id="shape-text" value="${shape.text || ''}"></div><div class="property-group"><label>Fonte</label><input type="number" id="shape-fontsize" value="${shape.fontSize || 14}"></div><div class="property-group"><label>Cor Texto</label><input type="color" id="shape-textcolor" value="${shape.textColor || '#212529'}"></div>` : `<div class="property-group"><label>🔄 Rotação</label><input type="range" id="shape-rotation" min="0" max="360" value="${shape.rotation || 0}"><span id="rotation-val">${Math.round(shape.rotation || 0)}°</span></div><div class="property-group"><label>🔁 Inverter</label><button class="btn btn-secondary" onclick="flipShape(${shape.id})" style="width:100%;">🔄 Inverter (180°)</button></div>`}
                 <div class="property-group"><label>Posição X</label><input type="number" id="shape-x" value="${Math.round(shape.x || shape.x1 || 0)}"></div>
                 <div class="property-group"><label>Posição Y</label><input type="number" id="shape-y" value="${Math.round(shape.y || shape.y1 || 0)}"></div>
-                <div class="modal-buttons"><button class="btn btn-danger" onclick="deleteShape(${shape.id})">🗑 Excluir Forma</button><button class="btn btn-secondary" onclick="duplicateShape(${shape.id})">📋 Duplicar Forma</button></div>
+                <div class="modal-buttons"><button class="btn btn-danger" onclick="deleteShape(${shape.id})">🗑 Excluir</button><button class="btn btn-secondary" onclick="duplicateShape(${shape.id})">📋 Duplicar</button></div>
             `;
             document.getElementById('shape-stroke')?.addEventListener('change', (e) => { shape.strokeColor = e.target.value; saveUserData(); });
             document.getElementById('shape-linewidth')?.addEventListener('change', (e) => { shape.lineWidth = parseInt(e.target.value); saveUserData(); });
@@ -2358,249 +2223,194 @@ HTML_TEMPLATE = """
         
         function showConnectionProperties(connIdx) {
             const div = document.getElementById('props-content'); const conn = connections[connIdx];
-            if(!conn) { div.innerHTML = '<p style="color:#6c757d;">Clique em uma conexão para editar</p>'; return; }
+            if(!conn) { div.innerHTML = '<p style="color:#6c757d;">Clique em uma conexão</p>'; return; }
             const fromComp = components.find(c => c.id === conn.from); const toComp = components.find(c => c.id === conn.to); if(!fromComp || !toComp) return;
-            div.innerHTML = `<div class="property-group"><label>Conexão</label><input type="text" value="${fromComp.name} → ${toComp.name}" disabled></div><div class="property-group"><label>Tipo de Cabo</label><select id="conn-cable-type" style="width:100%; padding:8px; background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:5px;">${Object.entries(cableColors).map(([key, value]) => `<option value="${key}" ${conn.type === key ? 'selected' : ''}>${value.icon} ${value.name} - ${value.speed}</option>`).join('')}</select></div><div class="modal-buttons"><button class="btn btn-primary" onclick="updateSelectedConnection(${connIdx})">✅ Atualizar</button><button class="btn btn-danger" onclick="deleteSelectedConnection(${connIdx})">🗑 Excluir Conexão</button></div>`;
+            div.innerHTML = `<div class="property-group"><label>Conexão</label><input type="text" value="${fromComp.name} → ${toComp.name}" disabled></div><div class="property-group"><label>Tipo de Cabo</label><select id="conn-cable-type">${Object.entries(cableColors).map(([key, value]) => `<option value="${key}" ${conn.type === key ? 'selected' : ''}>${value.icon} ${value.name} - ${value.speed}</option>`).join('')}</select></div><div class="modal-buttons"><button class="btn btn-primary" onclick="updateSelectedConnection(${connIdx})">✅ Atualizar</button><button class="btn btn-danger" onclick="deleteSelectedConnection(${connIdx})">🗑 Excluir</button></div>`;
         }
         
-        window.updateSelectedConnection = (connIdx) => { const cableType = document.getElementById('conn-cable-type').value; connections[connIdx].type = cableType; selectedConnectionIndex = null; showProperties(null); closeProperties(); showToast(`✅ Conexão atualizada para ${cableType.toUpperCase()}!`); saveUserData(); };
-        window.deleteSelectedConnection = (connIdx) => { if(confirm('Deseja excluir esta conexão?')) { connections.splice(connIdx, 1); selectedConnectionIndex = null; showProperties(null); closeProperties(); showToast(`✅ Conexão removida!`); saveUserData(); } };
+        window.updateSelectedConnection = (connIdx) => { const cableType = document.getElementById('conn-cable-type').value; connections[connIdx].type = cableType; selectedConnectionIndex = null; showProperties(null); closeProperties(); showToast(`✅ Atualizada!`); saveUserData(); };
+        window.deleteSelectedConnection = (connIdx) => { if(confirm('Excluir conexão?')) { connections.splice(connIdx, 1); selectedConnectionIndex = null; showProperties(null); closeProperties(); showToast(`✅ Removida!`); saveUserData(); } };
         window.flipComponentById = (id) => { const comp = components.find(c => c.id === id); if(comp) { flipComponent(comp); saveUserData(); } };
         window.flipComponent = (comp) => { if (!comp) return; comp.rotation = (comp.rotation || 0) + 180; showToast(`🔄 ${comp.name} invertido!`); saveUserData(); };
-        window.flipShape = (id) => { const shape = shapes.find(s => s.id === id); if(shape && (shape.type === 'door' || shape.type === 'window')) { shape.rotation = (shape.rotation || 0) + 180; showToast(`🔄 Forma invertida!`); saveUserData(); } else if(shape && shape.type === 'line') { const tempX = shape.x1; const tempY = shape.y1; shape.x1 = shape.x2; shape.y1 = shape.y2; shape.x2 = tempX; shape.y2 = tempY; showToast(`🔄 Linha invertida!`); saveUserData(); } };
-        window.duplicateShape = (id) => { const shape = shapes.find(s => s.id === id); if(shape) { const newShape = JSON.parse(JSON.stringify(shape)); newShape.id = Date.now(); if(newShape.type === 'line') { newShape.x1 += 30; newShape.y1 += 30; newShape.x2 += 30; newShape.y2 += 30; } else if(newShape.type === 'text') { newShape.x += 30; newShape.y += 30; } else { newShape.x += 30; newShape.y += 30; } shapes.push(newShape); showToast(`📋 Forma duplicada!`); saveUserData(); } };
-        window.deleteShape = (id) => { shapes = shapes.filter(s => s.id !== id); selectedShapes = selectedShapes.filter(s => s.id !== id); showProperties(null); if(selectedShapes.length === 0 && selectedComponents.length === 0 && selectedConnectionIndex === null) closeProperties(); document.getElementById('deleteShapeBtn').style.display = 'none'; showToast('🗑 Forma removida!'); saveUserData(); };
-        window.deleteSelectedShape = () => { if (selectedShapes.length > 0) { const shapeId = selectedShapes[0].id; shapes = shapes.filter(s => s.id !== shapeId); selectedShapes = []; showProperties(null); closeProperties(); document.getElementById('deleteShapeBtn').style.display = 'none'; showToast('🗑 Forma removida!'); saveUserData(); } };
+        window.flipShape = (id) => { const shape = shapes.find(s => s.id === id); if(shape && (shape.type === 'door' || shape.type === 'window')) { shape.rotation = (shape.rotation || 0) + 180; showToast(`🔄 Invertida!`); saveUserData(); } else if(shape && shape.type === 'line') { const tX = shape.x1; const tY = shape.y1; shape.x1 = shape.x2; shape.y1 = shape.y2; shape.x2 = tX; shape.y2 = tY; showToast(`🔄 Invertida!`); saveUserData(); } };
+        window.duplicateShape = (id) => { const shape = shapes.find(s => s.id === id); if(shape) { const newShape = JSON.parse(JSON.stringify(shape)); newShape.id = Date.now(); if(newShape.type === 'line') { newShape.x1 += 30; newShape.y1 += 30; newShape.x2 += 30; newShape.y2 += 30; } else { newShape.x += 30; newShape.y += 30; } shapes.push(newShape); showToast(`📋 Duplicada!`); saveUserData(); } };
+        window.deleteShape = (id) => { shapes = shapes.filter(s => s.id !== id); selectedShapes = selectedShapes.filter(s => s.id !== id); showProperties(null); if(selectedShapes.length === 0 && selectedComponents.length === 0 && selectedConnectionIndex === null) closeProperties(); document.getElementById('deleteShapeBtn').style.display = 'none'; showToast('🗑 Removida!'); saveUserData(); };
+        window.deleteSelectedShape = () => { if (selectedShapes.length > 0) { const shapeId = selectedShapes[0].id; shapes = shapes.filter(s => s.id !== shapeId); selectedShapes = []; showProperties(null); closeProperties(); document.getElementById('deleteShapeBtn').style.display = 'none'; showToast('🗑 Removida!'); saveUserData(); } };
         window.deleteSelectedItems = () => {
             if (selectedComponents.length === 0 && selectedShapes.length === 0 && selectedConnectionIndex === null) { showToast('⚠️ Nenhum item selecionado'); return; }
             if (confirm(`Deseja excluir ${selectedComponents.length} equipamento(s), ${selectedShapes.length} forma(s) e ${selectedConnectionIndex !== null ? 1 : 0} conexão(ões)?`)) {
                 const selectedIds = selectedComponents.map(c => c.id); connections = connections.filter(c => !selectedIds.includes(c.from) && !selectedIds.includes(c.to));
                 if (selectedConnectionIndex !== null) { connections.splice(selectedConnectionIndex, 1); selectedConnectionIndex = null; }
                 components = components.filter(c => !selectedIds.includes(c.id)); const selectedShapeIds = selectedShapes.map(s => s.id); shapes = shapes.filter(s => !selectedShapeIds.includes(s.id));
-                selectedComponents = []; selectedShapes = []; showProperties(null); closeProperties(); document.getElementById('deleteShapeBtn').style.display = 'none'; showToast(`🗑 Itens excluídos com sucesso!`); saveUserData();
+                selectedComponents = []; selectedShapes = []; showProperties(null); closeProperties(); document.getElementById('deleteShapeBtn').style.display = 'none'; showToast(`🗑 Excluídos!`); saveUserData();
             }
         };
         window.rotateLeft = (id) => { const comp = components.find(c => c.id === id); if(comp) { rotateComponent(comp, -15); saveUserData(); } };
         window.rotateRight = (id) => { const comp = components.find(c => c.id === id); if(comp) { rotateComponent(comp, 15); saveUserData(); } };
         window.accessDeviceById = (id) => { const comp = components.find(c => c.id === id); accessDevice(comp); };
-        window.deleteComponent = (id) => { if(confirm('Deseja remover este equipamento?')) { connections = connections.filter(c => c.from !== id && c.to !== id); components = components.filter(c => c.id !== id); selectedComponents = selectedComponents.filter(c => c.id !== id); showProperties(null); if(selectedComponents.length === 0 && selectedShapes.length === 0 && selectedConnectionIndex === null) closeProperties(); showToast(`🗑 Equipamento removido!`); saveUserData(); } };
-        window.addConnection = (fromId) => { const toId = document.getElementById('prop-connect').value; const cableType = document.getElementById('prop-cable-type').value; if(toId) { connections.push({from: fromId, to: parseInt(toId), type: cableType}); const cableInfo = cableColors[cableType]; if(cableInfo && cableInfo.type === 'wireless') { const fromComp = components.find(c => c.id === fromId); const toComp = components.find(c => c.id === parseInt(toId)); if(fromComp && toComp) { showWirelessAnimation(fromComp.x, fromComp.y, cableType); setTimeout(() => showWirelessAnimation(toComp.x, toComp.y, cableType), 500); } } showToast(`✅ Conexão ${cableInfo ? cableInfo.name : cableType.toUpperCase()} adicionada!`); saveUserData(); } else { showToast('⚠️ Selecione um equipamento para conectar'); } };
-        
-        function showWirelessAnimation(x, y, type) {
-            const canvasRect = canvas.getBoundingClientRect(); const container = document.querySelector('.canvas-area');
-            const animationDiv = document.createElement('div'); animationDiv.className = 'connection-animation';
-            animationDiv.style.position = 'absolute'; animationDiv.style.left = (canvasRect.left + x * zoom) + 'px'; animationDiv.style.top = (canvasRect.top + y * zoom) + 'px'; animationDiv.style.width = '80px'; animationDiv.style.height = '80px'; animationDiv.style.transform = 'translate(-50%, -50%)';
-            const cableInfo = cableColors[type]; const color = cableInfo?.color || '#005f99';
-            if (cableInfo?.animation === 'wave') { for(let i = 0; i < 3; i++) { const wave = document.createElement('div'); wave.className = 'connection-wave'; wave.style.position = 'absolute'; wave.style.width = '20px'; wave.style.height = '20px'; wave.style.left = '40px'; wave.style.top = '40px'; wave.style.animationDelay = (i * 0.3) + 's'; wave.style.border = `2px solid ${color}`; wave.style.borderRadius = '50%'; wave.style.boxShadow = `0 0 8px ${color}`; animationDiv.appendChild(wave); } }
-            else { for(let i = 0; i < 4; i++) { const packet = document.createElement('div'); packet.className = 'data-packet'; packet.style.position = 'absolute'; packet.style.width = '8px'; packet.style.height = '8px'; packet.style.borderRadius = '2px'; packet.style.backgroundColor = color; packet.style.boxShadow = `0 0 6px ${color}`; packet.style.top = '36px'; packet.style.left = '-20px'; packet.style.animation = 'dataPacket 1s linear infinite'; packet.style.animationDelay = (i * 0.25) + 's'; animationDiv.appendChild(packet); } }
-            container.appendChild(animationDiv); setTimeout(() => animationDiv.remove(), 1500);
-        }
+        window.deleteComponent = (id) => { if(confirm('Remover equipamento?')) { connections = connections.filter(c => c.from !== id && c.to !== id); components = components.filter(c => c.id !== id); selectedComponents = selectedComponents.filter(c => c.id !== id); showProperties(null); if(selectedComponents.length === 0 && selectedShapes.length === 0 && selectedConnectionIndex === null) closeProperties(); showToast(`🗑 Removido!`); saveUserData(); } };
+        window.addConnection = (fromId) => { const toId = document.getElementById('prop-connect').value; const cableType = document.getElementById('prop-cable-type').value; if(toId) { connections.push({from: fromId, to: parseInt(toId), type: cableType}); const cableInfo = cableColors[cableType]; showToast(`✅ Conexão ${cableInfo ? cableInfo.name : cableType.toUpperCase()}!`); saveUserData(); } else { showToast('⚠️ Selecione um equipamento'); } };
         
         function showCableModal(fromComp, toComp) {
             const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🔌 Tipo de Conexão</h3><p>De: ${fromComp.name}</p><p>Para: ${toComp.name}</p><select id="cableSelect" style="width:100%; padding:8px; margin:10px 0; background:var(--bg-tertiary); color:var(--text-primary); border:none; border-radius:5px;">${Object.entries(cableColors).map(([key, value]) => `<option value="${key}">${value.icon} ${value.name} - ${value.speed}</option>`).join('')}</select><div class="modal-buttons"><button class="btn btn-primary" onclick="confirmConnection(${fromComp.id}, ${toComp.id})">✅ Conectar</button><button class="btn btn-danger" onclick="closeModal()">❌ Cancelar</button></div></div>`;
+            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🔌 Tipo de Conexão</h3><p>De: ${fromComp.name}</p><p>Para: ${toComp.name}</p><select id="cableSelect">${Object.entries(cableColors).map(([key, value]) => `<option value="${key}">${value.icon} ${value.name} - ${value.speed}</option>`).join('')}</select><div class="modal-buttons"><button class="btn btn-primary" onclick="confirmConnection(${fromComp.id}, ${toComp.id})">✅ Conectar</button><button class="btn btn-danger" onclick="closeModal()">❌ Cancelar</button></div></div>`;
             document.body.appendChild(modal); window.currentModal = modal;
         }
         
         window.confirmConnection = (fromId, toId) => {
             const cableType = document.getElementById('cableSelect').value; connections.push({from: fromId, to: toId, type: cableType});
             if(window.currentModal) { document.body.removeChild(window.currentModal); window.currentModal = null; }
-            const cableInfo = cableColors[cableType]; if(cableInfo && cableInfo.type === 'wireless') { const fromComp = components.find(c => c.id === fromId); const toComp = components.find(c => c.id === toId); if(fromComp && toComp) { showWirelessAnimation(fromComp.x, fromComp.y, cableType); setTimeout(() => showWirelessAnimation(toComp.x, toComp.y, cableType), 500); } }
-            showToast(`✅ Conexão ${cableInfo ? cableInfo.name : cableType.toUpperCase()} adicionada!`); saveUserData();
+            const cableInfo = cableColors[cableType]; showToast(`✅ Conexão ${cableInfo ? cableInfo.name : cableType.toUpperCase()}!`); saveUserData();
         };
         
         function openPermanentIconModal(comp) {
             const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🎨 Alterar Ícone (Permanente)</h3><p>Equipamento: <strong>${comp.name}</strong></p><p style="font-size:12px;color:#6c757d;">Este ícone será salvo no servidor e visível para todos os usuários.</p><div class="property-group"><label>Escolha uma imagem</label><input type="file" id="permIconImage" accept="image/*"><div class="image-preview" id="permIconPreview"></div></div><div class="modal-buttons"><button class="btn btn-primary" onclick="applyPermanentIcon(${comp.id})">✅ Aplicar (Permanente)</button><button class="btn btn-danger" onclick="closeModal()">❌ Cancelar</button></div></div>`;
-            document.body.appendChild(modal); window.currentModal = modal; window.permIconTargetComp = comp;
+            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🎨 Ícone Permanente</h3><p>${comp.name}</p><input type="file" id="permIconImage" accept="image/*"><div class="image-preview" id="permIconPreview"></div><div class="modal-buttons"><button class="btn btn-primary" onclick="applyPermanentIcon(${comp.id})">✅ Aplicar</button><button class="btn btn-danger" onclick="closeModal()">❌ Cancelar</button></div></div>`;
+            document.body.appendChild(modal); window.currentModal = modal;
             const imageInput = document.getElementById('permIconImage');
-            if(imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if(file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('permIconPreview'); if(preview) preview.innerHTML = '<img src="' + base64 + '" style="max-width:50px;max-height:50px;">'; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'equipment' }) }); const data = await response.json(); if(data.success) { window.permIconFilename = data.filename; showToast('✅ Ícone enviado com sucesso!'); } } }; }
+            if(imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if(file) { const base64 = await readImageAsBase64(file); document.getElementById('permIconPreview').innerHTML = `<img src="${base64}" style="max-width:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'equipment' }) }); const data = await response.json(); if(data.success) window.permIconFilename = data.filename; } }; }
         }
         
-        window.applyPermanentIcon = (compId) => {
-            const comp = components.find(c => c.id === compId);
-            if(comp && window.permIconFilename) { comp.iconFile = window.permIconFilename; comp.customImage = null; comp.customImageTemp = null; comp.customIconTemp = null; showToast(`✅ Ícone permanente aplicado a ${comp.name} (visível para todos)`); closeModal(); saveUserData(); }
-            else if(comp) { showToast('⚠️ Nenhuma imagem selecionada'); }
-            window.permIconFilename = null;
-        };
-        
+        window.applyPermanentIcon = (compId) => { const comp = components.find(c => c.id === compId); if(comp && window.permIconFilename) { comp.iconFile = window.permIconFilename; showToast(`✅ Aplicado a ${comp.name}`); closeModal(); saveUserData(); } else { showToast('⚠️ Selecione uma imagem'); } window.permIconFilename = null; };
         window.openPermanentIconModalById = (id) => { const comp = components.find(c => c.id === id); if(comp) openPermanentIconModal(comp); };
         
         function openAddCategoryModal() {
-            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem adicionar categorias'); return; }
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores'); return; }
             const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">📁 Nova Categoria</h3><input type="text" id="catName" placeholder="Nome da categoria"><input type="text" id="catIcon" placeholder="Ícone (ex: 🌐)" value="📁"><div class="modal-buttons"><button class="btn btn-primary" onclick="addCategory()">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
+            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">📁 Nova Categoria</h3><input type="text" id="catName" placeholder="Nome"><input type="text" id="catIcon" placeholder="Ícone" value="📁"><div class="modal-buttons"><button class="btn btn-primary" onclick="addCategory()">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
             document.body.appendChild(modal); window.currentModal = modal;
         }
         
-        window.addCategory = () => {
-            const name = document.getElementById('catName')?.value; const icon = document.getElementById('catIcon')?.value;
-            if (!name) { showToast('Digite um nome para a categoria'); return; }
-            if (categories[name]) { showToast('Categoria já existe'); return; }
-            categories[name] = { icon: icon || '📁', devices: [] }; saveUserData(); saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ Categoria "${name}" adicionada!`);
-        };
+        window.addCategory = () => { const name = document.getElementById('catName')?.value; const icon = document.getElementById('catIcon')?.value; if (!name) { showToast('Digite um nome'); return; } if (categories[name]) { showToast('Categoria já existe'); return; } categories[name] = { icon: icon || '📁', devices: [] }; saveUserData(); saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ "${name}"!`); };
         
         window.editCategory = (catName) => {
-            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem editar categorias'); return; }
-            const catData = categories[catName];
-            const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">✏️ Editar Categoria</h3><input type="text" id="catName" value="${catName}"><input type="text" id="catIcon" value="${catData.icon}"><div class="modal-buttons"><button class="btn btn-primary" onclick="updateCategory('${catName.replace(/'/g, "\\'")}')">Salvar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores'); return; }
+            const catData = categories[catName]; const modal = document.createElement('div'); modal.className = 'modal';
+            modal.innerHTML = `<div class="modal-content"><h3>✏️ Editar Categoria</h3><input type="text" id="catName" value="${catName}"><input type="text" id="catIcon" value="${catData.icon}"><div class="modal-buttons"><button class="btn btn-primary" onclick="updateCategory('${catName.replace(/'/g, "\\'")}')">Salvar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
             document.body.appendChild(modal); window.currentModal = modal;
         };
         
-        window.updateCategory = (oldName) => {
-            const newName = document.getElementById('catName')?.value; const icon = document.getElementById('catIcon')?.value;
-            if (!newName) return;
-            const catData = categories[oldName]; delete categories[oldName]; categories[newName] = { ...catData, icon: icon };
-            saveUserData(); saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ Categoria atualizada!`);
-        };
+        window.updateCategory = (oldName) => { const newName = document.getElementById('catName')?.value; const icon = document.getElementById('catIcon')?.value; if (!newName) return; const catData = categories[oldName]; delete categories[oldName]; categories[newName] = { ...catData, icon: icon }; saveUserData(); saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ Atualizada!`); };
         
-        window.deleteCategory = (catName) => {
-            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem excluir categorias'); return; }
-            if (confirm(`Deseja excluir a categoria "${catName}" e todos os seus dispositivos?`)) { delete categories[catName]; saveUserData(); saveGlobalLibrary(); renderPalette(); showToast(`🗑 Categoria "${catName}" removida!`); }
-        };
+        window.deleteCategory = (catName) => { if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores'); return; } if (confirm(`Excluir "${catName}"?`)) { delete categories[catName]; saveUserData(); saveGlobalLibrary(); renderPalette(); showToast(`🗑 Removida!`); } };
         
         window.addDeviceToCategory = (catName) => {
-            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem adicionar dispositivos'); return; }
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores'); return; }
             const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">➕ Novo Dispositivo em ${catName}</h3><input type="text" id="devName" placeholder="Nome"><input type="text" id="devIcon" placeholder="Ícone (emoji)" value="📦"><div class="property-group"><label>OU Imagem do dispositivo (permanente)</label><input type="file" id="devImage" accept="image/*"><div class="image-preview" id="devImagePreview"></div></div><input type="text" id="devDesc" placeholder="Descrição"><input type="color" id="devColor" value="#005f99"><input type="text" id="devType" placeholder="Tipo (ex: camera, switch)"><div class="modal-buttons"><button class="btn btn-primary" onclick="addDevice('${catName.replace(/'/g, "\\'")}')">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
+            modal.innerHTML = `<div class="modal-content"><h3>➕ Novo Dispositivo em ${catName}</h3><input type="text" id="devName" placeholder="Nome"><input type="text" id="devIcon" placeholder="Ícone" value="📦"><input type="text" id="devDesc" placeholder="Descrição"><input type="color" id="devColor" value="#005f99"><input type="text" id="devType" placeholder="Tipo (camera, switch...)"><div class="modal-buttons"><button class="btn btn-primary" onclick="addDevice('${catName.replace(/'/g, "\\'")}')">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
             document.body.appendChild(modal); window.currentModal = modal;
-            const imageInput = document.getElementById('devImage');
-            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('devImagePreview'); if (preview) preview.innerHTML = '<img src="' + base64 + '" style="max-width:50px;max-height:50px;">'; window.tempImageData = base64; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'equipment' }) }); const data = await response.json(); if (data.success) { window.tempImageFile = data.filename; } } }; }
         };
         
         window.addDevice = async (catName) => {
-            const name = document.getElementById('devName')?.value; const icon = document.getElementById('devIcon')?.value; const desc = document.getElementById('devDesc')?.value; const color = document.getElementById('devColor')?.value; const type = document.getElementById('devType')?.value; const imageData = window.tempImageData || null; const iconFile = window.tempImageFile || null;
-            if (!name) { showToast('Digite um nome para o dispositivo'); return; }
-            categories[catName].devices.push({ name, icon: icon || '📦', desc: desc || '', type: type || 'custom', color: color || '#005f99', imageData: imageData, iconFile: iconFile });
-            window.tempImageData = null; window.tempImageFile = null; saveUserData(); await saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ Dispositivo "${name}" adicionado!`);
+            const name = document.getElementById('devName')?.value; const icon = document.getElementById('devIcon')?.value; const desc = document.getElementById('devDesc')?.value; const color = document.getElementById('devColor')?.value; const type = document.getElementById('devType')?.value;
+            if (!name) { showToast('Digite um nome'); return; }
+            categories[catName].devices.push({ name, icon: icon || '📦', desc: desc || '', type: type || 'custom', color: color || '#005f99', iconFile: null });
+            saveUserData(); await saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ "${name}"!`);
         };
         
         window.editDevice = (catName, idx) => {
-            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem editar dispositivos'); return; }
-            const device = categories[catName].devices[idx];
-            const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">✏️ Editar Dispositivo</h3><input type="text" id="devName" value="${device.name.replace(/"/g, '&quot;')}"><input type="text" id="devIcon" value="${device.icon || '📦'}"><div class="property-group"><label>OU Imagem do dispositivo</label><input type="file" id="devImage" accept="image/*"><div class="image-preview" id="devImagePreview">${device.iconFile ? `<img src="/uploads/icons/${device.iconFile}" style="max-width:50px;max-height:50px;">` : (device.imageData ? `<img src="${device.imageData}" style="max-width:50px;max-height:50px;">` : '')}</div></div><input type="text" id="devDesc" value="${device.desc || ''}"><input type="color" id="devColor" value="${device.color || '#005f99'}"><input type="text" id="devType" value="${device.type || 'custom'}"><div class="modal-buttons"><button class="btn btn-primary" onclick="updateDevice('${catName.replace(/'/g, "\\'")}', ${idx})">Salvar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores'); return; }
+            const device = categories[catName].devices[idx]; const modal = document.createElement('div'); modal.className = 'modal';
+            modal.innerHTML = `<div class="modal-content"><h3>✏️ Editar</h3><input type="text" id="devName" value="${device.name.replace(/"/g, '&quot;')}"><input type="text" id="devIcon" value="${device.icon || '📦'}"><input type="text" id="devDesc" value="${device.desc || ''}"><input type="color" id="devColor" value="${device.color || '#005f99'}"><input type="text" id="devType" value="${device.type || 'custom'}"><div class="modal-buttons"><button class="btn btn-primary" onclick="updateDevice('${catName.replace(/'/g, "\\'")}', ${idx})">Salvar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
             document.body.appendChild(modal); window.currentModal = modal;
-            const imageInput = document.getElementById('devImage');
-            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('devImagePreview'); if (preview) preview.innerHTML = '<img src="' + base64 + '" style="max-width:50px;max-height:50px;">'; window.tempImageData = base64; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'equipment' }) }); const data = await response.json(); if (data.success) { window.tempImageFile = data.filename; } } }; }
         };
         
         window.updateDevice = async (catName, idx) => {
-            const name = document.getElementById('devName')?.value; const icon = document.getElementById('devIcon')?.value; const desc = document.getElementById('devDesc')?.value; const color = document.getElementById('devColor')?.value; const type = document.getElementById('devType')?.value; const imageData = window.tempImageData || categories[catName].devices[idx].imageData; const iconFile = window.tempImageFile || categories[catName].devices[idx].iconFile;
+            const name = document.getElementById('devName')?.value; const icon = document.getElementById('devIcon')?.value; const desc = document.getElementById('devDesc')?.value; const color = document.getElementById('devColor')?.value; const type = document.getElementById('devType')?.value;
             if (!name) return;
-            categories[catName].devices[idx] = { ...categories[catName].devices[idx], name, icon: icon || '📦', desc: desc || '', type: type || 'custom', color: color || '#005f99', imageData: imageData, iconFile: iconFile };
-            window.tempImageData = null; window.tempImageFile = null; saveUserData(); await saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ Dispositivo atualizado!`);
+            categories[catName].devices[idx] = { ...categories[catName].devices[idx], name, icon: icon || '📦', desc: desc || '', type: type || 'custom', color: color || '#005f99' };
+            saveUserData(); await saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ Atualizado!`);
         };
         
-        window.deleteDevice = (catName, idx) => {
-            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem excluir dispositivos'); return; }
-            if (confirm('Deseja excluir este dispositivo?')) { categories[catName].devices.splice(idx, 1); saveUserData(); saveGlobalLibrary(); renderPalette(); showToast(`🗑 Dispositivo removido!`); }
-        };
+        window.deleteDevice = (catName, idx) => { if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores'); return; } if (confirm('Excluir?')) { categories[catName].devices.splice(idx, 1); saveUserData(); saveGlobalLibrary(); renderPalette(); showToast(`🗑 Removido!`); } };
         
         function openAddDeviceModal() {
-            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem adicionar equipamentos personalizados'); return; }
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores'); return; }
             const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🔧 Novo Equipamento Personalizado</h3><input type="text" id="devName" placeholder="Nome"><input type="text" id="devIcon" placeholder="Ícone (emoji)" value="📦"><div class="property-group"><label>OU Imagem do equipamento (permanente)</label><input type="file" id="devImage" accept="image/*"><div class="image-preview" id="devImagePreview"></div></div><input type="text" id="devDesc" placeholder="Descrição"><input type="color" id="devColor" value="#005f99"><input type="text" id="devType" placeholder="Tipo (opcional)"><div class="modal-buttons"><button class="btn btn-primary" onclick="addCustomDevice()">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
+            modal.innerHTML = `<div class="modal-content"><h3>🔧 Novo Equipamento Personalizado</h3><input type="text" id="devName" placeholder="Nome"><input type="text" id="devIcon" placeholder="Ícone" value="📦"><input type="text" id="devDesc" placeholder="Descrição"><input type="color" id="devColor" value="#005f99"><input type="text" id="devType" placeholder="Tipo"><div class="modal-buttons"><button class="btn btn-primary" onclick="addCustomDevice()">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
             document.body.appendChild(modal); window.currentModal = modal;
-            const imageInput = document.getElementById('devImage');
-            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('devImagePreview'); if (preview) preview.innerHTML = '<img src="' + base64 + '" style="max-width:50px;max-height:50px;">'; window.tempImageData = base64; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'equipment' }) }); const data = await response.json(); if (data.success) { window.tempImageFile = data.filename; } } }; }
         }
         
         window.addCustomDevice = async () => {
-            const name = document.getElementById('devName')?.value; const icon = document.getElementById('devIcon')?.value; const desc = document.getElementById('devDesc')?.value; const color = document.getElementById('devColor')?.value; const type = document.getElementById('devType')?.value; const imageData = window.tempImageData || null; const iconFile = window.tempImageFile || null;
-            if (!name) { showToast('Digite um nome para o equipamento'); return; }
-            customDevices.push({ id: Date.now(), name, icon: icon || '📦', desc: desc || '', type: type || 'custom', color: color || '#005f99', imageData: imageData, iconFile: iconFile });
-            window.tempImageData = null; window.tempImageFile = null; saveUserData(); await saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ Equipamento "${name}" adicionado!`);
+            const name = document.getElementById('devName')?.value; const icon = document.getElementById('devIcon')?.value; const desc = document.getElementById('devDesc')?.value; const color = document.getElementById('devColor')?.value; const type = document.getElementById('devType')?.value;
+            if (!name) { showToast('Digite um nome'); return; }
+            customDevices.push({ id: Date.now(), name, icon: icon || '📦', desc: desc || '', type: type || 'custom', color: color || '#005f99', iconFile: null });
+            saveUserData(); await saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ "${name}"!`);
         };
         
         window.editCustomDevice = (idx) => {
-            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem editar equipamentos'); return; }
-            const device = customDevices[idx];
-            const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">✏️ Editar Equipamento</h3><input type="text" id="devName" value="${device.name.replace(/"/g, '&quot;')}"><input type="text" id="devIcon" value="${device.icon || '📦'}"><div class="property-group"><label>OU Imagem do equipamento</label><input type="file" id="devImage" accept="image/*"><div class="image-preview" id="devImagePreview">${device.iconFile ? `<img src="/uploads/icons/${device.iconFile}" style="max-width:50px;max-height:50px;">` : (device.imageData ? `<img src="${device.imageData}" style="max-width:50px;max-height:50px;">` : '')}</div></div><input type="text" id="devDesc" value="${device.desc || ''}"><input type="color" id="devColor" value="${device.color || '#005f99'}"><input type="text" id="devType" value="${device.type || 'custom'}"><div class="modal-buttons"><button class="btn btn-primary" onclick="updateCustomDevice(${idx})">Salvar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores'); return; }
+            const device = customDevices[idx]; const modal = document.createElement('div'); modal.className = 'modal';
+            modal.innerHTML = `<div class="modal-content"><h3>✏️ Editar</h3><input type="text" id="devName" value="${device.name.replace(/"/g, '&quot;')}"><input type="text" id="devIcon" value="${device.icon || '📦'}"><input type="text" id="devDesc" value="${device.desc || ''}"><input type="color" id="devColor" value="${device.color || '#005f99'}"><input type="text" id="devType" value="${device.type || 'custom'}"><div class="modal-buttons"><button class="btn btn-primary" onclick="updateCustomDevice(${idx})">Salvar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
             document.body.appendChild(modal); window.currentModal = modal;
-            const imageInput = document.getElementById('devImage');
-            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('devImagePreview'); if (preview) preview.innerHTML = '<img src="' + base64 + '" style="max-width:50px;max-height:50px;">'; window.tempImageData = base64; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'equipment' }) }); const data = await response.json(); if (data.success) { window.tempImageFile = data.filename; } } }; }
         };
         
         window.updateCustomDevice = async (idx) => {
-            const name = document.getElementById('devName')?.value; const icon = document.getElementById('devIcon')?.value; const desc = document.getElementById('devDesc')?.value; const color = document.getElementById('devColor')?.value; const type = document.getElementById('devType')?.value; const imageData = window.tempImageData || customDevices[idx].imageData; const iconFile = window.tempImageFile || customDevices[idx].iconFile;
+            const name = document.getElementById('devName')?.value; const icon = document.getElementById('devIcon')?.value; const desc = document.getElementById('devDesc')?.value; const color = document.getElementById('devColor')?.value; const type = document.getElementById('devType')?.value;
             if (!name) return;
-            customDevices[idx] = { ...customDevices[idx], name, icon: icon || '📦', desc: desc || '', type: type || 'custom', color: color || '#005f99', imageData: imageData, iconFile: iconFile };
-            window.tempImageData = null; window.tempImageFile = null; saveUserData(); await saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ Equipamento atualizado!`);
+            customDevices[idx] = { ...customDevices[idx], name, icon: icon || '📦', desc: desc || '', type: type || 'custom', color: color || '#005f99' };
+            saveUserData(); await saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ Atualizado!`);
         };
         
-        window.deleteCustomDevice = (idx) => {
-            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem excluir equipamentos'); return; }
-            if (confirm('Deseja excluir este equipamento?')) { customDevices.splice(idx, 1); saveUserData(); saveGlobalLibrary(); renderPalette(); showToast(`🗑 Equipamento removido!`); }
-        };
+        window.deleteCustomDevice = (idx) => { if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores'); return; } if (confirm('Excluir?')) { customDevices.splice(idx, 1); saveUserData(); saveGlobalLibrary(); renderPalette(); showToast(`🗑 Removido!`); } };
         
         function openAddConnectionModal() {
-            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem adicionar conexões'); return; }
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores'); return; }
             const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🔌 Nova Conexão</h3><input type="text" id="connName" placeholder="Nome da conexão (ex: Fibra Óptica)"><input type="text" id="connIcon" placeholder="Ícone (ex: 🔷)" value="🔌"><div class="property-group"><label>OU Imagem personalizada (permanente)</label><input type="file" id="connIconImage" accept="image/*"><div class="image-preview" id="connIconPreview"></div></div><input type="color" id="connColor" value="#005f99"><input type="text" id="connSpeed" placeholder="Velocidade (ex: 10 Gbps)" value="N/A"><input type="text" id="connDesc" placeholder="Descrição"><select id="connType"><option value="cable">Cabeado</option><option value="wireless">Sem Fio</option></select><select id="connAnimation"><option value="">Nenhuma</option><option value="wave">Ondas</option><option value="packet">Pacotes</option></select><select id="connCategory"><option value="Cabeadas">Cabeadas</option><option value="Sem Fio">Sem Fio</option><option value="Personalizadas">Personalizadas</option></select><div class="modal-buttons"><button class="btn btn-primary" onclick="addConnectionFromModal()">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
+            modal.innerHTML = `<div class="modal-content"><h3>🔌 Nova Conexão</h3><input type="text" id="connName" placeholder="Nome"><input type="text" id="connIcon" placeholder="Ícone" value="🔌"><input type="color" id="connColor" value="#005f99"><input type="text" id="connSpeed" placeholder="Velocidade"><input type="text" id="connDesc" placeholder="Descrição"><select id="connType"><option value="cable">Cabeado</option><option value="wireless">Sem Fio</option></select><select id="connAnimation"><option value="">Nenhuma</option><option value="wave">Ondas</option><option value="packet">Pacotes</option></select><select id="connCategory"><option value="Cabeadas">Cabeadas</option><option value="Sem Fio">Sem Fio</option></select><div class="modal-buttons"><button class="btn btn-primary" onclick="addConnectionFromModal()">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
             document.body.appendChild(modal); window.currentModal = modal;
-            const imageInput = document.getElementById('connIconImage');
-            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('connIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;max-height:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'connection' }) }); const data = await response.json(); if (data.success) { window.tempConnIconFile = data.filename; showToast('✅ Ícone da conexão enviado com sucesso!'); } } }; }
         }
         
         window.addConnectionFromModal = () => {
-            try {
-                const name = document.getElementById('connName')?.value; const icon = document.getElementById('connIcon')?.value; const color = document.getElementById('connColor')?.value; const speed = document.getElementById('connSpeed')?.value; const desc = document.getElementById('connDesc')?.value; const type = document.getElementById('connType')?.value; const animation = document.getElementById('connAnimation')?.value; const category = document.getElementById('connCategory')?.value; const iconFile = window.tempConnIconFile || null;
-                if (!name) { showToast('Digite um nome para a conexão'); return; }
-                const connData = { name, icon: icon || '🔌', color, speed: speed || 'N/A', desc: desc || '', type, animation: animation || null, iconFile: iconFile };
-                addCustomConnection(category, connData); window.tempConnIconFile = null; closeModal(); showToast(`✅ Conexão "${name}" adicionada com sucesso!`);
-            } catch (error) { console.error('Erro ao adicionar conexão:', error); showToast('❌ Erro ao adicionar conexão. Verifique o console.'); closeModal(); }
+            const name = document.getElementById('connName')?.value; const icon = document.getElementById('connIcon')?.value; const color = document.getElementById('connColor')?.value; const speed = document.getElementById('connSpeed')?.value; const desc = document.getElementById('connDesc')?.value; const type = document.getElementById('connType')?.value; const animation = document.getElementById('connAnimation')?.value; const category = document.getElementById('connCategory')?.value;
+            if (!name) { showToast('Digite um nome'); return; }
+            addCustomConnection(category, { name, icon: icon || '🔌', color, speed: speed || 'N/A', desc: desc || '', type, animation: animation || null, iconFile: null });
+            closeModal();
         };
         
         window.addConnectionToCategory = (category) => {
-            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem adicionar conexões'); return; }
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores'); return; }
             const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🔌 Nova Conexão em ${category}</h3><input type="text" id="connName" placeholder="Nome da conexão"><input type="text" id="connIcon" placeholder="Ícone (ex: 🔷)" value="🔌"><div class="property-group"><label>OU Imagem personalizada (permanente)</label><input type="file" id="connIconImage" accept="image/*"><div class="image-preview" id="connIconPreview"></div></div><input type="color" id="connColor" value="#005f99"><input type="text" id="connSpeed" placeholder="Velocidade" value="N/A"><input type="text" id="connDesc" placeholder="Descrição"><select id="connType"><option value="cable">Cabeado</option><option value="wireless">Sem Fio</option></select><select id="connAnimation"><option value="">Nenhuma</option><option value="wave">Ondas</option><option value="packet">Pacotes</option></select><div class="modal-buttons"><button class="btn btn-primary" onclick="addConnectionToCategoryConfirm('${category.replace(/'/g, "\\'")}')">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
+            modal.innerHTML = `<div class="modal-content"><h3>🔌 Nova Conexão em ${category}</h3><input type="text" id="connName" placeholder="Nome"><input type="text" id="connIcon" placeholder="Ícone" value="🔌"><input type="color" id="connColor" value="#005f99"><input type="text" id="connSpeed" placeholder="Velocidade"><input type="text" id="connDesc" placeholder="Descrição"><select id="connType"><option value="cable">Cabeado</option><option value="wireless">Sem Fio</option></select><select id="connAnimation"><option value="">Nenhuma</option><option value="wave">Ondas</option><option value="packet">Pacotes</option></select><div class="modal-buttons"><button class="btn btn-primary" onclick="addConnectionToCategoryConfirm('${category.replace(/'/g, "\\'")}')">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
             document.body.appendChild(modal); window.currentModal = modal;
-            const imageInput = document.getElementById('connIconImage');
-            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('connIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;max-height:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'connection' }) }); const data = await response.json(); if (data.success) { window.tempConnIconFile = data.filename; showToast('✅ Ícone da conexão enviado com sucesso!'); } } }; }
         };
         
         window.addConnectionToCategoryConfirm = (category) => {
-            try {
-                const name = document.getElementById('connName')?.value; const icon = document.getElementById('connIcon')?.value; const color = document.getElementById('connColor')?.value; const speed = document.getElementById('connSpeed')?.value; const desc = document.getElementById('connDesc')?.value; const type = document.getElementById('connType')?.value; const animation = document.getElementById('connAnimation')?.value; const iconFile = window.tempConnIconFile || null;
-                if (!name) { showToast('Digite um nome para a conexão'); return; }
-                const connData = { name, icon: icon || '🔌', color, speed: speed || 'N/A', desc: desc || '', type, animation: animation || null, iconFile: iconFile };
-                if (!connectionCategories[category]) connectionCategories[category] = { icon: '🔌', connections: [] };
-                const key = getConnectionKey(name); connectionCategories[category].connections.push(connData);
-                cableColors[key] = { color: color, name: name, icon: icon || '🔌', type: type, speed: speed || 'N/A', desc: desc || '', animation: animation || null, iconFile: iconFile };
-                window.tempConnIconFile = null; saveUserData(); saveGlobalLibrary(); closeModal(); renderConnectionsPalette(); showToast(`✅ Conexão "${name}" adicionada!`);
-            } catch (error) { console.error('Erro ao adicionar conexão:', error); showToast('❌ Erro ao adicionar conexão. Verifique o console.'); closeModal(); }
+            const name = document.getElementById('connName')?.value; const icon = document.getElementById('connIcon')?.value; const color = document.getElementById('connColor')?.value; const speed = document.getElementById('connSpeed')?.value; const desc = document.getElementById('connDesc')?.value; const type = document.getElementById('connType')?.value; const animation = document.getElementById('connAnimation')?.value;
+            if (!name) { showToast('Digite um nome'); return; }
+            if (!connectionCategories[category]) connectionCategories[category] = { icon: '🔌', connections: [] };
+            const key = getConnectionKey(name);
+            connectionCategories[category].connections.push({ name, icon: icon || '🔌', color, speed: speed || 'N/A', desc: desc || '', type, animation: animation || null, iconFile: null });
+            cableColors[key] = { color, name, icon: icon || '🔌', type, speed: speed || 'N/A', desc: desc || '', animation: animation || null, iconFile: null };
+            saveUserData(); saveGlobalLibrary(); closeModal(); renderConnectionsPalette(); showToast(`✅ "${name}"!`);
         };
         
         function openBackgroundModal() {
             const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🖼️ Planta Baixa / Imagem de Fundo</h3><div class="background-controls"><label><strong>📁 Importar Imagem Local</strong></label><input type="file" id="bgImageUpload" accept="image/*"><div class="image-preview" id="bgPreview"></div><button class="btn btn-primary" style="margin-top:8px;" onclick="importLocalImage()">📤 Importar e Adicionar à Tela</button></div><div class="background-controls"><label><strong>🎨 Opacidade da Imagem</strong></label><input type="range" id="bgOpacity" min="0.1" max="1" step="0.01" value="${backgroundOpacity}" onchange="updateBackgroundOpacity(this.value)"><span id="opacityValue">${Math.round(backgroundOpacity * 100)}%</span></div>${backgroundImage ? `<div class="background-controls"><label><strong>🖼️ Imagem Atual</strong></label><div class="action-buttons"><button class="btn btn-secondary" onclick="selectBackgroundImage()">🔍 Selecionar Imagem na Tela</button><button class="btn btn-danger" onclick="removeBackground()">🗑 Remover Imagem de Fundo</button></div><div style="margin-top: 8px; font-size: 12px; color: #005f99;">✨ Dica: Selecione a imagem e depois arraste para mover ou redimensione pelos cantos!</div></div>` : ''}<div class="modal-buttons"><button class="btn btn-danger" onclick="closeModal()">❌ Fechar</button></div></div>`;
+            modal.innerHTML = `<div class="modal-content"><h3>🖼️ Planta Baixa / Fundo</h3><div class="background-controls"><label><strong>📁 Importar Imagem</strong></label><input type="file" id="bgImageUpload" accept="image/*"><div class="image-preview" id="bgPreview"></div><button class="btn btn-primary" style="margin-top:8px;" onclick="importLocalImage()">📤 Importar</button></div><div class="background-controls"><label><strong>🎨 Opacidade</strong></label><input type="range" id="bgOpacity" min="0.1" max="1" step="0.01" value="${backgroundOpacity}" onchange="updateBackgroundOpacity(this.value)"><span id="opacityValue">${Math.round(backgroundOpacity * 100)}%</span></div>${backgroundImage ? `<div class="background-controls"><div class="action-buttons"><button class="btn btn-secondary" onclick="selectBackgroundImage()">🔍 Selecionar</button><button class="btn btn-danger" onclick="removeBackground()">🗑 Remover</button></div></div>` : ''}<div class="modal-buttons"><button class="btn btn-danger" onclick="closeModal()">❌ Fechar</button></div></div>`;
             document.body.appendChild(modal); window.currentModal = modal;
         }
         
-        window.importLocalImage = async () => { const fileInput = document.getElementById('bgImageUpload'); const file = fileInput.files[0]; if (file) { const base64 = await readImageAsBase64(file); await uploadBackgroundImage(base64, file.name); } else { showToast('Selecione uma imagem primeiro'); } };
-        window.selectBackgroundImage = () => { isBackgroundSelected = true; closeModal(); showToast('✅ Imagem selecionada! Arraste para mover ou redimensione pelos cantos.'); };
+        window.importLocalImage = async () => { const fileInput = document.getElementById('bgImageUpload'); const file = fileInput.files[0]; if (file) { const base64 = await readImageAsBase64(file); await uploadBackgroundImage(base64, file.name); } else { showToast('Selecione uma imagem'); } };
+        window.selectBackgroundImage = () => { isBackgroundSelected = true; closeModal(); showToast('✅ Imagem selecionada!'); };
         window.updateBackgroundOpacity = (value) => { backgroundOpacity = parseFloat(value); document.getElementById('opacityValue').innerText = Math.round(backgroundOpacity * 100) + '%'; saveUserData(); };
-        window.removeBackground = () => { if (confirm('Deseja remover a imagem de fundo?')) { backgroundImage = null; backgroundImageObj = null; backgroundOpacity = 0.8; backgroundWidth = 0; backgroundHeight = 0; backgroundX = 0; backgroundY = 0; isBackgroundSelected = false; saveUserData(); showToast('✅ Imagem de fundo removida'); closeModal(); } };
+        window.removeBackground = () => { if (confirm('Remover imagem?')) { backgroundImage = null; backgroundImageObj = null; backgroundOpacity = 0.8; backgroundWidth = 0; backgroundHeight = 0; backgroundX = 0; backgroundY = 0; isBackgroundSelected = false; saveUserData(); showToast('✅ Removida'); closeModal(); } };
         
         async function uploadBackgroundImage(base64, name) {
-            showToast('📤 Enviando imagem...');
+            showToast('📤 Enviando...');
             try {
                 const response = await fetch('/api/upload_background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, name: name }) });
                 const data = await response.json();
-                if (data.success) { backgroundImage = data.url; backgroundImageObj = new Image(); backgroundImageObj.onload = function() { backgroundWidth = backgroundImageObj.width; backgroundHeight = backgroundImageObj.height; backgroundX = canvas.width/2 - backgroundWidth/2; backgroundY = canvas.height/2 - backgroundHeight/2; saveUserData(); showToast('✅ Imagem de fundo adicionada!'); closeModal(); }; backgroundImageObj.src = backgroundImage; saveUserData(); }
-                else { showToast('Erro ao enviar imagem'); }
-            } catch(e) { showToast('Erro ao enviar imagem'); }
+                if (data.success) { backgroundImage = data.url; backgroundImageObj = new Image(); backgroundImageObj.onload = function() { backgroundWidth = backgroundImageObj.width; backgroundHeight = backgroundImageObj.height; backgroundX = canvas.width/2 - backgroundWidth/2; backgroundY = canvas.height/2 - backgroundHeight/2; saveUserData(); showToast('✅ Adicionada!'); closeModal(); }; backgroundImageObj.src = backgroundImage; saveUserData(); }
+                else { showToast('Erro ao enviar'); }
+            } catch(e) { showToast('Erro'); }
         }
         
-        function newProject() { if (confirm('Novo projeto? Todos os dados não salvos serão perdidos.')) { components = []; connections = []; shapes = []; selectedComponents = []; selectedShapes = []; selectedConnectionIndex = null; backgroundImage = null; backgroundImageObj = null; backgroundOpacity = 0.8; backgroundWidth = 0; backgroundHeight = 0; backgroundX = 0; backgroundY = 0; isBackgroundSelected = false; closeProperties(); saveUserData(); showToast('📁 Novo projeto criado!'); } }
+        function newProject() { if (confirm('Novo projeto? Todos os dados não salvos serão perdidos.')) { components = []; connections = []; shapes = []; selectedComponents = []; selectedShapes = []; selectedConnectionIndex = null; backgroundImage = null; backgroundImageObj = null; backgroundOpacity = 0.8; backgroundWidth = 0; backgroundHeight = 0; backgroundX = 0; backgroundY = 0; isBackgroundSelected = false; closeProperties(); saveUserData(); showToast('📁 Novo projeto!'); } }
         
         function saveProjectToFile() {
-            const projectData = { components: components.map(c => ({ ...c, customImage: c.customImage || null, imageData: c.imageData || null, iconFile: c.iconFile || null, customIconTemp: c.customIconTemp || null, customImageTemp: c.customImageTemp || null })), connections: connections, shapes: shapes, background: backgroundImage, backgroundOpacity: backgroundOpacity, backgroundWidth: backgroundWidth, backgroundHeight: backgroundHeight, backgroundX: backgroundX, backgroundY: backgroundY, version: '2.2', date: new Date().toISOString() };
-            const dataStr = JSON.stringify(projectData, null, 2); const blob = new Blob([dataStr], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `projeto_${Date.now()}.projetize`; a.click(); URL.revokeObjectURL(url); showToast('✅ Projeto salvo com sucesso!');
+            const projectData = { components, connections, shapes, background: backgroundImage, backgroundOpacity, backgroundWidth, backgroundHeight, backgroundX, backgroundY, version: '2.4', date: new Date().toISOString() };
+            const dataStr = JSON.stringify(projectData, null, 2); const blob = new Blob([dataStr], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `projeto_${Date.now()}.projetize`; a.click(); URL.revokeObjectURL(url); showToast('✅ Salvo!');
         }
         
         function loadProjectFromFile() {
@@ -2612,19 +2422,19 @@ HTML_TEMPLATE = """
                     try {
                         const data = JSON.parse(ev.target.result); components = data.components || []; connections = data.connections || []; shapes = data.shapes || [];
                         if (data.background) { backgroundImage = data.background; backgroundOpacity = data.backgroundOpacity || 0.8; backgroundWidth = data.backgroundWidth || 0; backgroundHeight = data.backgroundHeight || 0; backgroundX = data.backgroundX || 0; backgroundY = data.backgroundY || 0; backgroundImageObj = new Image(); backgroundImageObj.src = backgroundImage; }
-                        selectedComponents = []; selectedShapes = []; selectedConnectionIndex = null; closeProperties(); saveUserData(); showToast('✅ Projeto carregado com sucesso!');
-                    } catch(err) { showToast('Erro ao carregar projeto: ' + err.message); }
+                        selectedComponents = []; selectedShapes = []; selectedConnectionIndex = null; closeProperties(); saveUserData(); showToast('✅ Carregado!');
+                    } catch(err) { showToast('Erro: ' + err.message); }
                 };
                 reader.readAsText(file);
             };
             input.click();
         }
         
-        function exportPDF() { drawWithBackground(true, true); setTimeout(() => { const imgData = canvas.toDataURL('image/png'); const pdfWindow = window.open('', '_blank'); pdfWindow.document.write(`<html><head><title>Projeto CFTV</title></head><body style="margin:0; padding:20px; display:flex; justify-content:center; background:white;"><img src="${imgData}" style="max-width:100%; height:auto;"><script>window.print();<\\/script></body></html>`); setTimeout(() => draw(), 500); showToast('📄 PDF gerado! Use Ctrl+P para salvar como PDF.'); }, 100); }
+        function exportPDF() { drawWithBackground(true, true); setTimeout(() => { const imgData = canvas.toDataURL('image/png'); const pdfWindow = window.open('', '_blank'); pdfWindow.document.write(`<html><head><title>Projeto CFTV</title></head><body style="margin:0;padding:20px;display:flex;justify-content:center;background:white;"><img src="${imgData}" style="max-width:100%;height:auto;"><script>window.print();<\\/script></body></html>`); setTimeout(() => draw(), 500); showToast('📄 PDF gerado!'); }, 100); }
         
         function exportPDFWithList() {
             drawWithBackground(true, true);
-            let listHTML = `<div style="font-family: Arial, sans-serif; padding: 20px;"><h1 style="color: #005f99; text-align: center;">PROJETIZE - LISTA DE EQUIPAMENTOS</h1><hr><p><strong>Data:</strong> ${new Date().toLocaleString()}</p><p><strong>Projetado por:</strong> Thiago Souza</p><br>`;
+            let listHTML = `<div style="font-family:Arial,sans-serif;padding:20px;"><h1 style="color:#005f99;text-align:center;">PROJETIZE - LISTA DE EQUIPAMENTOS</h1><hr><p><strong>Data:</strong> ${new Date().toLocaleString()}</p><p><strong>Projetado por:</strong> Thiago Souza</p><br>`;
             const byType = {}; components.forEach(comp => { const type = comp.type; if (!byType[type]) byType[type] = []; byType[type].push(comp); });
             for (const [type, comps] of Object.entries(byType)) {
                 listHTML += `<h2>📌 ${type.toUpperCase()}</h2><table style="width:100%;border-collapse:collapse;"><tr style="background:#005f99;color:white;"><th style="padding:8px;text-align:left;">Equipamento</th><th style="padding:8px;text-align:left;">IP</th><th style="padding:8px;text-align:left;">Posição</th></tr>`;
@@ -2638,8 +2448,8 @@ HTML_TEMPLATE = """
             }
             listHTML += `<br><hr><p><strong>Total de Equipamentos:</strong> ${components.length}</p><p><strong>Total de Conexões:</strong> ${connections.length}</p><p><strong>Total de Formas:</strong> ${shapes.length}</p><br><p style="text-align:center;font-size:11px;color:#888;">Desenvolvido por Thiago Souza - Analista de Tecnologia | Unidade 2 - São José do Rio Preto</p></div>`;
             const imgData = canvas.toDataURL('image/png'); const pdfWindow = window.open('', '_blank');
-            pdfWindow.document.write(`<html><head><title>Projeto CFTV - Relatório Completo</title><style>@media print{.page-break{page-break-before:always;}}</style></head><body style="margin:0;padding:20px;"><div style="text-align:center;margin-bottom:20px;"><img src="${imgData}" style="max-width:100%;"></div><div class="page-break"></div>${listHTML}<script>window.print();<\\/script></body></html>`);
-            setTimeout(() => draw(), 500); showToast('📄 PDF com lista de equipamentos gerado!');
+            pdfWindow.document.write(`<html><head><title>Projeto CFTV - Relatório</title><style>@media print{.page-break{page-break-before:always;}}</style></head><body style="margin:0;padding:20px;"><div style="text-align:center;margin-bottom:20px;"><img src="${imgData}" style="max-width:100%;"></div><div class="page-break"></div>${listHTML}<script>window.print();<\\/script></body></html>`);
+            setTimeout(() => draw(), 500); showToast('📄 PDF completo gerado!');
         }
         
         function generateBudget() {
@@ -2648,348 +2458,31 @@ HTML_TEMPLATE = """
             for (const [type, comps] of Object.entries(byType)) { list += `\\n📌 ${type.toUpperCase()}:\\n${'-'.repeat(30)}\\n`; comps.forEach(comp => { list += `   ✅ ${comp.name}`; if (comp.ip) list += ` (IP: ${comp.ip})`; list += '\\n'; }); }
             list += `\\n📡 CONEXÕES:\\n${'-'.repeat(30)}\\n`;
             connections.forEach(conn => { const fromComp = components.find(c => c.id === conn.from); const toComp = components.find(c => c.id === conn.to); const cableInfo = cableColors[conn.type] || cableColors['cat6']; if (fromComp && toComp) { list += `   🔗 ${fromComp.name} → ${toComp.name} (${cableInfo.name})\\n`; } });
-            list += `\\n${'='.repeat(50)}\\n📊 TOTAL DE EQUIPAMENTOS: ${components.length}\\n🔌 TOTAL DE CONEXÕES: ${connections.length}\\n📐 TOTAL DE FORMAS: ${shapes.length}\\n`;
-            const blob = new Blob([list], {type: 'text/plain;charset=utf-8'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `orcamento_${Date.now()}.txt`; a.click(); showToast('💰 Orçamento gerado e baixado!');
+            list += `\\n${'='.repeat(50)}\\n📊 TOTAL: ${components.length} equipamentos, ${connections.length} conexões, ${shapes.length} formas\\n`;
+            const blob = new Blob([list], {type: 'text/plain;charset=utf-8'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `orcamento_${Date.now()}.txt`; a.click(); showToast('💰 Orçamento baixado!');
         }
         
-        function toggleGrid() { showGrid = !showGrid; showToast(showGrid ? '🔲 Grade visível' : '🔳 Grade oculta'); }
-        function setShapeMode(mode) { shapeMode = mode; document.querySelectorAll('.shape-btn').forEach(btn => btn.classList.remove('active')); if (event && event.target) event.target.classList.add('active'); showToast(`Modo: Desenhar ${getShapeName(mode)} - Clique e arraste no canvas`); }
-        function cancelShapeMode() { shapeMode = null; drawingPreview = null; document.querySelectorAll('.shape-btn').forEach(btn => btn.classList.remove('active')); showToast('Modo de desenho cancelado'); }
+        function toggleGrid() { showGrid = !showGrid; showToast(showGrid ? '🔲 Grade ON' : '🔳 Grade OFF'); }
+        function setShapeMode(mode) { shapeMode = mode; document.querySelectorAll('.shape-btn').forEach(btn => btn.classList.remove('active')); if (event && event.target) event.target.classList.add('active'); showToast(`Desenhar: ${getShapeName(mode)}`); }
+        function cancelShapeMode() { shapeMode = null; drawingPreview = null; document.querySelectorAll('.shape-btn').forEach(btn => btn.classList.remove('active')); showToast('Cancelado'); }
         function toggleShapesToolbar() { const toolbar = document.getElementById('shapesToolbar'); toolbar.style.display = toolbar.style.display === 'none' ? 'flex' : 'none'; }
-        function togglePalette() { const palette = document.getElementById('palette'); const toggleBtn = document.querySelector('.toggle-palette'); palette.classList.toggle('collapsed'); toggleBtn.innerHTML = palette.classList.contains('collapsed') ? '▶' : '◀'; if (window.innerWidth <= 768) { if (!palette.classList.contains('collapsed')) { document.getElementById('mobileOverlay').style.display = 'block'; } else { document.getElementById('mobileOverlay').style.display = 'none'; } } }
-        function toggleMobilePalette() { const palette = document.getElementById('palette'); const overlay = document.getElementById('mobileOverlay'); if (palette.classList.contains('collapsed')) { palette.classList.remove('collapsed'); document.querySelector('.toggle-palette').innerHTML = '◀'; overlay.style.display = 'block'; } else { palette.classList.add('collapsed'); document.querySelector('.toggle-palette').innerHTML = '▶'; overlay.style.display = 'none'; } }
-        function closeMobilePalette() { const palette = document.getElementById('palette'); if (!palette.classList.contains('collapsed')) { palette.classList.add('collapsed'); document.querySelector('.toggle-palette').innerHTML = '▶'; } document.getElementById('mobileOverlay').style.display = 'none'; }
+        function togglePalette() { const palette = document.getElementById('palette'); const toggleBtn = document.querySelector('.toggle-palette'); palette.classList.toggle('collapsed'); toggleBtn.innerHTML = palette.classList.contains('collapsed') ? '▶' : '◀'; }
+        function toggleMobilePalette() { const palette = document.getElementById('palette'); const overlay = document.getElementById('mobileOverlay'); if (palette.classList.contains('collapsed')) { palette.classList.remove('collapsed'); overlay.style.display = 'block'; } else { palette.classList.add('collapsed'); overlay.style.display = 'none'; } }
+        function closeMobilePalette() { const palette = document.getElementById('palette'); if (!palette.classList.contains('collapsed')) palette.classList.add('collapsed'); document.getElementById('mobileOverlay').style.display = 'none'; }
         function closePropertiesPanel() { document.getElementById('propertiesPanel').classList.remove('open'); }
         function openProperties() { document.getElementById('propertiesPanel').classList.add('open'); }
         function closeProperties() { document.getElementById('propertiesPanel').classList.remove('open'); }
-        function readImageAsBase64(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.readAsDataURL(file); }); }
-        
-        async function loadLoginBgConfig() {
-            try {
-                const response = await fetch('/api/login_bg_config');
-                const data = await response.json();
-                if (data.success) {
-                    loginBgConfig = data.config;
-                    applyLoginBg();
-                }
-            } catch(e) { console.error('Erro ao carregar config do fundo de login:', e); }
-        }
-
-        function applyLoginBg() {
-            const imgEl = document.getElementById('loginBgMedia');
-            const videoEl = document.getElementById('loginBgVideo');
-            const matrixEl = document.getElementById('matrixBg');
-            
-            imgEl.style.display = 'none';
-            videoEl.style.display = 'none';
-            imgEl.src = '';
-            videoEl.src = '';
-            matrixEl.style.display = 'block';
-            
-            if (loginBgConfig.type === 'image' && loginBgConfig.filename) {
-                imgEl.src = `/uploads/login_bg/${loginBgConfig.filename}?t=${Date.now()}`;
-                imgEl.style.display = 'block';
-                imgEl.style.opacity = loginBgConfig.opacity || 0.35;
-                matrixEl.style.display = 'none';
-            } else if (loginBgConfig.type === 'video' && loginBgConfig.filename) {
-                videoEl.src = `/uploads/login_bg/${loginBgConfig.filename}?t=${Date.now()}`;
-                videoEl.style.display = 'block';
-                videoEl.style.opacity = loginBgConfig.opacity || 0.35;
-                videoEl.play().catch(() => {});
-                matrixEl.style.display = 'none';
-            } else {
-                createMatrixAnimation('matrixBg', true);
-                matrixEl.style.display = 'block';
-            }
-        }
-
-        function openLoginBgModal() {
-            const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `
-                <div class="modal-content" style="max-width: 560px;">
-                    <h3 style="color:var(--text-accent);">🎬 Fundo da Tela de Login</h3>
-                    <p style="font-size:12px;color:#6c757d;margin-bottom:15px;">Personalize o fundo da tela de login com imagem, GIF ou vídeo. Esta alteração é global.</p>
-                    
-                    <div class="background-controls">
-                        <label><strong>📁 Escolher mídia (Imagem, GIF ou Vídeo)</strong></label>
-                        <input type="file" id="loginBgFileInput" accept="image/*,video/mp4,video/webm,video/ogg">
-                        <div class="image-preview" id="loginBgPreview"></div>
-                        <div id="loginBgFileInfo" style="font-size:11px;color:#6c757d;margin-top:6px;"></div>
-                    </div>
-                    
-                    <div class="background-controls">
-                        <label><strong>🎨 Opacidade do Fundo</strong></label>
-                        <input type="range" id="loginBgOpacityRange" min="0.05" max="1" step="0.05" value="${loginBgConfig.opacity || 0.35}" oninput="document.getElementById('loginBgOpacityVal').innerText=Math.round(this.value*100)+'%'">
-                        <span id="loginBgOpacityVal">${Math.round((loginBgConfig.opacity || 0.35)*100)}%</span>
-                    </div>
-                    
-                    <div class="background-controls">
-                        <label><strong>🎨 Usar animação Matrix (padrão)</strong></label>
-                        <button class="btn btn-secondary" onclick="setLoginBgMatrix()" style="width:100%;">🔢 Voltar para Matrix</button>
-                    </div>
-                    
-                    <div class="modal-buttons">
-                        <button class="btn btn-primary" onclick="uploadLoginBgMedia()">✅ Aplicar Fundo</button>
-                        <button class="btn btn-danger" onclick="closeModal()">❌ Fechar</button>
-                    </div>
-                </div>`;
-            document.body.appendChild(modal); window.currentModal = modal;
-            
-            const fileInput = document.getElementById('loginBgFileInput');
-            if (fileInput) {
-                fileInput.onchange = async (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    const preview = document.getElementById('loginBgPreview');
-                    const info = document.getElementById('loginBgFileInfo');
-                    const url = URL.createObjectURL(file);
-                    if (file.type.startsWith('video/')) {
-                        preview.innerHTML = `<video src="${url}" style="max-width:100%;max-height:150px;border-radius:6px;" autoplay loop muted playsinline></video>`;
-                        info.innerText = `📹 Vídeo: ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
-                    } else {
-                        preview.innerHTML = `<img src="${url}" style="max-width:100%;max-height:150px;border-radius:6px;">`;
-                        info.innerText = `🖼️ Imagem: ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
-                    }
-                    window.tempLoginBgFile = file;
-                };
-            }
-        }
-
-        window.setLoginBgMatrix = async () => {
-            try {
-                const response = await fetch('/api/login_bg_config', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: 'matrix' })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    loginBgConfig = data.config;
-                    applyLoginBg();
-                    showToast('✅ Fundo Matrix restaurado!');
-                    closeModal();
-                } else {
-                    showToast('❌ ' + (data.error || 'Erro ao salvar'));
-                }
-            } catch(e) { showToast('❌ Erro de conexão'); }
-        };
-
-        window.uploadLoginBgMedia = async () => {
-            if (!window.tempLoginBgFile) { showToast('⚠️ Selecione uma imagem, GIF ou vídeo primeiro'); return; }
-            const file = window.tempLoginBgFile;
-            const maxSize = 40 * 1024 * 1024;
-            if (file.size > maxSize) { showToast('⚠️ Arquivo muito grande. Máximo 40MB.'); return; }
-            
-            showToast('📤 Enviando mídia...');
-            try {
-                const base64 = await readImageAsBase64(file);
-                const mediaType = file.type.startsWith('video/') ? 'video' : 'image';
-                const opacity = parseFloat(document.getElementById('loginBgOpacityRange').value) || 0.35;
-                
-                const response = await fetch('/api/upload_login_bg', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ media: base64, type: mediaType, opacity: opacity })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    loginBgConfig = data.config;
-                    applyLoginBg();
-                    showToast('✅ Fundo da tela de login atualizado!');
-                    closeModal();
-                } else {
-                    showToast('❌ ' + (data.error || 'Erro ao salvar mídia'));
-                }
-            } catch(e) {
-                console.error(e);
-                showToast('❌ Erro ao enviar mídia: ' + e.message);
-            }
-            window.tempLoginBgFile = null;
-        };
-
-        function openDevImageModal() {
-            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem alterar a foto do desenvolvedor'); return; }
-            const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <h3 style="color:var(--text-accent);">🖼️ Alterar Foto do Desenvolvedor</h3>
-                    <p>Envie uma nova imagem para substituir a foto do desenvolvedor.</p>
-                    <div class="property-group">
-                        <label>Escolha uma imagem</label>
-                        <input type="file" id="newDevImage" accept="image/*">
-                        <div class="image-preview" id="newDevPreview"></div>
-                    </div>
-                    <div class="modal-buttons">
-                        <button class="btn btn-primary" onclick="uploadNewDevImage()">✅ Salvar Foto</button>
-                        <button class="btn btn-danger" onclick="closeModal()">❌ Cancelar</button>
-                    </div>
-                </div>`;
-            document.body.appendChild(modal); window.currentModal = modal;
-            const imageInput = document.getElementById('newDevImage');
-            if (imageInput) { 
-                imageInput.onchange = async (e) => { 
-                    const file = e.target.files[0]; 
-                    if (file) { 
-                        const base64 = await readImageAsBase64(file); 
-                        const preview = document.getElementById('newDevPreview'); 
-                        if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:100px;max-height:100px;">`; 
-                        window.tempDevImage = base64;
-                    } 
-                }; 
-            }
-        }
-
-        window.uploadNewDevImage = async () => {
-            if (!window.tempDevImage) { showToast('Selecione uma imagem primeiro'); return; }
-            try {
-                const response = await fetch('/api/upload_dev_image', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: window.tempDevImage })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    showToast('✅ Foto do desenvolvedor atualizada com sucesso!');
-                    setTimeout(() => location.reload(), 1000); 
-                } else {
-                    showToast('❌ Erro ao salvar imagem: ' + data.error);
-                }
-            } catch(e) {
-                showToast('❌ Erro de conexão ao salvar imagem');
-            }
-            window.tempDevImage = null;
-            closeModal();
-        };
-
-        function openDynamicBgModal() {
-            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem alterar o fundo'); return; }
-            const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <h3 style="color:var(--text-accent);">🎬 Fundo Dinâmico (GIF ou Vídeo)</h3>
-                    <p>Selecione um arquivo GIF ou Vídeo (MP4) para usar como plano de fundo.</p>
-                    <div class="property-group">
-                        <label>Escolha um arquivo</label>
-                        <input type="file" id="newBgFile" accept="image/gif, video/mp4">
-                        <div class="image-preview" id="newBgPreview"></div>
-                    </div>
-                    <div class="property-group">
-                        <label>Opacidade do Fundo</label>
-                        <input type="range" id="dynamicBgOpacity" min="0.05" max="1" step="0.05" value="0.3" oninput="document.getElementById('bgVideo').style.opacity = this.value; document.getElementById('bgGif').style.opacity = this.value;">
-                    </div>
-                    <div class="modal-buttons">
-                        <button class="btn btn-primary" onclick="applyDynamicBg()">✅ Aplicar</button>
-                        <button class="btn btn-danger" onclick="closeModal()">❌ Cancelar</button>
-                    </div>
-                </div>`;
-            document.body.appendChild(modal); window.currentModal = modal;
-            const fileInput = document.getElementById('newBgFile');
-            if (fileInput) { 
-                fileInput.onchange = (e) => { 
-                    const file = e.target.files[0]; 
-                    if (file) { 
-                        const preview = document.getElementById('newBgPreview'); 
-                        const url = URL.createObjectURL(file);
-                        if (file.type.startsWith('image')) {
-                            preview.innerHTML = `<img src="${url}" style="max-width:100px;max-height:100px;">`;
-                        } else {
-                            preview.innerHTML = `<video src="${url}" style="max-width:100px;max-height:100px;" autoplay loop muted></video>`;
-                        }
-                        window.tempBgFile = file;
-                    } 
-                }; 
-            }
-        }
-
-        window.applyDynamicBg = () => {
-            if (!window.tempBgFile) { showToast('Selecione um arquivo primeiro'); return; }
-            const url = URL.createObjectURL(window.tempBgFile);
-            if (window.tempBgFile.type.startsWith('image')) {
-                document.getElementById('bgVideo').style.display = 'none';
-                document.getElementById('bgGif').src = url;
-                document.getElementById('bgGif').style.display = 'block';
-            } else {
-                document.getElementById('bgGif').style.display = 'none';
-                document.getElementById('bgVideo').src = url;
-                document.getElementById('bgVideo').style.display = 'block';
-            }
-            showToast('✅ Fundo dinâmico aplicado com sucesso!');
-            closeModal();
-        };
-
-        async function doLogin() {
-            const username = document.getElementById('loginUsername').value;
-            const password = document.getElementById('loginPassword').value;
-            const btn = document.getElementById('loginBtn');
-            const errEl = document.getElementById('loginError');
-            errEl.style.display = 'none';
-            
-            if (!username || !password) {
-                errEl.textContent = 'Preencha usuário e senha';
-                errEl.style.display = 'block';
-                return;
-            }
-            
-            btn.disabled = true;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<span class="spinner"></span> Entrando...';
-            
-            try {
-                const response = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
-                const data = await response.json();
-                
-                if (data.success) {
-                    currentUser = username; userRole = data.role;
-                    if (data.role === 'admin' || data.role === 'master') {
-                        document.getElementById('loginBgToggle').style.display = 'flex';
-                    }
-                    document.getElementById('loginModal').style.display = 'none';
-                    document.getElementById('loadingOverlay').style.display = 'flex';
-                    document.getElementById('toolbar').style.display = 'flex';
-                    document.getElementById('userInfo').innerHTML = `<span>👤 ${username}</span><span class="user-role">${data.role.toUpperCase()}</span>`;
-                    
-                    if (data.role === 'admin' || data.role === 'master') {
-                        document.getElementById('adminUsersBtn').style.display = 'inline-block';
-                        document.getElementById('adminShapesBtn').style.display = 'inline-block';
-                        document.getElementById('adminCategoriesBtn').style.display = 'inline-block';
-                        document.getElementById('adminDevicesBtn').style.display = 'inline-block';
-                        document.getElementById('adminConnectionsBtn').style.display = 'inline-block';
-                        document.getElementById('resetDefaultsBtn').style.display = 'inline-block';
-                        document.getElementById('adminDevBtn').style.display = 'inline-block';
-                        document.getElementById('adminBgBtn').style.display = 'inline-block';
-                    }
-                    
-                    await Promise.all([loadDefaultConfig(), loadDefaultConnections()]);
-                    await loadUserData();
-                    
-                    document.getElementById('loadingOverlay').style.display = 'none';
-                    showToast(`Bem-vindo, ${username}!`);
-                } else {
-                    errEl.textContent = data.error || 'Usuário ou senha inválidos';
-                    errEl.style.display = 'block';
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                }
-            } catch(e) {
-                errEl.textContent = 'Erro de conexão com o servidor';
-                errEl.style.display = 'block';
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }
-        }
-        
-        function logout() { fetch('/api/logout', { method: 'POST' }).then(() => location.reload()); }
         
         async function openUserManagement() {
             const response = await fetch('/api/users'); const users = await response.json();
             const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">👥 Gerenciar Usuários</h3><div class="user-list" id="userList"></div><div style="margin-top:15px;"><input type="text" id="newUsername" placeholder="Novo usuário"><input type="password" id="newPassword" placeholder="Senha"><select id="newRole"><option value="viewer">Visualizador</option><option value="admin">Administrador</option></select><button class="btn btn-primary" style="margin-top:10px;" onclick="addUser()">➕ Adicionar</button></div><div class="modal-buttons"><button class="btn btn-danger" onclick="closeModal()">Fechar</button></div></div>`;
+            modal.innerHTML = `<div class="modal-content"><h3>👥 Gerenciar Usuários</h3><div class="user-list" id="userList"></div><div style="margin-top:15px;"><input type="text" id="newUsername" placeholder="Novo usuário"><input type="password" id="newPassword" placeholder="Senha"><select id="newRole"><option value="viewer">Visualizador</option><option value="admin">Administrador</option></select><button class="btn btn-primary" style="margin-top:10px;" onclick="addUser()">➕ Adicionar</button></div><div class="modal-buttons"><button class="btn btn-danger" onclick="closeModal()">Fechar</button></div></div>`;
             document.body.appendChild(modal); window.currentModal = modal; renderUserList(users);
         }
         
         function renderUserList(users) {
             const container = document.getElementById('userList'); if (!container) return; container.innerHTML = '';
-            for (const [username, userData] of Object.entries(users)) { const userDiv = document.createElement('div'); userDiv.className = 'user-item'; userDiv.innerHTML = `<div><strong>${username}</strong><br><small>${userData.role} | Criado: ${new Date(userData.created_at).toLocaleDateString()}</small></div><div class="user-actions">${userData.role !== 'master' ? `<button onclick="deleteUser('${username}')" title="Excluir">🗑</button>` : '<span style="color:var(--text-accent);">Master</span>'}</div>`; container.appendChild(userDiv); }
+            for (const [username, userData] of Object.entries(users)) { const userDiv = document.createElement('div'); userDiv.className = 'user-item'; userDiv.innerHTML = `<div><strong>${username}</strong><br><small>${userData.role} | ${new Date(userData.created_at).toLocaleDateString()}</small></div><div class="user-actions">${userData.role !== 'master' ? `<button onclick="deleteUser('${username}')">🗑</button>` : '<span style="color:var(--text-accent);">Master</span>'}</div>`; container.appendChild(userDiv); }
         }
         
         async function addUser() {
@@ -2997,16 +2490,16 @@ HTML_TEMPLATE = """
             if (!username || !password) { showToast('Preencha todos os campos'); return; }
             const response = await fetch('/api/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password, role }) });
             const data = await response.json();
-            if (data.success) { showToast('✅ Usuário adicionado!'); closeModal(); openUserManagement(); } else { showToast(data.error); }
+            if (data.success) { showToast('✅ Adicionado!'); closeModal(); openUserManagement(); } else { showToast(data.error); }
         }
         
         async function deleteUser(username) {
-            if (confirm(`Deseja excluir o usuário "${username}"?`)) { const response = await fetch(`/api/users/${username}`, { method: 'DELETE' }); const data = await response.json(); if (data.success) { showToast('✅ Usuário excluído!'); closeModal(); openUserManagement(); } else { showToast(data.error); } }
+            if (confirm(`Excluir "${username}"?`)) { const response = await fetch(`/api/users/${username}`, { method: 'DELETE' }); const data = await response.json(); if (data.success) { showToast('✅ Excluído!'); closeModal(); openUserManagement(); } else { showToast(data.error); } }
         }
         
         async function resetToDefaultConfig() {
-            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem restaurar as configurações padrão'); return; }
-            if (confirm('⚠️ Isso irá restaurar todas as categorias e dispositivos para a configuração padrão. Continuar?')) { try { const response = await fetch('/api/reset_default_config', { method: 'POST' }); const data = await response.json(); if (data.success) { await loadDefaultConfig(); categories = JSON.parse(JSON.stringify(defaultCategories)); customDevices = []; saveUserData(); saveGlobalLibrary(); renderPalette(); showToast('✅ Configurações restauradas para o padrão!'); } } catch(e) { showToast('Erro ao restaurar configurações'); } }
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores'); return; }
+            if (confirm('⚠️ Restaurar todas as categorias e dispositivos para o padrão?')) { try { const response = await fetch('/api/reset_default_config', { method: 'POST' }); const data = await response.json(); if (data.success) { await loadDefaultConfig(); categories = JSON.parse(JSON.stringify(defaultCategories)); customDevices = []; saveUserData(); saveGlobalLibrary(); renderPalette(); showToast('✅ Restaurado!'); } } catch(e) { showToast('Erro'); } }
         }
         
         function createMatrixAnimation(containerId, isLogin = false) {
@@ -3017,10 +2510,7 @@ HTML_TEMPLATE = """
         
         let slideIndex = 0;
         const slides = document.querySelectorAll('.intro-slide'); const dots = document.querySelectorAll('.dot');
-        function showSlide(index) {
-            if (slides.length === 0) return; if (index >= slides.length) index = 0; if (index < 0) index = slides.length - 1;
-            slides.forEach(slide => slide.classList.remove('active')); dots.forEach(dot => dot.classList.remove('active')); slides[index].classList.add('active'); dots[index].classList.add('active'); slideIndex = index;
-        }
+        function showSlide(index) { if (slides.length === 0) return; if (index >= slides.length) index = 0; if (index < 0) index = slides.length - 1; slides.forEach(slide => slide.classList.remove('active')); dots.forEach(dot => dot.classList.remove('active')); slides[index].classList.add('active'); dots[index].classList.add('active'); slideIndex = index; }
         
         window.nextSlide = () => showSlide(slideIndex + 1); window.prevSlide = () => showSlide(slideIndex - 1); window.currentSlide = (index) => showSlide(index);
         function closeIntroAndShowLogin() { document.getElementById('introScreen').style.display = 'none'; document.getElementById('loginModal').style.display = 'flex'; loadLoginBgConfig(); }
@@ -3028,38 +2518,141 @@ HTML_TEMPLATE = """
         function loadDevImages() {
             const loginContainer = document.getElementById('loginDevImageContainer'); const loginImg = document.getElementById('loginDevImage'); const badgeImg = document.getElementById('badgeDevImage'); const devSlideImg = document.getElementById('devSlideImg'); const devSlideContainer = document.getElementById('devSlideImage');
             const img = new Image();
-            img.onload = function() { 
-                if (loginImg) { loginImg.src = img.src; loginImg.style.display = 'block'; } 
-                if (badgeImg) badgeImg.src = img.src; 
-                if (devSlideImg) { devSlideImg.src = img.src; devSlideImg.style.display = 'block'; } 
-                if (devSlideContainer) devSlideContainer.style.background = 'transparent'; 
-                if (loginContainer) loginContainer.style.background = 'transparent'; 
-            };
-            img.onerror = function() {
-                if (devImageBase64) { 
-                    const dataUrl = 'data:image/png;base64,' + devImageBase64; 
-                    if (loginImg) { loginImg.src = dataUrl; loginImg.style.display = 'block'; } 
-                    if (badgeImg) badgeImg.src = dataUrl; 
-                    if (devSlideImg) { devSlideImg.src = dataUrl; devSlideImg.style.display = 'block'; } 
-                    if (devSlideContainer) devSlideContainer.style.background = 'transparent'; 
-                    if (loginContainer) loginContainer.style.background = 'transparent'; 
-                }
-                else { 
-                    if (loginImg) loginImg.style.display = 'none'; 
-                    if (devSlideImg) devSlideImg.style.display = 'none'; 
-                    if (loginContainer) { loginContainer.style.background = '#005f99'; loginContainer.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:40px;font-weight:bold;">TS</div>'; } 
-                    if (devSlideContainer) { devSlideContainer.style.background = '#005f99'; devSlideContainer.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:40px;font-weight:bold;">TS</div>'; } 
-                    if (badgeImg) { badgeImg.style.display = 'none'; badgeImg.parentElement.style.background = '#005f99'; badgeImg.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:16px;font-weight:bold;">TS</div>'; } 
-                }
-            };
+            img.onload = function() { if (loginImg) { loginImg.src = img.src; loginImg.style.display = 'block'; const fallback = document.getElementById('loginAvatarFallback'); if (fallback) fallback.style.display = 'none'; } if (badgeImg) badgeImg.src = img.src; if (devSlideImg) { devSlideImg.src = img.src; devSlideImg.style.display = 'block'; } };
             img.src = devImageBase64 ? 'data:image/png;base64,' + devImageBase64 : '/static/dev.png?v=2';
         }
+        
+        // ================ LOGIN BG ================
+        async function loadLoginBgConfig() {
+            try {
+                const response = await fetch('/api/login_bg_config');
+                const data = await response.json();
+                if (data.success) { loginBgConfig = data.config; applyLoginBg(); }
+            } catch(e) { console.error(e); }
+        }
+
+        function applyLoginBg() {
+            const imgEl = document.getElementById('loginBgMedia'); const videoEl = document.getElementById('loginBgVideo'); const matrixEl = document.getElementById('matrixBg');
+            imgEl.style.display = 'none'; videoEl.style.display = 'none'; imgEl.src = ''; videoEl.src = ''; matrixEl.style.display = 'block';
+            if (loginBgConfig.type === 'image' && loginBgConfig.filename) { imgEl.src = `/uploads/login_bg/${loginBgConfig.filename}?t=${Date.now()}`; imgEl.style.display = 'block'; imgEl.style.opacity = loginBgConfig.opacity || 0.35; matrixEl.style.display = 'none'; }
+            else if (loginBgConfig.type === 'video' && loginBgConfig.filename) { videoEl.src = `/uploads/login_bg/${loginBgConfig.filename}?t=${Date.now()}`; videoEl.style.display = 'block'; videoEl.style.opacity = loginBgConfig.opacity || 0.35; videoEl.play().catch(() => {}); matrixEl.style.display = 'none'; }
+            else { createMatrixAnimation('matrixBg', true); matrixEl.style.display = 'block'; }
+        }
+
+        function openLoginBgModal() {
+            const modal = document.createElement('div'); modal.className = 'modal';
+            modal.innerHTML = `<div class="modal-content" style="max-width:560px;"><h3 style="color:var(--text-accent);">🎬 Fundo da Tela de Login</h3><p style="font-size:12px;color:#6c757d;margin-bottom:15px;">Personalize com imagem, GIF ou vídeo.</p><div class="background-controls"><label><strong>📁 Escolher mídia</strong></label><input type="file" id="loginBgFileInput" accept="image/*,video/mp4,video/webm,video/ogg"><div class="image-preview" id="loginBgPreview"></div></div><div class="background-controls"><label><strong>🎨 Opacidade</strong></label><input type="range" id="loginBgOpacityRange" min="0.05" max="1" step="0.05" value="${loginBgConfig.opacity || 0.35}" oninput="document.getElementById('loginBgOpacityVal').innerText=Math.round(this.value*100)+'%'"><span id="loginBgOpacityVal">${Math.round((loginBgConfig.opacity || 0.35)*100)}%</span></div><div class="background-controls"><label><strong>🔢 Matrix</strong></label><button class="btn btn-secondary" onclick="setLoginBgMatrix()" style="width:100%;">Restaurar Matrix</button></div><div class="modal-buttons"><button class="btn btn-primary" onclick="uploadLoginBgMedia()">✅ Aplicar</button><button class="btn btn-danger" onclick="closeModal()">❌ Fechar</button></div></div>`;
+            document.body.appendChild(modal); window.currentModal = modal;
+            const fileInput = document.getElementById('loginBgFileInput');
+            if (fileInput) { fileInput.onchange = async (e) => { const file = e.target.files[0]; if (!file) return; const preview = document.getElementById('loginBgPreview'); const url = URL.createObjectURL(file); if (file.type.startsWith('video/')) { preview.innerHTML = `<video src="${url}" style="max-width:100%;max-height:150px;border-radius:6px;" autoplay loop muted playsinline></video>`; } else { preview.innerHTML = `<img src="${url}" style="max-width:100%;max-height:150px;border-radius:6px;">`; } window.tempLoginBgFile = file; }; }
+        }
+
+        window.setLoginBgMatrix = async () => {
+            try { const response = await fetch('/api/login_bg_config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'matrix' }) }); const data = await response.json(); if (data.success) { loginBgConfig = data.config; applyLoginBg(); showToast('✅ Matrix restaurado!'); closeModal(); } } catch(e) { showToast('❌ Erro'); }
+        };
+
+        window.uploadLoginBgMedia = async () => {
+            if (!window.tempLoginBgFile) { showToast('⚠️ Selecione uma mídia'); return; }
+            const file = window.tempLoginBgFile;
+            if (file.size > 40 * 1024 * 1024) { showToast('⚠️ Máximo 40MB'); return; }
+            showToast('📤 Enviando...');
+            try {
+                const base64 = await readImageAsBase64(file);
+                const mediaType = file.type.startsWith('video/') ? 'video' : 'image';
+                const opacity = parseFloat(document.getElementById('loginBgOpacityRange').value) || 0.35;
+                const response = await fetch('/api/upload_login_bg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ media: base64, type: mediaType, opacity: opacity }) });
+                const data = await response.json();
+                if (data.success) { loginBgConfig = data.config; applyLoginBg(); showToast('✅ Atualizado!'); closeModal(); }
+                else { showToast('❌ ' + (data.error || 'Erro')); }
+            } catch(e) { showToast('❌ Erro: ' + e.message); }
+            window.tempLoginBgFile = null;
+        };
+
+        function openDevImageModal() {
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores'); return; }
+            const modal = document.createElement('div'); modal.className = 'modal';
+            modal.innerHTML = `<div class="modal-content"><h3>🖼️ Alterar Foto do Desenvolvedor</h3><input type="file" id="newDevImage" accept="image/*"><div class="image-preview" id="newDevPreview"></div><div class="modal-buttons"><button class="btn btn-primary" onclick="uploadNewDevImage()">✅ Salvar</button><button class="btn btn-danger" onclick="closeModal()">❌ Cancelar</button></div></div>`;
+            document.body.appendChild(modal); window.currentModal = modal;
+            const imageInput = document.getElementById('newDevImage');
+            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); document.getElementById('newDevPreview').innerHTML = `<img src="${base64}" style="max-width:100px;">`; window.tempDevImage = base64; } }; }
+        }
+
+        window.uploadNewDevImage = async () => {
+            if (!window.tempDevImage) { showToast('Selecione uma imagem'); return; }
+            try { const response = await fetch('/api/upload_dev_image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: window.tempDevImage }) }); const data = await response.json(); if (data.success) { showToast('✅ Atualizada!'); setTimeout(() => location.reload(), 1000); } } catch(e) { showToast('❌ Erro'); }
+            window.tempDevImage = null; closeModal();
+        };
+
+        function openDynamicBgModal() {
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores'); return; }
+            const modal = document.createElement('div'); modal.className = 'modal';
+            modal.innerHTML = `<div class="modal-content"><h3>🎬 Fundo Dinâmico</h3><p>GIF ou MP4</p><input type="file" id="newBgFile" accept="image/gif, video/mp4"><div class="image-preview" id="newBgPreview"></div><div class="modal-buttons"><button class="btn btn-primary" onclick="applyDynamicBg()">✅ Aplicar</button><button class="btn btn-danger" onclick="closeModal()">❌ Cancelar</button></div></div>`;
+            document.body.appendChild(modal); window.currentModal = modal;
+            const fileInput = document.getElementById('newBgFile');
+            if (fileInput) { fileInput.onchange = (e) => { const file = e.target.files[0]; if (file) { const preview = document.getElementById('newBgPreview'); const url = URL.createObjectURL(file); preview.innerHTML = file.type.startsWith('image') ? `<img src="${url}" style="max-width:100px;">` : `<video src="${url}" style="max-width:100px;" autoplay loop muted></video>`; window.tempBgFile = file; } }; }
+        }
+
+        window.applyDynamicBg = () => {
+            if (!window.tempBgFile) { showToast('Selecione um arquivo'); return; }
+            const url = URL.createObjectURL(window.tempBgFile);
+            if (window.tempBgFile.type.startsWith('image')) { document.getElementById('bgVideo').style.display = 'none'; document.getElementById('bgGif').src = url; document.getElementById('bgGif').style.display = 'block'; }
+            else { document.getElementById('bgGif').style.display = 'none'; document.getElementById('bgVideo').src = url; document.getElementById('bgVideo').style.display = 'block'; }
+            showToast('✅ Aplicado!'); closeModal();
+        };
+
+        async function doLogin() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginBtn');
+            const errEl = document.getElementById('loginError');
+            errEl.style.display = 'none';
+            if (!username || !password) { errEl.textContent = 'Preencha usuário e senha'; errEl.style.display = 'block'; return; }
+            btn.disabled = true;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner"></span> Entrando...';
+            try {
+                const response = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
+                const data = await response.json();
+                if (data.success) {
+                    currentUser = username; userRole = data.role;
+                    if (data.role === 'admin' || data.role === 'master') { document.getElementById('loginBgToggle').style.display = 'flex'; }
+                    document.getElementById('loginModal').style.display = 'none';
+                    document.getElementById('loadingOverlay').style.display = 'flex';
+                    document.getElementById('toolbar').style.display = 'flex';
+                    document.getElementById('userInfo').innerHTML = `<span>👤 ${username}</span><span class="user-role">${data.role.toUpperCase()}</span>`;
+                    if (data.role === 'admin' || data.role === 'master') {
+                        document.getElementById('adminUsersBtn').style.display = 'inline-block';
+                        document.getElementById('adminShapesBtn').style.display = 'inline-block';
+                        document.getElementById('adminCategoriesBtn').style.display = 'inline-block';
+                        document.getElementById('adminDevicesBtn').style.display = 'inline-block';
+                        document.getElementById('adminConnectionsBtn').style.display = 'inline-block';
+                        document.getElementById('resetDefaultsBtn').style.display = 'inline-block';
+                        document.getElementById('adminDevBtn').style.display = 'inline-block';
+                        document.getElementById('adminBgBtn').style.display = 'inline-block';
+                    }
+                    await Promise.all([loadDefaultConfig(), loadDefaultConnections()]);
+                    await loadUserData();
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    showToast(`Bem-vindo, ${username}!`);
+                } else {
+                    errEl.textContent = data.error || 'Credenciais inválidas';
+                    errEl.style.display = 'block';
+                    btn.disabled = false; btn.innerHTML = originalText;
+                }
+            } catch(e) {
+                errEl.textContent = 'Erro de conexão';
+                errEl.style.display = 'block';
+                btn.disabled = false; btn.innerHTML = originalText;
+            }
+        }
+        
+        function logout() { fetch('/api/logout', { method: 'POST' }).then(() => location.reload()); }
         
         canvas.addEventListener('dragover', (e) => e.preventDefault());
         canvas.addEventListener('drop', (e) => {
             e.preventDefault(); const {x, y} = getMousePos(e); const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-            const component = { id: Date.now(), type: data.type || 'custom', subtype: data.subtype || '', name: data.name, x: x, y: y, icon: data.icon || '📦', iconFile: data.iconFile || null, color: data.color || '#005f99', imageData: data.imageData || null, angle: 0, fov: 80, rotation: 0, customImage: null, customIconTemp: null, customImageTemp: null, ip: '', port: 80, username: '', password: '' };
-            components.push(component); showToast(`✅ ${component.name} adicionado ao projeto!`); saveUserData();
+            const component = { id: Date.now(), type: data.type || 'custom', subtype: data.subtype || '', name: data.name, x: x, y: y, icon: data.icon || '📦', iconFile: data.iconFile || null, color: data.color || '#005f99', angle: 0, fov: 80, rotation: 0, customImage: null, customIconTemp: null, customImageTemp: null, ip: '', port: 80, username: '', password: '' };
+            components.push(component); showToast(`✅ ${component.name} adicionado!`); saveUserData();
         });
         
         canvas.addEventListener('touchstart', handleStart, { passive: false }); canvas.addEventListener('touchmove', handleMove, { passive: false }); canvas.addEventListener('touchend', handleEnd); canvas.addEventListener('touchcancel', handleEnd);
@@ -3080,45 +2673,41 @@ HTML_TEMPLATE = """
         window.newProject = newProject; window.saveProjectToFile = saveProjectToFile; window.loadProjectFromFile = loadProjectFromFile; window.exportPDF = exportPDF; window.exportPDFWithList = exportPDFWithList; window.generateBudget = generateBudget;
         window.zoomIn = zoomIn; window.zoomOut = zoomOut; window.resetZoom = resetZoom; window.iconZoomIn = iconZoomIn; window.iconZoomOut = iconZoomOut; window.resetIconSize = resetIconSize;
         window.togglePalette = togglePalette; window.closeModal = closeModal; window.openAddCategoryModal = openAddCategoryModal; window.openAddDeviceModal = openAddDeviceModal; window.openAddConnectionModal = openAddConnectionModal;
-        window.addDeviceToCategory = addDeviceToCategory; window.addCategory = addCategory; window.addDevice = addDevice; window.editCategory = editCategory; window.editDevice = editDevice; window.deleteCategory = deleteCategory; window.deleteDevice = deleteDevice; window.updateCategory = updateCategory; window.updateDevice = updateDevice; window.editCustomDevice = editCustomDevice; window.deleteCustomDevice = deleteCustomDevice; window.addCustomDevice = addCustomDevice;
         window.doLogin = doLogin; window.logout = logout; window.openUserManagement = openUserManagement; window.addUser = addUser; window.deleteUser = deleteUser;
-        window.setShapeMode = setShapeMode; window.cancelShapeMode = cancelShapeMode; window.toggleShapesToolbar = toggleShapesToolbar; window.deleteShape = deleteShape; window.toggleGrid = toggleGrid; window.resetToDefaultConfig = resetToDefaultConfig;
-        window.openBackgroundModal = openBackgroundModal; window.updateBackgroundOpacity = updateBackgroundOpacity; window.removeBackground = removeBackground; window.importLocalImage = importLocalImage; window.selectBackgroundImage = selectBackgroundImage;
-        window.closeIntroAndShowLogin = closeIntroAndShowLogin; window.closePropertiesPanel = closePropertiesPanel; window.toggleMobilePalette = toggleMobilePalette; window.closeMobilePalette = closeMobilePalette; window.deleteSelectedShape = deleteSelectedShape;
-        window.flipComponent = flipComponent; window.flipComponentById = flipComponentById; window.nextSlide = nextSlide; window.prevSlide = prevSlide; window.currentSlide = currentSlide; window.deleteSelectedItems = deleteSelectedItems; window.updateSelectedConnection = updateSelectedConnection; window.deleteSelectedConnection = deleteSelectedConnection; window.flipShape = flipShape; window.duplicateShape = duplicateShape;
-        window.openPermanentIconModal = openPermanentIconModal; window.applyPermanentIcon = applyPermanentIcon; window.openPermanentIconModalFromMenu = openPermanentIconModalFromMenu;
-        window.addCustomConnection = addCustomConnection; window.deleteCustomConnection = deleteCustomConnection; window.editCustomConnection = editCustomConnection; window.addConnectionToCategory = addConnectionToCategory; window.addConnectionToCategoryConfirm = addConnectionToCategoryConfirm;
-        window.openCategoryIconModal = openCategoryIconModal; window.applyCategoryIcon = applyCategoryIcon; window.openConnectionIconModal = openConnectionIconModal; window.applyConnectionIcon = applyConnectionIcon; window.openDeviceIconModal = openDeviceIconModal; window.applyDeviceIcon = applyDeviceIcon; window.openCustomDeviceIconModal = openCustomDeviceIconModal; window.applyCustomDeviceIcon = applyCustomDeviceIcon; window.addConnectionFromModal = addConnectionFromModal; window.renderConnectionsPalette = renderConnectionsPalette; window.renderPalette = renderPalette;
+        window.setShapeMode = setShapeMode; window.cancelShapeMode = cancelShapeMode; window.toggleShapesToolbar = toggleShapesToolbar; window.toggleGrid = toggleGrid; window.resetToDefaultConfig = resetToDefaultConfig;
+        window.openBackgroundModal = openBackgroundModal;
+        window.closeIntroAndShowLogin = closeIntroAndShowLogin; window.closePropertiesPanel = closePropertiesPanel; window.toggleMobilePalette = toggleMobilePalette; window.closeMobilePalette = closeMobilePalette;
+        window.nextSlide = nextSlide; window.prevSlide = prevSlide; window.currentSlide = currentSlide; window.deleteSelectedItems = deleteSelectedItems;
+        window.loadLoginBgConfig = loadLoginBgConfig; window.applyLoginBg = applyLoginBg; window.openLoginBgModal = openLoginBgModal; window.uploadLoginBgMedia = uploadLoginBgMedia; window.setLoginBgMatrix = setLoginBgMatrix;
+        window.openDevImageModal = openDevImageModal; window.uploadNewDevImage = uploadNewDevImage; window.openDynamicBgModal = openDynamicBgModal; window.applyDynamicBg = applyDynamicBg;
         
-        window.openDevImageModal = openDevImageModal;
-        window.uploadNewDevImage = uploadNewDevImage;
-        window.openDynamicBgModal = openDynamicBgModal;
-        window.applyDynamicBg = applyDynamicBg;
-        
-        window.loadLoginBgConfig = loadLoginBgConfig;
-        window.applyLoginBg = applyLoginBg;
-        window.openLoginBgModal = openLoginBgModal;
-        window.uploadLoginBgMedia = uploadLoginBgMedia;
-        window.setLoginBgMatrix = setLoginBgMatrix;
-        
-        // ==================== SIMULADOR 3D - LÓGICA INTEGRADA ====================
+        // ==================== SIMULADOR 3D — APENAS DISPOSITIVOS DE REDE ====================
         (function() {
-            // Catálogo expandido mapeando tipos do Projetize para o 3D
-            const SIM3D_EQUIPMENT_TYPES = [
-                { id: 'patch-panel', name: 'Patch Panel Cat6 24p', unit: '1U', type: 'patch', height: 0.4, desc: 'Distribuição UTP estruturada', keywords: ['patch', 'patch panel'] },
-                { id: 'switch-core', name: 'Switch Core L3 Managed', unit: '1U', type: 'switch', height: 0.4, desc: 'Comutação Gigabit & SFP+', keywords: ['switch'] },
-                { id: 'olt-gpon', name: 'OLT GPON 16P', unit: '2U', type: 'olt', height: 0.8, desc: 'Provedor FTTH fibra', keywords: ['olt', 'gpon'] },
-                { id: 'router-r3004g', name: 'Roteador VPN R3004G', unit: '1U', type: 'router', height: 0.4, desc: 'Roteador de borda VPN', keywords: ['router', 'roteador'] },
-                { id: 'pabx-unniti', name: 'Central PABX IP UnniTI', unit: '2U', type: 'unniti', height: 0.8, desc: 'Central telefônica IP', keywords: ['pabx', 'central'] },
-                { id: 'nvr-dvr', name: 'Gravador NVR 16ch IA', unit: '1U', type: 'dvr', height: 0.4, desc: 'Gerenciamento CFTV', keywords: ['nvr', 'dvr', 'gravador'] },
-                { id: 'server-app', name: 'Servidor Virtualização', unit: '2U', type: 'server', height: 0.8, desc: 'Processamento e hypervisor', keywords: ['server', 'servidor'] },
-                { id: 'storage-nas', name: 'NAS Storage SAN 12-Bay', unit: '3U', type: 'nas', height: 1.2, desc: 'Armazenamento massivo', keywords: ['nas', 'storage', 'san'] },
-                { id: 'ups-nobreak', name: 'Nobreak UPS Online', unit: '3U', type: 'ups', height: 1.2, desc: 'Proteção e energia', keywords: ['nobreak', 'ups', 'energia'] },
-                { id: 'pdu-strip', name: 'Régua PDU', unit: '1U', type: 'pdu', height: 0.3, desc: 'Distribuição AC traseira', keywords: ['pdu', 'régua', 'regua'] },
-                { id: 'dio-fiber', name: 'DIO ODF Fibra SC/APC', unit: '1U', type: 'dio', height: 0.4, desc: 'Distribuição fibra interna', keywords: ['dio', 'odf', 'fibra'] }
-            ];
+            const NETWORK_3D_CATALOG = {
+                'router':        { unit: '1U', height: 0.4, label: 'Router',        visualType: 'router' },
+                'switch_l2':     { unit: '1U', height: 0.4, label: 'Switch L2',     visualType: 'switch' },
+                'switch_l3':     { unit: '1U', height: 0.4, label: 'Switch L3',     visualType: 'switch' },
+                'switch_l2_poe': { unit: '1U', height: 0.4, label: 'Switch L2 PoE', visualType: 'switch' },
+                'switch_l3_poe': { unit: '1U', height: 0.4, label: 'Switch L3 PoE', visualType: 'switch' },
+                'olt':           { unit: '2U', height: 0.8, label: 'OLT GPON',      visualType: 'olt' },
+                'onu':           { unit: '1U', height: 0.4, label: 'ONU',           visualType: 'onu' },
+                'ont':           { unit: '1U', height: 0.4, label: 'ONT',           visualType: 'onu' },
+                'converter':     { unit: '1U', height: 0.4, label: 'Conversor',     visualType: 'converter' },
+                'patch':         { unit: '1U', height: 0.4, label: 'Patch Panel',   visualType: 'patch' },
+                'nvr':           { unit: '1U', height: 0.4, label: 'NVR',           visualType: 'nvr' },
+                'dvr':           { unit: '1U', height: 0.4, label: 'DVR',           visualType: 'nvr' },
+                'pbx':           { unit: '2U', height: 0.8, label: 'PABX',          visualType: 'pbx' },
+                'server':        { unit: '2U', height: 0.8, label: 'Servidor',      visualType: 'server' },
+                'nas':           { unit: '3U', height: 1.2, label: 'NAS/SAN',       visualType: 'nas' },
+                'nobreak':       { unit: '3U', height: 1.2, label: 'Nobreak',       visualType: 'ups' },
+                'ups':           { unit: '3U', height: 1.2, label: 'UPS',           visualType: 'ups' },
+                'pdu':           { unit: '1U', height: 0.3, label: 'PDU',           visualType: 'pdu' }
+            };
             
-            let mountedIds = [];
+            const NETWORK_TYPES_FILTER = ['router', 'switch_l2', 'switch_l3', 'switch_l2_poe', 'switch_l3_poe', 'olt', 'onu', 'ont', 'converter', 'cto', 'patch', 'nvr', 'dvr', 'pbx', 'nobreak', 'ups', 'pdu'];
+            const NETWORK_CATEGORY_NAMES = ['rede', 'redes', 'network', 'networking'];
+            
+            let mountedInstances = [];
             let sim3dConnections = [];
             let activeSourceId = null;
             let selectedCable = 'cat6';
@@ -3129,81 +2718,47 @@ HTML_TEMPLATE = """
             let cableGroup, particleGroup;
             let textureUpdates = [];
             let animFrame3d = null;
-            let isOpen = false;
             let activeCableAnims = [];
             
             const raycaster3d = new THREE.Raycaster();
             const mouse3d = new THREE.Vector2();
             
-            function matchEquipType(name) {
-                const lowerName = name.toLowerCase();
-                for (const t of SIM3D_EQUIPMENT_TYPES) {
-                    if (t.keywords.some(k => lowerName.includes(k))) return t;
-                }
-                return null;
-            }
+            function isNetworkCategory(catName) { const lower = catName.toLowerCase(); return NETWORK_CATEGORY_NAMES.some(n => lower.includes(n)); }
+            function isNetworkDevice(dev) { return NETWORK_TYPES_FILTER.includes(dev.type); }
             
-            function getEquipmentMeta(name) {
-                const match = matchEquipType(name);
-                if (match) {
-                    // Retorna uma cópia com nome real
-                    return { ...match, displayName: name };
-                }
-                // Fallback genérico
-                return { id: 'generic-' + name.replace(/\s+/g, '-').toLowerCase(), name: name, unit: '1U', type: 'generic', height: 0.4, desc: 'Equipamento personalizado', displayName: name };
-            }
-            
-            function getAvailableFromProject() {
-                // Junta todos equipamentos da paleta + customizados
-                const list = [];
-                const seen = new Set();
-                
-                // Do catálogo padrão
+            function getAvailableNetworkDevices() {
+                const list = []; const seen = new Set();
                 for (const [catName, catData] of Object.entries(categories || {})) {
                     if (!catData.devices) continue;
+                    if (!isNetworkCategory(catName)) continue;
                     for (const dev of catData.devices) {
-                        if (seen.has(dev.name)) continue;
-                        seen.add(dev.name);
-                        list.push({ name: dev.name, type: dev.type, cat: catName, desc: dev.desc, icon: dev.icon });
+                        const key = dev.name + '|' + dev.type;
+                        if (seen.has(key)) continue;
+                        seen.add(key);
+                        list.push({ ...dev, _category: catName });
                     }
                 }
-                // Customizados
                 for (const dev of (customDevices || [])) {
-                    if (seen.has(dev.name)) continue;
-                    seen.add(dev.name);
-                    list.push({ name: dev.name, type: dev.type, cat: 'Personalizados', desc: dev.desc, icon: dev.icon });
+                    if (!isNetworkDevice(dev)) continue;
+                    const key = dev.name + '|' + dev.type;
+                    if (seen.has(key)) continue;
+                    seen.add(key);
+                    list.push({ ...dev, _category: 'Personalizados' });
                 }
-                
-                // Aplica match com o catálogo 3D
-                return list.map(dev => {
-                    const meta = matchEquipType(dev.name);
-                    return {
-                        ...dev,
-                        sim3dId: meta ? meta.id : null,
-                        sim3dUnit: meta ? meta.unit : '1U',
-                        sim3dHeight: meta ? meta.height : 0.4,
-                        sim3dType: meta ? meta.type : 'generic',
-                        sim3dDesc: meta ? meta.desc : (dev.desc || 'Personalizado')
-                    };
-                });
+                return list;
             }
             
-            function getSim3DId(projectEquipName) {
-                const meta = matchEquipType(projectEquipName);
-                return meta ? meta.id : 'generic-' + projectEquipName.replace(/\s+/g, '-').toLowerCase();
-            }
+            function makeInstanceId(dev) { return dev.type + '::' + dev.name; }
+            function findCatalogEntry(dev) { return NETWORK_3D_CATALOG[dev.type] || { unit: '1U', height: 0.4, label: dev.name, visualType: 'generic' }; }
             
             function init3DScene() {
                 const container = document.getElementById('sim3d-container');
                 container.innerHTML = '';
-                
                 scene3d = new THREE.Scene();
                 scene3d.background = new THREE.Color(0x080b13);
                 scene3d.fog = new THREE.FogExp2(0x080b13, 0.015);
-                
                 camera3d = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
                 camera3d.position.set(14, 6.5, 17);
-                
                 renderer3d = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
                 renderer3d.setSize(window.innerWidth, window.innerHeight);
                 renderer3d.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -3212,150 +2767,142 @@ HTML_TEMPLATE = """
                 renderer3d.toneMapping = THREE.ACESFilmicToneMapping;
                 renderer3d.toneMappingExposure = 1.3;
                 container.appendChild(renderer3d.domElement);
-                
                 controls3d = new THREE.OrbitControls(camera3d, renderer3d.domElement);
-                controls3d.enableDamping = true;
-                controls3d.dampingFactor = 0.05;
-                controls3d.target.set(0, 3, 0);
-                controls3d.maxPolarAngle = Math.PI / 2 + 0.05;
-                controls3d.minDistance = 4;
-                controls3d.maxDistance = 30;
-                
-                const ambient = new THREE.AmbientLight(0xffffff, 1.6);
-                scene3d.add(ambient);
-                
-                const spot = new THREE.SpotLight(0x38bdf8, 3.2);
-                spot.position.set(10, 18, 12);
-                spot.angle = Math.PI / 4;
-                spot.castShadow = true;
-                scene3d.add(spot);
-                
-                const fill = new THREE.PointLight(0x0284c7, 2.0, 30);
-                fill.position.set(-12, 8, -5);
-                scene3d.add(fill);
-                
-                cableGroup = new THREE.Group();
-                particleGroup = new THREE.Group();
-                scene3d.add(cableGroup);
-                scene3d.add(particleGroup);
-                
-                buildEnvironment3D();
-                buildRackCabinet3D();
-                rebuildRack3D();
-                renderSim3DTrayUI();
-                
+                controls3d.enableDamping = true; controls3d.dampingFactor = 0.05;
+                controls3d.target.set(0, 3, 0); controls3d.maxPolarAngle = Math.PI / 2 + 0.05;
+                controls3d.minDistance = 4; controls3d.maxDistance = 30;
+                scene3d.add(new THREE.AmbientLight(0xffffff, 1.6));
+                const spot = new THREE.SpotLight(0x38bdf8, 3.2); spot.position.set(10, 18, 12); spot.angle = Math.PI / 4; spot.castShadow = true; scene3d.add(spot);
+                const fill = new THREE.PointLight(0x0284c7, 2.0, 30); fill.position.set(-12, 8, -5); scene3d.add(fill);
+                cableGroup = new THREE.Group(); particleGroup = new THREE.Group();
+                scene3d.add(cableGroup); scene3d.add(particleGroup);
+                buildEnvironment3D(); buildRackCabinet3D();
+                rebuildRack3D(); renderSim3DTrayUI();
                 window.addEventListener('resize', onSim3DResize);
                 renderer3d.domElement.addEventListener('click', onSim3DClick);
-                
                 animate3D();
             }
             
             function buildEnvironment3D() {
                 const grid = new THREE.GridHelper(50, 50, 0x38bdf8, 0x1e293b);
-                grid.position.y = -2.51;
-                grid.material.opacity = 0.35;
-                grid.material.transparent = true;
+                grid.position.y = -2.51; grid.material.opacity = 0.35; grid.material.transparent = true;
                 scene3d.add(grid);
-                
-                const floor = new THREE.Mesh(
-                    new THREE.PlaneGeometry(60, 60),
-                    new THREE.MeshStandardMaterial({ color: 0x0a0e17, roughness: 0.4, metalness: 0.7 })
-                );
-                floor.rotation.x = -Math.PI / 2;
-                floor.position.y = -2.52;
-                floor.receiveShadow = true;
-                scene3d.add(floor);
+                const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ color: 0x0a0e17, roughness: 0.4, metalness: 0.7 }));
+                floor.rotation.x = -Math.PI / 2; floor.position.y = -2.52; floor.receiveShadow = true; scene3d.add(floor);
             }
             
             function buildRackCabinet3D() {
                 const rackGroup = new THREE.Group();
                 const metal = new THREE.MeshStandardMaterial({ color: 0x111622, roughness: 0.5, metalness: 0.85 });
-                
                 const pillarGeo = new THREE.BoxGeometry(0.3, 11, 0.3);
-                [[-2.1, 2.7, -2.1], [2.1, 2.7, -2.1], [-2.1, 2.7, 2.1], [2.1, 2.7, 2.1]].forEach(pos => {
-                    const p = new THREE.Mesh(pillarGeo, metal);
-                    p.position.set(...pos);
-                    rackGroup.add(p);
-                });
-                
-                const top = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.4, 4.6), metal);
-                top.position.set(0, 8.2, 0);
-                rackGroup.add(top);
-                
-                const bot = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.4, 4.6), metal);
-                bot.position.set(0, -2.6, 0);
-                rackGroup.add(bot);
-                
-                const doorGlass = new THREE.Mesh(
-                    new THREE.BoxGeometry(4.0, 10.2, 0.06),
-                    new THREE.MeshPhysicalMaterial({ color: 0x0284c7, transparent: true, opacity: 0.15, transmission: 0.85, roughness: 0.1 })
-                );
-                doorGlass.position.set(0, 2.7, 2.25);
-                rackGroup.add(doorGlass);
-                
+                [[-2.1, 2.7, -2.1], [2.1, 2.7, -2.1], [-2.1, 2.7, 2.1], [2.1, 2.7, 2.1]].forEach(pos => { const p = new THREE.Mesh(pillarGeo, metal); p.position.set(...pos); rackGroup.add(p); });
+                const top = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.4, 4.6), metal); top.position.set(0, 8.2, 0); rackGroup.add(top);
+                const bot = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.4, 4.6), metal); bot.position.set(0, -2.6, 0); rackGroup.add(bot);
+                const doorGlass = new THREE.Mesh(new THREE.BoxGeometry(4.0, 10.2, 0.06), new THREE.MeshPhysicalMaterial({ color: 0x0284c7, transparent: true, opacity: 0.15, transmission: 0.85, roughness: 0.1 }));
+                doorGlass.position.set(0, 2.7, 2.25); rackGroup.add(doorGlass);
                 scene3d.add(rackGroup);
             }
             
-            function createEquipmentTexture(type, name, isPowered) {
+            function createFrontTexture(visualType, name, isPowered) {
                 const canvas = document.createElement('canvas');
-                canvas.width = 1024;
-                canvas.height = 256;
+                canvas.width = 1024; canvas.height = 256;
                 const ctx = canvas.getContext('2d');
                 
                 function draw() {
-                    ctx.fillStyle = '#1e293b';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, 1024, 256);
+                    ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 4; ctx.strokeRect(2, 2, 1020, 252);
+                    ctx.fillStyle = '#1e293b'; ctx.fillRect(0, 0, 1024, 32);
+                    ctx.fillStyle = '#e2e8f0'; ctx.font = 'bold 16px "JetBrains Mono", monospace';
+                    ctx.fillText(name.toUpperCase().substring(0, 40), 16, 22);
+                    ctx.fillStyle = isPowered ? '#22c55e' : '#475569';
+                    ctx.beginPath(); ctx.arc(1000, 16, 6, 0, Math.PI * 2); ctx.fill();
                     
-                    ctx.strokeStyle = '#334155';
-                    ctx.lineWidth = 6;
-                    ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
-                    
-                    ctx.font = 'bold 22px "JetBrains Mono", sans-serif';
-                    ctx.fillStyle = '#38bdf8';
-                    ctx.fillText('NEXUS // ' + name.toUpperCase().substring(0, 32), 30, 45);
-                    
-                    ctx.fillStyle = isPowered ? '#22c55e' : '#64748b';
-                    ctx.beginPath();
-                    ctx.arc(880, 38, 8, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    ctx.fillStyle = '#94a3b8';
-                    ctx.font = '12px sans-serif';
-                    ctx.fillText(isPowered ? 'PWR ON' : 'OFF', 900, 43);
-                    
-                    if (type === 'patch') {
-                        for (let i = 0; i < 24; i++) {
-                            const x = 35 + i * 40;
-                            ctx.fillStyle = '#0f172a';
-                            ctx.fillRect(x, 110, 26, 26);
-                            ctx.fillStyle = '#eab308';
-                            ctx.fillRect(x + 5, 114, 16, 4);
-                        }
-                    } else if (type === 'switch' || type === 'olt') {
-                        for (let i = 0; i < 24; i++) {
-                            const x = 50 + i * 38;
-                            ctx.fillStyle = '#0f172a';
-                            ctx.fillRect(x, 100, 24, 24);
-                            ctx.fillStyle = (isPowered && Math.random() > 0.3) ? '#22c55e' : '#334155';
-                            ctx.fillRect(x + 8, 84, 8, 8);
-                        }
-                    } else if (type === 'ups' || type === 'pdu') {
-                        ctx.fillStyle = '#0284c7';
-                        ctx.fillRect(40, 70, 350, 140);
-                        ctx.fillStyle = '#0f172a';
-                        ctx.fillRect(50, 80, 330, 120);
-                        ctx.fillStyle = isPowered ? '#22c55e' : '#ef4444';
-                        ctx.font = 'bold 22px "JetBrains Mono"';
-                        ctx.fillText(isPowered ? 'AC 220V // ON' : 'SEM ENERGIA', 70, 135);
-                    } else {
-                        ctx.fillStyle = '#0f172a';
-                        ctx.fillRect(40, 80, 300, 130);
-                        ctx.fillStyle = isPowered ? '#22c55e' : '#ef4444';
-                        ctx.font = 'bold 20px "JetBrains Mono"';
-                        ctx.fillText(isPowered ? 'STATUS: NORMAL // OK' : 'STATUS: DESLIGADO', 60, 140);
+                    switch(visualType) {
+                        case 'router':
+                            ctx.fillStyle = '#475569'; ctx.font = '11px monospace'; ctx.fillText('WAN', 20, 60);
+                            for (let i = 0; i < 4; i++) {
+                                const x = 20 + i * 44;
+                                ctx.fillStyle = '#020617'; ctx.fillRect(x, 70, 36, 30);
+                                ctx.strokeStyle = '#0ea5e9'; ctx.strokeRect(x, 70, 36, 30);
+                                ctx.fillStyle = isPowered && Math.random() > 0.2 ? '#22c55e' : '#1e293b';
+                                ctx.fillRect(x + 14, 76, 8, 8);
+                            }
+                            ctx.fillStyle = '#020617'; ctx.fillRect(220, 70, 50, 30); ctx.strokeStyle = '#f59e0b'; ctx.strokeRect(220, 70, 50, 30);
+                            ctx.fillStyle = isPowered ? '#f59e0b' : '#1e293b'; ctx.fillRect(240, 82, 10, 8);
+                            ctx.fillStyle = '#020617'; ctx.fillRect(700, 65, 180, 55); ctx.strokeStyle = '#0ea5e9'; ctx.strokeRect(700, 65, 180, 55);
+                            ctx.fillStyle = isPowered ? '#22c55e' : '#ef4444'; ctx.font = 'bold 14px monospace';
+                            ctx.fillText(isPowered ? 'WAN: UP' : 'WAN: DOWN', 720, 90);
+                            ctx.font = '10px monospace'; ctx.fillStyle = '#94a3b8'; ctx.fillText('CPU 12% | RAM 43%', 720, 108);
+                            for (let i = 0; i < 12; i++) { ctx.fillStyle = isPowered && (Math.random() > 0.5) ? '#22c55e' : '#334155'; ctx.fillRect(20 + i * 70, 200, 40, 8); }
+                            break;
+                        case 'switch':
+                            ctx.fillStyle = '#94a3b8'; ctx.font = '10px monospace'; ctx.fillText('24x RJ45 Gigabit + 2x SFP+', 20, 55);
+                            for (let i = 0; i < 24; i++) {
+                                const x = 20 + (i % 12) * 60; const y = 70 + Math.floor(i / 12) * 70;
+                                ctx.fillStyle = '#020617'; ctx.fillRect(x, y, 50, 34);
+                                ctx.strokeStyle = '#334155'; ctx.strokeRect(x, y, 50, 34);
+                                ctx.fillStyle = isPowered && (Math.random() > 0.4) ? '#22c55e' : '#475569';
+                                ctx.fillRect(x + 20, y + 4, 8, 5);
+                            }
+                            for (let i = 0; i < 2; i++) { ctx.fillStyle = '#020617'; ctx.fillRect(760 + i * 60, 70, 50, 34); ctx.strokeStyle = '#f59e0b'; ctx.strokeRect(760 + i * 60, 70, 50, 34); ctx.fillStyle = isPowered ? '#f59e0b' : '#334155'; ctx.fillRect(778 + i * 60, 80, 14, 10); }
+                            break;
+                        case 'olt':
+                            ctx.fillStyle = '#94a3b8'; ctx.font = '10px monospace'; ctx.fillText('GPON OLT · 16 PON', 20, 55);
+                            for (let i = 0; i < 2; i++) { ctx.fillStyle = isPowered ? '#22c55e' : '#475569'; ctx.beginPath(); ctx.arc(30 + i * 24, 85, 8, 0, Math.PI * 2); ctx.fill(); }
+                            for (let i = 0; i < 16; i++) { const x = 140 + i * 50; ctx.fillStyle = '#020617'; ctx.fillRect(x, 80, 42, 26); ctx.strokeStyle = '#14b8a6'; ctx.strokeRect(x, 80, 42, 26); ctx.fillStyle = isPowered && Math.random() > 0.3 ? '#22c55e' : '#334155'; ctx.fillRect(x + 5, 86, 5, 5); }
+                            ctx.fillStyle = '#020617'; ctx.fillRect(140, 140, 80, 30); ctx.strokeStyle = '#f59e0b'; ctx.strokeRect(140, 140, 80, 30);
+                            ctx.fillStyle = '#f59e0b'; ctx.font = 'bold 12px monospace'; ctx.fillText('SFP+ UPLINK', 150, 160);
+                            ctx.fillStyle = '#020617'; ctx.fillRect(700, 140, 220, 40); ctx.fillStyle = isPowered ? '#22c55e' : '#ef4444'; ctx.font = 'bold 14px monospace';
+                            ctx.fillText(isPowered ? 'ONLINE · 47/64 ONU' : 'OFFLINE', 720, 168);
+                            break;
+                        case 'onu':
+                            ctx.fillStyle = '#94a3b8'; ctx.font = '10px monospace'; ctx.fillText('GPON ONU · 4x LAN + WiFi', 20, 55);
+                            ctx.fillStyle = '#020617'; ctx.fillRect(20, 80, 46, 30); ctx.strokeStyle = '#22c55e'; ctx.strokeRect(20, 80, 46, 30);
+                            ctx.fillStyle = isPowered ? '#22c55e' : '#334155'; ctx.fillRect(32, 88, 10, 6);
+                            for (let i = 0; i < 4; i++) { ctx.fillStyle = '#020617'; ctx.fillRect(110 + i * 55, 80, 46, 30); ctx.strokeStyle = '#334155'; ctx.strokeRect(110 + i * 55, 80, 46, 30); ctx.fillStyle = isPowered ? '#22c55e' : '#334155'; ctx.fillRect(124 + i * 55, 86, 6, 6); }
+                            break;
+                        case 'converter':
+                            ctx.fillStyle = '#94a3b8'; ctx.font = '10px monospace'; ctx.fillText('MEDIA CONVERTER · Fiber ↔ RJ45', 20, 55);
+                            ctx.fillStyle = '#020617'; ctx.fillRect(40, 80, 55, 40); ctx.strokeStyle = '#f59e0b'; ctx.strokeRect(40, 80, 55, 40);
+                            ctx.fillStyle = isPowered ? '#f59e0b' : '#334155'; ctx.fillRect(60, 92, 14, 14);
+                            ctx.fillStyle = '#020617'; ctx.fillRect(160, 80, 55, 40); ctx.strokeStyle = '#10b981'; ctx.strokeRect(160, 80, 55, 40);
+                            ctx.fillStyle = '#10b981'; ctx.fillRect(178, 94, 18, 12);
+                            ctx.fillStyle = isPowered ? '#22c55e' : '#475569'; ctx.font = 'bold 14px monospace'; ctx.fillText('PWR', 280, 110);
+                            break;
+                        case 'nvr':
+                            ctx.fillStyle = '#94a3b8'; ctx.font = '10px monospace'; ctx.fillText('NVR/DVR · 16CH 4K', 20, 55);
+                            for (let i = 0; i < 4; i++) { ctx.fillStyle = '#020617'; ctx.fillRect(20 + i * 70, 80, 60, 50); ctx.strokeStyle = '#8b5cf6'; ctx.strokeRect(20 + i * 70, 80, 60, 50); ctx.fillStyle = isPowered && Math.random() > 0.3 ? '#8b5cf6' : '#334155'; ctx.beginPath(); ctx.arc(50 + i * 70, 90, 4, 0, Math.PI * 2); ctx.fill(); }
+                            ctx.fillStyle = '#020617'; ctx.fillRect(400, 80, 280, 50); ctx.strokeStyle = '#8b5cf6'; ctx.strokeRect(400, 80, 280, 50);
+                            ctx.fillStyle = '#22c55e'; ctx.font = 'bold 14px monospace'; ctx.fillText(isPowered ? 'REC · CH01-CH16' : 'STANDBY', 420, 105);
+                            break;
+                        case 'pbx':
+                            ctx.fillStyle = '#94a3b8'; ctx.font = '10px monospace'; ctx.fillText('PABX IP · 16x FXS + 4x FXO', 20, 55);
+                            for (let bloco = 0; bloco < 2; bloco++) { for (let i = 0; i < 8; i++) { const x = 20 + bloco * 200 + i * 22; ctx.fillStyle = '#020617'; ctx.fillRect(x, 80, 18, 24); ctx.strokeStyle = bloco === 0 ? '#a855f7' : '#eab308'; ctx.strokeRect(x, 80, 18, 24); } }
+                            break;
+                        case 'server':
+                            ctx.fillStyle = '#94a3b8'; ctx.font = '10px monospace'; ctx.fillText('RACK SERVER · 2U', 20, 55);
+                            for (let i = 0; i < 8; i++) { const x = 20 + i * 80; ctx.fillStyle = '#020617'; ctx.fillRect(x, 80, 70, 60); ctx.strokeStyle = '#6366f1'; ctx.strokeRect(x, 80, 70, 60); ctx.fillStyle = isPowered ? '#6366f1' : '#334155'; ctx.fillRect(x + 8, 100, 54, 8); }
+                            break;
+                        case 'nas':
+                            ctx.fillStyle = '#94a3b8'; ctx.font = '10px monospace'; ctx.fillText('NAS STORAGE · 12 BAYS', 20, 55);
+                            for (let row = 0; row < 2; row++) { for (let i = 0; i < 12; i++) { const x = 20 + i * 55; const y = 80 + row * 55; ctx.fillStyle = '#020617'; ctx.fillRect(x, y, 48, 45); ctx.strokeStyle = '#6366f1'; ctx.strokeRect(x, y, 48, 45); ctx.fillStyle = isPowered && Math.random() > 0.2 ? '#22c55e' : '#334155'; ctx.beginPath(); ctx.arc(x + 24, y + 22, 4, 0, Math.PI * 2); ctx.fill(); } }
+                            break;
+                        case 'ups':
+                        case 'pdu':
+                            ctx.fillStyle = '#94a3b8'; ctx.font = '10px monospace'; ctx.fillText('UPS ONLINE · 3000VA', 20, 55);
+                            ctx.fillStyle = '#020617'; ctx.fillRect(40, 80, 400, 100); ctx.strokeStyle = '#ef4444'; ctx.strokeRect(40, 80, 400, 100);
+                            ctx.fillStyle = isPowered ? '#22c55e' : '#ef4444'; ctx.font = 'bold 32px monospace';
+                            ctx.fillText(isPowered ? '220V · 87%' : '--- OFF ---', 60, 130);
+                            break;
+                        case 'patch':
+                            for (let i = 0; i < 24; i++) { const x = 30 + i * 40; ctx.fillStyle = '#020617'; ctx.fillRect(x, 90, 30, 40); ctx.strokeStyle = '#64748b'; ctx.strokeRect(x, 90, 30, 40); ctx.fillStyle = '#eab308'; ctx.fillRect(x + 5, 98, 20, 4); }
+                            break;
+                        default:
+                            ctx.fillStyle = '#020617'; ctx.fillRect(20, 80, 980, 130); ctx.strokeStyle = '#475569'; ctx.strokeRect(20, 80, 980, 130);
+                            ctx.fillStyle = isPowered ? '#22c55e' : '#ef4444'; ctx.font = 'bold 20px monospace';
+                            ctx.fillText(isPowered ? 'STATUS: ONLINE' : 'STATUS: OFF', 60, 150);
                     }
                 }
-                
                 draw();
                 const tex = new THREE.CanvasTexture(canvas);
                 textureUpdates.push({ texture: tex, redraw: draw });
@@ -3365,96 +2912,75 @@ HTML_TEMPLATE = """
             function rebuildRack3D() {
                 rackMeshes.forEach(m => scene3d.remove(m));
                 rackMeshes = [];
-                
                 let currentY = 7.0;
-                
-                mountedIds.forEach((eqId) => {
-                    const eqMeta = SIM3D_EQUIPMENT_TYPES.find(e => e.id === eqId) || { id: eqId, name: eqId, unit: '1U', type: 'generic', height: 0.4 };
-                    
+                mountedInstances.forEach((inst) => {
+                    const catEntry = NETWORK_3D_CATALOG[inst.type] || { unit: '1U', height: 0.4, label: inst.name, visualType: 'generic' };
                     const group = new THREE.Group();
-                    const width = 3.65;
-                    const height = eqMeta.height;
-                    const depth = 3.4;
-                    
-                    const isPowered = sim3dConnections.some(c => (c.to === eqId || c.from === eqId) && c.cable === 'power-ac') || eqId === 'ups-nobreak';
-                    const texture = createEquipmentTexture(eqMeta.type, eqMeta.name, isPowered);
-                    
+                    const width = 3.65; const height = catEntry.height; const depth = 3.4;
+                    const isPowered = sim3dConnections.some(c => (c.to === inst.id || c.from === inst.id) && c.cable === 'power-ac');
+                    const frontTexture = createFrontTexture(catEntry.visualType, inst.name, isPowered);
                     const materials = [
                         new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.3 }),
                         new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.3 }),
                         new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.7, roughness: 0.4 }),
                         new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.7, roughness: 0.4 }),
-                        new THREE.MeshStandardMaterial({ map: texture, roughness: 0.2, metalness: 0.5 }),
+                        new THREE.MeshStandardMaterial({ map: frontTexture, roughness: 0.2, metalness: 0.5 }),
                         new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.2 })
                     ];
-                    
                     const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), materials);
                     mesh.castShadow = true;
                     group.add(mesh);
-                    
+                    addFrontDetails(group, catEntry.visualType, width, height, isPowered);
                     group.position.set(0, currentY - height / 2, 0);
-                    group.userData = { id: eqId, meta: eqMeta };
-                    
+                    group.userData = { instanceId: inst.id, type: inst.type, name: inst.name };
                     rackMeshes.push(group);
                     scene3d.add(group);
-                    
                     currentY -= (height + 0.1);
                 });
-                
                 renderSim3DConnectionsUI();
+            }
+            
+            function addFrontDetails(group, visualType, width, height, isPowered) {
+                const detailY = height / 2 - 0.05; const detailZ = 1.72;
+                if (visualType === 'switch') { for (let i = 0; i < 2; i++) { const sfp = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.06, 0.03), new THREE.MeshStandardMaterial({ color: isPowered ? 0xf59e0b : 0x334155, emissive: isPowered ? 0xf59e0b : 0x000000, emissiveIntensity: 0.5, metalness: 0.9, roughness: 0.2 })); sfp.position.set(1.3 - i * 0.25, detailY - 0.02, detailZ); group.add(sfp); } }
+                else if (visualType === 'router') { for (let i = 0; i < 3; i++) { const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 8), new THREE.MeshStandardMaterial({ color: 0x0ea5e9, metalness: 0.8, roughness: 0.3 })); antenna.position.set(-1.2 + i * 0.4, height / 2 + 0.2, detailZ - 0.1); antenna.rotation.z = 0.2; group.add(antenna); } }
+                const powerLed = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), new THREE.MeshStandardMaterial({ color: isPowered ? 0x22c55e : 0x475569, emissive: isPowered ? 0x22c55e : 0x000000, emissiveIntensity: isPowered ? 1 : 0 }));
+                powerLed.position.set(width / 2 - 0.15, detailY - 0.03, detailZ);
+                group.add(powerLed);
             }
             
             function rebuildCables3D() {
                 while (cableGroup.children.length > 0) cableGroup.remove(cableGroup.children[0]);
                 while (particleGroup.children.length > 0) particleGroup.remove(particleGroup.children[0]);
                 activeCableAnims = [];
-                
                 sim3dConnections.forEach(conn => {
-                    const srcMesh = rackMeshes.find(m => m.userData.id === conn.from);
-                    const dstMesh = rackMeshes.find(m => m.userData.id === conn.to);
+                    const srcMesh = rackMeshes.find(m => m.userData.instanceId === conn.from);
+                    const dstMesh = rackMeshes.find(m => m.userData.instanceId === conn.to);
                     if (!srcMesh || !dstMesh) return;
-                    
                     const zOffset = (conn.cable === 'power-ac') ? -1.7 : 1.7;
                     const p1 = new THREE.Vector3(srcMesh.position.x, srcMesh.position.y, srcMesh.position.z + zOffset);
                     const p2 = new THREE.Vector3(dstMesh.position.x, dstMesh.position.y, dstMesh.position.z + zOffset);
-                    
                     const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
                     mid.x += (conn.cable === 'power-ac') ? -2.2 : 2.2;
-                    
                     const curve = new THREE.QuadraticBezierCurve3(p1, mid, p2);
                     const tubeGeo = new THREE.TubeGeometry(curve, 32, 0.035, 8, false);
-                    
-                    let cableColor = 0x38bdf8;
-                    let particleColor = 0x22c55e;
+                    let cableColor = 0x38bdf8; let particleColor = 0x22c55e;
                     if (conn.cable === 'fiber-sfp') { cableColor = 0xf59e0b; particleColor = 0xffffff; }
                     else if (conn.cable === 'power-ac') { cableColor = 0xef4444; particleColor = 0xfacc15; }
                     else if (conn.cable === 'coax-bnc') { cableColor = 0xa855f7; particleColor = 0x38bdf8; }
-                    
                     const cableMat = new THREE.MeshStandardMaterial({ color: cableColor, roughness: 0.3, metalness: 0.2 });
-                    const cableMesh = new THREE.Mesh(tubeGeo, cableMat);
-                    cableGroup.add(cableMesh);
-                    
+                    cableGroup.add(new THREE.Mesh(tubeGeo, cableMat));
                     const particleGeo = new THREE.BufferGeometry();
                     const count = 12;
                     const positions = new Float32Array(count * 3);
                     const progresses = [];
-                    
-                    for (let i = 0; i < count; i++) {
-                        const t = i / count;
-                        progresses.push(t);
-                        const pt = curve.getPoint(t);
-                        positions[i * 3] = pt.x;
-                        positions[i * 3 + 1] = pt.y;
-                        positions[i * 3 + 2] = pt.z;
-                    }
+                    for (let i = 0; i < count; i++) { const t = i / count; progresses.push(t); const pt = curve.getPoint(t); positions[i * 3] = pt.x; positions[i * 3 + 1] = pt.y; positions[i * 3 + 2] = pt.z; }
                     particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
                     const particleMat = new THREE.PointsMaterial({ color: particleColor, size: 0.1, transparent: true, opacity: 0.9 });
                     const pMesh = new THREE.Points(particleGeo, particleMat);
                     particleGroup.add(pMesh);
-                    
                     activeCableAnims.push({ mesh: pMesh, curve: curve, progress: progresses });
                 });
-                
                 rebuildRack3D();
             }
             
@@ -3462,135 +2988,80 @@ HTML_TEMPLATE = """
                 const tray = document.getElementById('sim3d-equipment-list');
                 if (!tray) return;
                 tray.innerHTML = '';
-                
-                const mountedCountEl = document.getElementById('sim3d-mounted-count');
-                if (mountedCountEl) mountedCountEl.innerText = mountedIds.length;
-                
-                const available = getAvailableFromProject();
-                
+                const countEl = document.getElementById('sim3d-mounted-count');
+                if (countEl) countEl.innerText = mountedInstances.length;
+                const available = getAvailableNetworkDevices();
                 if (available.length === 0) {
-                    tray.innerHTML = '<p style="color:#64748b;font-size:11px;text-align:center;padding:20px;">Nenhum equipamento na biblioteca. Adicione equipamentos no Projetize primeiro.</p>';
+                    tray.innerHTML = '<p style="color:#64748b;font-size:11px;text-align:center;padding:20px;">Nenhum dispositivo na categoria <strong>Rede</strong>. Adicione equipamentos de rede no Projetize.</p>';
                     return;
                 }
-                
                 available.forEach((dev) => {
-                    const sim3dId = dev.sim3dId || getSim3DId(dev.name);
-                    const isMounted = mountedIds.includes(sim3dId);
-                    
+                    const instanceId = makeInstanceId(dev);
+                    const isMounted = mountedInstances.some(m => m.id === instanceId);
+                    const catEntry = NETWORK_3D_CATALOG[dev.type] || { unit: '1U', label: dev.name };
                     const div = document.createElement('div');
                     div.className = `sim3d-eq-item ${isMounted ? 'mounted' : ''}`;
-                    
                     div.innerHTML = `
-                        <div class="sim3d-eq-info" onclick="window.sim3dToggleMount('${sim3dId}', '${dev.name.replace(/'/g, "\\'")}')">
-                            <div class="sim3d-eq-name">
-                                <span class="sim3d-eq-unit">${dev.sim3dUnit}</span>
-                                ${dev.name}
-                            </div>
-                            <div class="sim3d-eq-desc">${dev.sim3dDesc}</div>
+                        <div class="sim3d-eq-info" onclick="window.sim3dToggleMount('${instanceId.replace(/'/g, "\\'")}', '${dev.name.replace(/'/g, "\\'")}', '${dev.type}')">
+                            <div class="sim3d-eq-name"><span class="sim3d-eq-unit">${catEntry.unit}</span>${dev.name}</div>
+                            <div class="sim3d-eq-desc">${dev.desc || catEntry.label}</div>
                         </div>
                         <div class="sim3d-eq-actions">
                             ${isMounted ? `
-                                <button onclick="event.stopPropagation();window.sim3dMoveUp('${sim3dId}')" title="Subir" class="sim3d-eq-btn sim3d-eq-btn-small">▲</button>
-                                <button onclick="event.stopPropagation();window.sim3dMoveDown('${sim3dId}')" title="Descer" class="sim3d-eq-btn sim3d-eq-btn-small">▼</button>
-                                <button onclick="event.stopPropagation();window.sim3dToggleMount('${sim3dId}', '${dev.name.replace(/'/g, "\\'")}')" title="Remover" class="sim3d-eq-btn sim3d-eq-btn-remove">✕</button>
+                                <button onclick="event.stopPropagation();window.sim3dMoveUp('${instanceId.replace(/'/g, "\\'")}')" title="Subir" class="sim3d-eq-btn sim3d-eq-btn-small">▲</button>
+                                <button onclick="event.stopPropagation();window.sim3dMoveDown('${instanceId.replace(/'/g, "\\'")}')" title="Descer" class="sim3d-eq-btn sim3d-eq-btn-small">▼</button>
+                                <button onclick="event.stopPropagation();window.sim3dToggleMount('${instanceId.replace(/'/g, "\\'")}', '${dev.name.replace(/'/g, "\\'")}', '${dev.type}')" title="Remover" class="sim3d-eq-btn sim3d-eq-btn-remove">✕</button>
                             ` : `
-                                <button onclick="event.stopPropagation();window.sim3dToggleMount('${sim3dId}', '${dev.name.replace(/'/g, "\\'")}')" class="sim3d-eq-btn">Adicionar</button>
+                                <button onclick="event.stopPropagation();window.sim3dToggleMount('${instanceId.replace(/'/g, "\\'")}', '${dev.name.replace(/'/g, "\\'")}', '${dev.type}')" class="sim3d-eq-btn">Adicionar</button>
                             `}
-                        </div>
-                    `;
+                        </div>`;
                     tray.appendChild(div);
                 });
             }
             
-            window.sim3dToggleMount = function(eqId, displayName) {
-                const idx = mountedIds.indexOf(eqId);
-                if (idx >= 0) {
-                    mountedIds.splice(idx, 1);
-                    sim3dConnections = sim3dConnections.filter(c => c.from !== eqId && c.to !== eqId);
-                    sim3dShowToast('Equipamento removido do Rack.');
-                } else {
-                    mountedIds.push(eqId);
-                    sim3dShowToast(`"${displayName}" montado no Rack 3D!`);
-                }
-                rebuildRack3D();
-                renderSim3DTrayUI();
-                rebuildCables3D();
+            window.sim3dToggleMount = function(instanceId, displayName, type) {
+                const idx = mountedInstances.findIndex(m => m.id === instanceId);
+                if (idx >= 0) { mountedInstances.splice(idx, 1); sim3dConnections = sim3dConnections.filter(c => c.from !== instanceId && c.to !== instanceId); sim3dShowToast('Removido do Rack.'); }
+                else { mountedInstances.push({ id: instanceId, type: type, name: displayName }); sim3dShowToast(`"${displayName}" montado!`); }
+                rebuildRack3D(); renderSim3DTrayUI(); rebuildCables3D();
                 if (typeof window.saveSim3DState === 'function') window.saveSim3DState();
             };
             
-            window.sim3dMoveUp = function(eqId) {
-                const idx = mountedIds.indexOf(eqId);
-                if (idx <= 0) return;
-                [mountedIds[idx - 1], mountedIds[idx]] = [mountedIds[idx], mountedIds[idx - 1]];
-                rebuildRack3D();
-                renderSim3DTrayUI();
-                rebuildCables3D();
-                if (typeof window.saveSim3DState === 'function') window.saveSim3DState();
-            };
-            
-            window.sim3dMoveDown = function(eqId) {
-                const idx = mountedIds.indexOf(eqId);
-                if (idx < 0 || idx >= mountedIds.length - 1) return;
-                [mountedIds[idx + 1], mountedIds[idx]] = [mountedIds[idx], mountedIds[idx + 1]];
-                rebuildRack3D();
-                renderSim3DTrayUI();
-                rebuildCables3D();
-                if (typeof window.saveSim3DState === 'function') window.saveSim3DState();
-            };
+            window.sim3dMoveUp = function(instanceId) { const idx = mountedInstances.findIndex(m => m.id === instanceId); if (idx <= 0) return; [mountedInstances[idx - 1], mountedInstances[idx]] = [mountedInstances[idx], mountedInstances[idx - 1]]; rebuildRack3D(); renderSim3DTrayUI(); rebuildCables3D(); if (typeof window.saveSim3DState === 'function') window.saveSim3DState(); };
+            window.sim3dMoveDown = function(instanceId) { const idx = mountedInstances.findIndex(m => m.id === instanceId); if (idx < 0 || idx >= mountedInstances.length - 1) return; [mountedInstances[idx + 1], mountedInstances[idx]] = [mountedInstances[idx], mountedInstances[idx + 1]]; rebuildRack3D(); renderSim3DTrayUI(); rebuildCables3D(); if (typeof window.saveSim3DState === 'function') window.saveSim3DState(); };
             
             function onSim3DClick(event) {
                 if (event.target.closest('#sim3d-patch-modal') || event.target.closest('#sim3d-terminal')) return;
                 if (event.target.closest('.sim3d-drawer') || event.target.closest('.sim3d-header')) return;
-                
                 mouse3d.x = (event.clientX / window.innerWidth) * 2 - 1;
                 mouse3d.y = -(event.clientY / window.innerHeight) * 2 + 1;
-                
                 raycaster3d.setFromCamera(mouse3d, camera3d);
                 const intersects = raycaster3d.intersectObjects(rackMeshes, true);
-                
                 if (intersects.length > 0) {
                     let top = intersects[0].object;
-                    while (top.parent && top.parent.type === 'Group' && top.parent !== scene3d) {
-                        top = top.parent;
-                    }
-                    if (top.userData && top.userData.id) {
-                        openSim3DPatchModal(top.userData.id);
-                    }
+                    while (top.parent && top.parent.type === 'Group' && top.parent !== scene3d) top = top.parent;
+                    if (top.userData && top.userData.instanceId) openSim3DPatchModal(top.userData.instanceId, top.userData.name);
                 }
             }
             
-            function openSim3DPatchModal(eqId) {
-                activeSourceId = eqId;
-                selectedDestinations.clear();
-                
-                const eqMeta = SIM3D_EQUIPMENT_TYPES.find(e => e.id === eqId) || { name: eqId };
+            function openSim3DPatchModal(instanceId, name) {
+                activeSourceId = instanceId; selectedDestinations.clear();
                 const titleEl = document.getElementById('sim3d-patch-title');
-                if (titleEl) titleEl.innerText = `Conectar: ${eqMeta.name}`;
-                
+                if (titleEl) titleEl.innerText = `Conectar: ${name}`;
                 const listContainer = document.getElementById('sim3d-dest-list');
                 if (!listContainer) return;
                 listContainer.innerHTML = '';
-                
-                mountedIds.forEach(targetId => {
-                    if (targetId === eqId) return;
-                    const targetMeta = SIM3D_EQUIPMENT_TYPES.find(e => e.id === targetId) || { name: targetId, unit: '1U' };
-                    
+                mountedInstances.forEach(target => {
+                    if (target.id === instanceId) return;
                     const label = document.createElement('label');
                     label.className = 'sim3d-dest-item';
-                    label.innerHTML = `
-                        <span>${targetMeta.name} (${targetMeta.unit || '1U'})</span>
-                        <input type="checkbox" value="${targetId}" onchange="window.sim3dToggleDest('${targetId}')">
-                    `;
+                    label.innerHTML = `<span>${target.name}</span><input type="checkbox" value="${target.id}" onchange="window.sim3dToggleDest('${target.id.replace(/'/g, "\\'")}')">`;
                     listContainer.appendChild(label);
                 });
-                
                 document.getElementById('sim3d-patch-modal').classList.add('open');
             }
             
-            window.sim3dToggleDest = function(id) {
-                if (selectedDestinations.has(id)) selectedDestinations.delete(id);
-                else selectedDestinations.add(id);
-            };
+            window.sim3dToggleDest = function(id) { if (selectedDestinations.has(id)) selectedDestinations.delete(id); else selectedDestinations.add(id); };
             
             function renderSim3DConnectionsUI() {
                 const container = document.getElementById('sim3d-connections-list');
@@ -3599,73 +3070,40 @@ HTML_TEMPLATE = """
                 if (!container) return;
                 container.innerHTML = '';
                 if (countEl) countEl.innerText = sim3dConnections.length;
-                
-                if (sim3dConnections.length > 0) {
-                    if (panel) panel.style.display = 'flex';
-                } else {
-                    if (panel) panel.style.display = 'none';
-                }
-                
+                if (panel) panel.style.display = sim3dConnections.length > 0 ? 'flex' : 'none';
                 sim3dConnections.forEach((c, idx) => {
-                    const e1 = SIM3D_EQUIPMENT_TYPES.find(e => e.id === c.from) || { name: c.from };
-                    const e2 = SIM3D_EQUIPMENT_TYPES.find(e => e.id === c.to) || { name: c.to };
-                    
+                    const e1 = mountedInstances.find(m => m.id === c.from);
+                    const e2 = mountedInstances.find(m => m.id === c.to);
                     const div = document.createElement('div');
                     div.className = 'sim3d-connection-row';
-                    div.innerHTML = `
-                        <div style="truncate">
-                            <span class="tag">[${c.cable.toUpperCase()}]</span> ${e1.name.substring(0, 14)} ↔ ${e2.name.substring(0, 14)}
-                        </div>
-                        <button onclick="window.sim3dRemoveConnection(${idx})" class="sim3d-connection-remove">✕</button>
-                    `;
+                    div.innerHTML = `<div style="truncate"><span class="tag">[${c.cable.toUpperCase()}]</span> ${(e1?.name || '?').substring(0, 14)} ↔ ${(e2?.name || '?').substring(0, 14)}</div><button onclick="window.sim3dRemoveConnection(${idx})" class="sim3d-connection-remove">✕</button>`;
                     container.appendChild(div);
                 });
             }
             
-            window.sim3dRemoveConnection = function(idx) {
-                sim3dConnections.splice(idx, 1);
-                rebuildCables3D();
-                sim3dShowToast('Conexão removida!');
-                if (typeof window.saveSim3DState === 'function') window.saveSim3DState();
-            };
+            window.sim3dRemoveConnection = function(idx) { sim3dConnections.splice(idx, 1); rebuildCables3D(); sim3dShowToast('Conexão removida!'); if (typeof window.saveSim3DState === 'function') window.saveSim3DState(); };
             
             function runSim3DScript() {
                 const modal = document.getElementById('sim3d-terminal');
                 const output = document.getElementById('sim3d-terminal-output');
                 if (!modal || !output) return;
                 modal.classList.add('open');
-                output.innerHTML = '<p style="color:#64748b;">[SYSTEM] Executando diagnóstico de infraestrutura...</p>';
-                
+                output.innerHTML = '<p style="color:#64748b;">[SYSTEM] Executando diagnóstico de rede...</p>';
                 setTimeout(() => {
                     let logs = [];
-                    let hasError = false;
-                    
-                    const hasNobreak = mountedIds.includes('ups-nobreak');
-                    const hasPDU = mountedIds.includes('pdu-strip');
-                    const hasSwitch = mountedIds.includes('switch-core');
-                    
-                    if (!hasNobreak && !hasPDU) {
-                        logs.push('<span style="color:#f87171;">[ERRO] Nobreak ou Régua PDU ausente no Rack!</span>');
-                        hasError = true;
-                    } else {
-                        logs.push('<span style="color:#34d399;">[OK] Infraestrutura de energia detectada.</span>');
-                    }
-                    
-                    const powerConns = sim3dConnections.filter(c => c.cable === 'power-ac');
-                    if (powerConns.length === 0) {
-                        logs.push('<span style="color:#fbbf24;">[ALERTA] Nenhum equipamento conectado à Energia AC.</span>');
-                    } else {
-                        logs.push(`<span style="color:#34d399;">[OK] ${powerConns.length} equipamentos na energia AC traseira.</span>`);
-                    }
-                    
-                    if (!hasError) {
-                        logs.push('<br><span style="color:#67e8f9;font-weight:bold;">>>> SCRIPT EXECUTADO COM SUCESSO! <<<</span>');
-                        logs.push('<span style="color:#6ee7b7;font-weight:bold;">Infraestrutura perfeitamente cabeada e operacional.</span>');
-                        sim3dShowToast('Infraestrutura validada!');
-                    } else {
-                        logs.push('<br><span style="color:#f87171;font-weight:bold;">>>> FALHA NA VALIDAÇÃO <<<</span>');
-                    }
-                    
+                    if (mountedInstances.length === 0) logs.push('<span style="color:#fbbf24;">[ALERTA] Nenhum dispositivo montado.</span>');
+                    else logs.push(`<span style="color:#34d399;">[OK] ${mountedInstances.length} dispositivos no rack.</span>`);
+                    const hasRouter = mountedInstances.some(m => m.type === 'router');
+                    const hasSwitch = mountedInstances.some(m => m.type.startsWith('switch'));
+                    const hasOLT = mountedInstances.some(m => m.type === 'olt');
+                    if (!hasRouter && !hasOLT && mountedInstances.length > 0) logs.push('<span style="color:#fbbf24;">[ALERTA] Sem router de borda ou OLT.</span>');
+                    else if (hasRouter) logs.push('<span style="color:#34d399;">[OK] Router de borda detectado.</span>');
+                    else if (hasOLT) logs.push('<span style="color:#34d399;">[OK] OLT GPON detectada.</span>');
+                    if (hasSwitch) logs.push('<span style="color:#34d399;">[OK] Switch(es) detectado(s).</span>');
+                    const dataConns = sim3dConnections.filter(c => c.cable === 'cat6' || c.cable === 'fiber-sfp');
+                    if (dataConns.length > 0) logs.push(`<span style="color:#34d399;">[OK] ${dataConns.length} conexões de dados.</span>`);
+                    logs.push('<br><span style="color:#67e8f9;font-weight:bold;">>>> DIAGNÓSTICO CONCLUÍDO <<<</span>');
+                    sim3dShowToast('Diagnóstico completo!');
                     output.innerHTML += logs.join('<br>');
                     output.scrollTop = output.scrollHeight;
                 }, 800);
@@ -3680,50 +3118,24 @@ HTML_TEMPLATE = """
                 setTimeout(() => toast.classList.remove('show'), 3000);
             }
             
-            function onSim3DResize() {
-                if (!camera3d || !renderer3d) return;
-                camera3d.aspect = window.innerWidth / window.innerHeight;
-                camera3d.updateProjectionMatrix();
-                renderer3d.setSize(window.innerWidth, window.innerHeight);
-            }
+            function onSim3DResize() { if (!camera3d || !renderer3d) return; camera3d.aspect = window.innerWidth / window.innerHeight; camera3d.updateProjectionMatrix(); renderer3d.setSize(window.innerWidth, window.innerHeight); }
             
             let lastBlink3d = 0;
             function animate3D(timestamp) {
                 animFrame3d = requestAnimationFrame(animate3D);
-                
-                if (!lastBlink3d || timestamp - lastBlink3d > 250) {
-                    lastBlink3d = timestamp;
-                    textureUpdates.forEach(item => {
-                        item.redraw();
-                        item.texture.needsUpdate = true;
-                    });
-                }
-                
+                if (!lastBlink3d || timestamp - lastBlink3d > 250) { lastBlink3d = timestamp; textureUpdates.forEach(item => { item.redraw(); item.texture.needsUpdate = true; }); }
                 activeCableAnims.forEach(anim => {
                     const positions = anim.mesh.geometry.attributes.position.array;
-                    const curve = anim.curve;
-                    const progresses = anim.progress;
-                    
-                    for (let i = 0; i < progresses.length; i++) {
-                        progresses[i] += 0.007;
-                        if (progresses[i] > 1) progresses[i] = 0;
-                        
-                        const pt = curve.getPoint(progresses[i]);
-                        positions[i * 3] = pt.x;
-                        positions[i * 3 + 1] = pt.y;
-                        positions[i * 3 + 2] = pt.z;
-                    }
+                    for (let i = 0; i < anim.progress.length; i++) { anim.progress[i] += 0.007; if (anim.progress[i] > 1) anim.progress[i] = 0; const pt = anim.curve.getPoint(anim.progress[i]); positions[i * 3] = pt.x; positions[i * 3 + 1] = pt.y; positions[i * 3 + 2] = pt.z; }
                     anim.mesh.geometry.attributes.position.needsUpdate = true;
                 });
-                
                 if (controls3d) controls3d.update();
                 if (renderer3d) renderer3d.render(scene3d, camera3d);
             }
             
-            // Expor funções de persistência
             window.saveSim3DState = function() {
                 if (!currentUser) return;
-                localStorage.setItem(STORAGE_KEYS.SIM3D_MOUNTED(currentUser), JSON.stringify(mountedIds));
+                localStorage.setItem(STORAGE_KEYS.SIM3D_MOUNTED(currentUser), JSON.stringify(mountedInstances));
                 localStorage.setItem(STORAGE_KEYS.SIM3D_CONNECTIONS(currentUser), JSON.stringify(sim3dConnections));
             };
             
@@ -3731,157 +3143,65 @@ HTML_TEMPLATE = """
                 if (!currentUser) return;
                 try {
                     const saved = localStorage.getItem(STORAGE_KEYS.SIM3D_MOUNTED(currentUser));
-                    if (saved) mountedIds = JSON.parse(saved);
+                    if (saved) mountedInstances = JSON.parse(saved);
                     const savedConn = localStorage.getItem(STORAGE_KEYS.SIM3D_CONNECTIONS(currentUser));
                     if (savedConn) sim3dConnections = JSON.parse(savedConn);
-                } catch(e) { console.error('Erro ao carregar estado 3D:', e); }
+                } catch(e) { console.error(e); }
             };
             
-            // Função pública para abrir o simulador
             window.openSim3D = function() {
                 const overlay = document.getElementById('sim3d-overlay');
                 if (!overlay) return;
                 overlay.classList.add('active');
-                isOpen = true;
-                
-                // Carrega estado do usuário
                 loadSim3DState();
-                
-                // Inicializa cena
-                setTimeout(() => {
-                    init3DScene();
-                    // Sincroniza equipamentos do canvas 2D para o 3D (opcional: monta automaticamente itens que combinam)
-                    // Não monta automaticamente, mas a lista já mostra todos os equipamentos disponíveis
-                }, 50);
-                
-                // Setup event listeners (apenas uma vez)
-                setupSim3DEventListeners();
+                setTimeout(() => { init3DScene(); setupSim3DEventListeners(); }, 50);
             };
             
             function setupSim3DEventListeners() {
-                const closeBtn = document.getElementById('sim3d-close-btn');
-                const toggleDrawer = document.getElementById('sim3d-toggle-drawer');
-                const closeDrawer = document.getElementById('sim3d-close-drawer');
-                const runScript = document.getElementById('sim3d-run-script');
-                const closeTerminal = document.getElementById('sim3d-terminal-close');
-                const closePatch = document.getElementById('sim3d-patch-close');
-                const confirmPatch = document.getElementById('sim3d-confirm-patch');
-                const resetBtn = document.getElementById('sim3d-reset-btn');
-                const drawer = document.getElementById('sim3d-equipment-drawer');
-                
-                if (closeBtn && !closeBtn.dataset.bound) {
-                    closeBtn.dataset.bound = '1';
-                    closeBtn.addEventListener('click', () => {
-                        const overlay = document.getElementById('sim3d-overlay');
-                        overlay.classList.remove('active');
-                        isOpen = false;
-                        if (animFrame3d) cancelAnimationFrame(animFrame3d);
-                        // Limpa cena
-                        if (renderer3d && renderer3d.domElement && renderer3d.domElement.parentNode) {
-                            renderer3d.domElement.parentNode.removeChild(renderer3d.domElement);
-                        }
-                        if (scene3d) {
-                            while (scene3d.children.length > 0) scene3d.remove(scene3d.children[0]);
-                        }
-                        rackMeshes = [];
-                        textureUpdates = [];
-                        activeCableAnims = [];
+                const bind = (id, handler) => { const el = document.getElementById(id); if (el && !el.dataset.bound) { el.dataset.bound = '1'; el.addEventListener('click', handler); } };
+                bind('sim3d-close-btn', () => {
+                    document.getElementById('sim3d-overlay').classList.remove('active');
+                    if (animFrame3d) cancelAnimationFrame(animFrame3d);
+                    if (renderer3d && renderer3d.domElement && renderer3d.domElement.parentNode) renderer3d.domElement.parentNode.removeChild(renderer3d.domElement);
+                    if (scene3d) { while (scene3d.children.length > 0) scene3d.remove(scene3d.children[0]); }
+                    rackMeshes = []; textureUpdates = []; activeCableAnims = [];
+                });
+                bind('sim3d-toggle-drawer', () => { document.getElementById('sim3d-equipment-drawer').classList.toggle('closed'); });
+                bind('sim3d-close-drawer', () => { document.getElementById('sim3d-equipment-drawer').classList.add('closed'); });
+                bind('sim3d-run-script', runSim3DScript);
+                bind('sim3d-terminal-close', () => { document.getElementById('sim3d-terminal').classList.remove('open'); });
+                bind('sim3d-patch-close', () => { document.getElementById('sim3d-patch-modal').classList.remove('open'); });
+                bind('sim3d-confirm-patch', () => {
+                    if (selectedDestinations.size === 0) { sim3dShowToast('⚠️ Selecione pelo menos um destino!'); return; }
+                    selectedDestinations.forEach(destId => {
+                        const exists = sim3dConnections.some(c => (c.from === activeSourceId && c.to === destId) || (c.from === destId && c.to === activeSourceId));
+                        if (!exists) sim3dConnections.push({ from: activeSourceId, to: destId, cable: selectedCable });
                     });
-                }
-                
-                if (toggleDrawer && !toggleDrawer.dataset.bound) {
-                    toggleDrawer.dataset.bound = '1';
-                    toggleDrawer.addEventListener('click', () => {
-                        drawer.classList.toggle('closed');
-                    });
-                }
-                
-                if (closeDrawer && !closeDrawer.dataset.bound) {
-                    closeDrawer.dataset.bound = '1';
-                    closeDrawer.addEventListener('click', () => {
-                        drawer.classList.add('closed');
-                    });
-                }
-                
-                if (runScript && !runScript.dataset.bound) {
-                    runScript.dataset.bound = '1';
-                    runScript.addEventListener('click', runSim3DScript);
-                }
-                
-                if (closeTerminal && !closeTerminal.dataset.bound) {
-                    closeTerminal.dataset.bound = '1';
-                    closeTerminal.addEventListener('click', () => {
-                        document.getElementById('sim3d-terminal').classList.remove('open');
-                    });
-                }
-                
-                if (closePatch && !closePatch.dataset.bound) {
-                    closePatch.dataset.bound = '1';
-                    closePatch.addEventListener('click', () => {
-                        document.getElementById('sim3d-patch-modal').classList.remove('open');
-                    });
-                }
-                
-                if (confirmPatch && !confirmPatch.dataset.bound) {
-                    confirmPatch.dataset.bound = '1';
-                    confirmPatch.addEventListener('click', () => {
-                        if (selectedDestinations.size === 0) {
-                            sim3dShowToast('⚠️ Selecione pelo menos um destino!');
-                            return;
-                        }
-                        
-                        let hasError = false;
-                        selectedDestinations.forEach(destId => {
-                            if (selectedCable === 'power-ac' && destId !== 'ups-nobreak' && destId !== 'pdu-strip' && activeSourceId !== 'pdu-strip' && activeSourceId !== 'ups-nobreak') {
-                                sim3dShowToast('⚠️ Cabo de Energia AC deve ligar em PDU ou Nobreak!');
-                                hasError = true;
-                            }
-                            
-                            const exists = sim3dConnections.some(c => (c.from === activeSourceId && c.to === destId) || (c.from === destId && c.to === activeSourceId));
-                            if (!exists && !hasError) {
-                                sim3dConnections.push({ from: activeSourceId, to: destId, cable: selectedCable });
-                            }
-                        });
-                        
-                        if (!hasError) {
-                            rebuildCables3D();
-                            document.getElementById('sim3d-patch-modal').classList.remove('open');
-                            sim3dShowToast('Conexão(ões) estabelecida(s)!');
-                            if (typeof window.saveSim3DState === 'function') window.saveSim3DState();
-                        }
-                    });
-                }
-                
-                if (resetBtn && !resetBtn.dataset.bound) {
-                    resetBtn.dataset.bound = '1';
-                    resetBtn.addEventListener('click', () => {
-                        if (confirm('Deseja resetar todo o datacenter 3D?')) {
-                            mountedIds = [];
-                            sim3dConnections = [];
-                            rebuildRack3D();
-                            renderSim3DTrayUI();
-                            rebuildCables3D();
-                            sim3dShowToast('Datacenter 3D resetado!');
-                            if (typeof window.saveSim3DState === 'function') window.saveSim3DState();
-                        }
-                    });
-                }
-                
-                // Cable selection buttons
+                    rebuildCables3D();
+                    document.getElementById('sim3d-patch-modal').classList.remove('open');
+                    sim3dShowToast('Conexão(ões) estabelecida(s)!');
+                    if (typeof window.saveSim3DState === 'function') window.saveSim3DState();
+                });
+                bind('sim3d-reset-btn', () => {
+                    if (confirm('Resetar rack 3D?')) {
+                        mountedInstances = []; sim3dConnections = [];
+                        rebuildRack3D(); renderSim3DTrayUI(); rebuildCables3D();
+                        sim3dShowToast('Rack resetado!');
+                        if (typeof window.saveSim3DState === 'function') window.saveSim3DState();
+                    }
+                });
                 document.querySelectorAll('.sim3d-cable-btn').forEach(btn => {
                     if (btn.dataset.bound) return;
                     btn.dataset.bound = '1';
                     btn.addEventListener('click', (e) => {
-                        const target = e.currentTarget;
                         document.querySelectorAll('.sim3d-cable-btn').forEach(b => b.classList.remove('active'));
-                        target.classList.add('active');
-                        selectedCable = target.getAttribute('data-cable');
+                        e.currentTarget.classList.add('active');
+                        selectedCable = e.currentTarget.getAttribute('data-cable');
                     });
                 });
             }
         })();
         // ===================================================================
-        
     </script>
 </body>
 </html>
