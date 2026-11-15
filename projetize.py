@@ -17,7 +17,7 @@ import mimetypes
 import math
 
 app = Flask(__name__, static_folder='static')
-app.config['MAX_CONTENT_LENGTH'] = 200 * 1024 * 1024  # Aumentado para vídeos
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 app.config['SECRET_KEY'] = 'projetize-super-secret-key-2026'
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
@@ -27,19 +27,16 @@ UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 ICONS_FOLDER = os.path.join(UPLOAD_FOLDER, 'icons')
 DEFAULT_ICONS_FOLDER = os.path.join(UPLOAD_FOLDER, 'default_icons')
 BACKGROUNDS_FOLDER = os.path.join(UPLOAD_FOLDER, 'backgrounds')
-DYNAMIC_BG_FOLDER = os.path.join(UPLOAD_FOLDER, 'dynamic_bg')
 STATIC_FOLDER = os.path.join(BASE_DIR, 'static')
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(ICONS_FOLDER, exist_ok=True)
 os.makedirs(DEFAULT_ICONS_FOLDER, exist_ok=True)
 os.makedirs(BACKGROUNDS_FOLDER, exist_ok=True)
-os.makedirs(DYNAMIC_BG_FOLDER, exist_ok=True)
 os.makedirs(STATIC_FOLDER, exist_ok=True)
 
 projects = {}
 USERS_FILE = os.path.join(UPLOAD_FOLDER, 'users.json')
-DYNAMIC_BG_CONFIG = os.path.join(UPLOAD_FOLDER, 'dynamic_bg_config.json')
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
@@ -74,6 +71,7 @@ def save_users(users_dict):
 users = load_users()
 
 def get_dev_image_base64():
+    # CORREÇÃO: Procura a imagem na raiz e na pasta static
     possible_paths = [
         os.path.join(BASE_DIR, 'dev.png'),
         os.path.join(BASE_DIR, 'dev.jpg'),
@@ -322,96 +320,6 @@ def save_json_file(filepath, data):
         return True
     except: return False
 
-# ==================== ROTAS PARA BACKGROUND DINÂMICO ====================
-@app.route('/api/upload_dynamic_bg', methods=['POST'])
-@admin_required
-def upload_dynamic_bg():
-    data = request.json
-    file_data = data.get('file', '')
-    file_type = data.get('type', '')  # 'image' ou 'video'
-    opacity = data.get('opacity', 0.3)
-    
-    if not file_data:
-        return jsonify({'success': False, 'error': 'Nenhum arquivo enviado'}), 400
-    
-    try:
-        # Remove prefixo data URL se existir
-        if ',' in file_data:
-            file_data = file_data.split(',', 1)[1]
-        
-        # Determina extensão
-        if file_type == 'video':
-            ext = '.mp4'
-        elif 'gif' in data.get('mimeType', ''):
-            ext = '.gif'
-        else:
-            ext = '.png'
-        
-        # Remove backgrounds dinâmicos antigos
-        for old_file in os.listdir(DYNAMIC_BG_FOLDER):
-            try:
-                os.remove(os.path.join(DYNAMIC_BG_FOLDER, old_file))
-            except: pass
-        
-        filename = f"dynamic_bg_{uuid.uuid4().hex}{ext}"
-        filepath = os.path.join(DYNAMIC_BG_FOLDER, filename)
-        
-        with open(filepath, 'wb') as f:
-            f.write(base64.b64decode(file_data))
-        
-        # Salva configuração
-        config = {
-            'filename': filename,
-            'type': file_type,
-            'opacity': float(opacity),
-            'updated_at': datetime.now().isoformat()
-        }
-        save_json_file(DYNAMIC_BG_CONFIG, config)
-        
-        return jsonify({
-            'success': True,
-            'filename': filename,
-            'url': f'/uploads/dynamic_bg/{filename}',
-            'type': file_type,
-            'opacity': opacity
-        })
-    except Exception as e:
-        print(f"Erro ao salvar background dinâmico: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/get_dynamic_bg', methods=['GET'])
-def get_dynamic_bg():
-    config = load_json_file(DYNAMIC_BG_CONFIG, None)
-    if config and config.get('filename'):
-        filepath = os.path.join(DYNAMIC_BG_FOLDER, config['filename'])
-        if os.path.exists(filepath):
-            return jsonify({
-                'success': True,
-                'url': f'/uploads/dynamic_bg/{config["filename"]}',
-                'type': config.get('type', 'image'),
-                'opacity': config.get('opacity', 0.3)
-            })
-    return jsonify({'success': False, 'config': None})
-
-@app.route('/api/remove_dynamic_bg', methods=['POST'])
-@admin_required
-def remove_dynamic_bg():
-    try:
-        for old_file in os.listdir(DYNAMIC_BG_FOLDER):
-            try:
-                os.remove(os.path.join(DYNAMIC_BG_FOLDER, old_file))
-            except: pass
-        if os.path.exists(DYNAMIC_BG_CONFIG):
-            os.remove(DYNAMIC_BG_CONFIG)
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/uploads/dynamic_bg/<filename>')
-def serve_dynamic_bg(filename):
-    return send_from_directory(DYNAMIC_BG_FOLDER, filename)
-
-# ==================== ROTAS EXISTENTES ====================
 @app.route('/api/upload_icon', methods=['POST'])
 @login_required
 def upload_icon():
@@ -460,8 +368,9 @@ def upload_dev_image():
         image_data = image_data.split(',')[1] if ',' in image_data else image_data
     
     filename = f"dev{ext}"
-    filepath = os.path.join(BASE_DIR, filename)
+    filepath = os.path.join(BASE_DIR, filename) # CORREÇÃO: Salva na raiz do projeto
     
+    # Remove outras versões antigas
     for old_ext in ['.png', '.jpg', '.jpeg', '.gif', '.webp']:
         old_path = os.path.join(BASE_DIR, f"dev{old_ext}")
         if os.path.exists(old_path) and old_path != filepath:
@@ -531,6 +440,7 @@ def serve_default_icon(filename):
 def serve_background(filename):
     return send_from_directory(BACKGROUNDS_FOLDER, filename)
 
+# Rota para servir dev.png da raiz
 @app.route('/dev.png')
 def serve_dev_image():
     return send_from_directory(BASE_DIR, 'dev.png')
@@ -623,8 +533,7 @@ def delete_user(username):
         return jsonify({'success': True})
     return jsonify({'error': 'Usuário não encontrado'}), 404
 
-
-# ==================== HTML TEMPLATE ====================
+# ==================== HTML_TEMPLATE OTIMIZADO ====================
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -651,289 +560,77 @@ HTML_TEMPLATE = """
         }
         @media (max-width: 576px) { :root { --palette-width: 180px; --properties-width: 240px; } }
         
-        /* ==================== BACKGROUND DINÂMICO GLOBAL ==================== */
-        .dynamic-bg-container {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: 0;
-            overflow: hidden;
-            display: none;
-        }
-        .dynamic-bg-container.active {
-            display: block;
-        }
-        .dynamic-bg-container video,
-        .dynamic-bg-container img {
-            position: absolute;
-            top: 50%; left: 50%;
-            min-width: 100%; min-height: 100%;
-            width: auto; height: auto;
-            transform: translate(-50%, -50%);
-            object-fit: cover;
-            opacity: 0.25;
-        }
-        .dynamic-bg-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, rgba(10, 22, 40, 0.92), rgba(0, 31, 63, 0.88));
-            pointer-events: none;
-        }
-        
-        /* ==================== RGB LINE ==================== */
         .rgb-line { position: fixed; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, #005f99, #0099cc, #00ccff, #005f99); background-size: 300% 100%; animation: rgbMove 3s linear infinite; z-index: 10000; }
         @keyframes rgbMove { 0% { background-position: 0% 0%; } 100% { background-position: 300% 100%; } }
         
-        /* ==================== INTRO SCREEN ==================== */
-        .intro-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0a1628, #001f3f); display: flex; justify-content: center; align-items: center; z-index: 25000; overflow-y: auto; padding: 20px; }
-        .intro-slider-container { position: relative; z-index: 2; width: 100%; max-width: 900px; background: rgba(10, 30, 55, 0.9); backdrop-filter: blur(16px); border-radius: 16px; padding: 30px; border: 1px solid rgba(0, 204, 255, 0.15); box-shadow: 0 25px 60px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; animation: fadeInUp 0.6s ease-out; }
+        .intro-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #001a2e, #00264d); display: flex; justify-content: center; align-items: center; z-index: 25000; overflow-y: auto; padding: 20px; }
+        .matrix-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; font-family: monospace; color: #ffffff; z-index: 0; opacity: 0.3; pointer-events: none; }
+        .matrix-column { position: absolute; top: -100%; animation: matrixFall linear infinite; white-space: pre; font-size: 16px; line-height: 1.2; opacity: 0.8; text-shadow: 0 0 8px #ffffff; color: #ffffff; font-weight: bold; }
+        @keyframes matrixFall { 0% { top: -100%; } 100% { top: 100%; } }
+        .intro-slider-container { position: relative; z-index: 2; width: 100%; max-width: 900px; background: rgba(0, 38, 77, 0.85); backdrop-filter: blur(12px); border-radius: 20px; padding: 25px; border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 0 40px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; animation: fadeInUp 0.6s ease-out; }
         .intro-slider-container::-webkit-scrollbar { width: 6px; }
-        .intro-slider-container::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 3px; }
-        .intro-slider-container::-webkit-scrollbar-thumb { background: rgba(0, 204, 255, 0.3); border-radius: 3px; }
+        .intro-slider-container::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 3px; }
+        .intro-slider-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         .intro-slide { display: none; text-align: center; animation: slideFade 0.8s ease-out; }
         .intro-slide.active { display: block; }
         @keyframes slideFade { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
-        .slide-title { font-size: 28px; color: #ffffff; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 15px; font-weight: 700; letter-spacing: 1px; }
+        .slide-title { font-size: 28px; color: #ffffff; margin-bottom: 15px; text-shadow: 0 0 15px #ffffff; display: flex; align-items: center; justify-content: center; gap: 15px; }
         @media (max-width: 576px) { .slide-title { font-size: 22px; } }
-        .slide-content { color: #b8c9e0; font-size: 14px; line-height: 1.6; text-align: left; max-width: 600px; margin: 0 auto; background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 12px; border-left: 3px solid #00ccff; }
+        .slide-content { color: #e0e0ff; font-size: 14px; line-height: 1.5; text-align: left; max-width: 600px; margin: 0 auto; background: rgba(0,0,0,0.4); padding: 20px; border-radius: 15px; border-left: 4px solid #ffffff; }
         @media (max-width: 576px) { .slide-content { font-size: 12px; padding: 15px; } }
         .slide-content ul { margin-left: 20px; margin-top: 10px; }
         .slide-content li { margin: 8px 0; }
-        .slide-icon { font-size: 48px; margin-bottom: 20px; }
+        .slide-icon { font-size: 48px; margin-bottom: 20px; filter: drop-shadow(0 0 10px #ffffff); }
         @media (max-width: 576px) { .slide-icon { font-size: 36px; } }
-        .dev-slide-image { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 15px; overflow: hidden; border: 3px solid #00ccff; box-shadow: 0 0 25px rgba(0, 204, 255, 0.3); background: #0a1628; display: flex; align-items: center; justify-content: center; }
+        .dev-slide-image { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 15px; overflow: hidden; border: 3px solid #ffffff; box-shadow: 0 0 20px rgba(255,255,255,0.5); background: #005f99; display: flex; align-items: center; justify-content: center; }
         @media (max-width: 576px) { .dev-slide-image { width: 80px; height: 80px; } }
         .dev-slide-image img { width: 100%; height: 100%; object-fit: cover; }
         .slide-dots { display: flex; justify-content: center; gap: 12px; margin: 20px 0; flex-wrap: wrap; }
-        .dot { width: 10px; height: 10px; background: rgba(0, 204, 255, 0.2); border-radius: 50%; cursor: pointer; transition: all 0.3s; border: 1px solid rgba(0, 204, 255, 0.3); }
-        .dot.active { background: #00ccff; box-shadow: 0 0 12px rgba(0, 204, 255, 0.6); transform: scale(1.2); }
+        .dot { width: 10px; height: 10px; background: rgba(255,255,255,0.4); border-radius: 50%; cursor: pointer; transition: all 0.3s; }
+        .dot.active { background: #ffffff; box-shadow: 0 0 15px #ffffff; transform: scale(1.2); }
         .slide-nav { display: flex; justify-content: center; gap: 20px; margin: 20px 0 15px; flex-wrap: wrap; }
-        .nav-btn { background: rgba(0, 204, 255, 0.1); border: 1px solid rgba(0, 204, 255, 0.3); color: #b8c9e0; padding: 8px 25px; border-radius: 30px; cursor: pointer; transition: all 0.3s; font-weight: 600; font-size: 14px; }
+        .nav-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); color: white; padding: 8px 25px; border-radius: 30px; cursor: pointer; transition: all 0.3s; font-weight: bold; font-size: 14px; }
         @media (max-width: 576px) { .nav-btn { padding: 6px 20px; font-size: 12px; } }
-        .nav-btn:hover { background: #00ccff; color: #0a1628; transform: scale(1.02); box-shadow: 0 0 20px rgba(0, 204, 255, 0.3); }
-        .access-btn { background: linear-gradient(135deg, #00ccff, #0099cc); color: #0a1628; border: none; padding: 12px 40px; border-radius: 30px; font-size: 15px; font-weight: 700; cursor: pointer; margin: 10px auto 5px; transition: all 0.3s; display: inline-block; letter-spacing: 0.5px; }
-        @media (max-width: 576px) { .access-btn { padding: 10px 30px; font-size: 13px; } }
-        .access-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 204, 255, 0.4); }
-        .intro-footer-note { text-align: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(0, 204, 255, 0.1); font-size: 11px; color: rgba(184, 201, 224, 0.5); }
+        .nav-btn:hover { background: #ffffff; color: #001a2e; transform: scale(1.02); box-shadow: 0 0 20px rgba(255,255,255,0.5); }
+        .access-btn { background: #ffffff; color: #001a2e; border: none; padding: 10px 30px; border-radius: 30px; font-size: 14px; font-weight: bold; cursor: pointer; margin: 10px auto 5px; transition: all 0.3s; animation: btnPulse 2s infinite; display: inline-block; }
+        @media (max-width: 576px) { .access-btn { padding: 8px 25px; font-size: 13px; } }
+        .access-btn:hover { background: #00ccff; color: #fff; transform: scale(1.02); box-shadow: 0 0 25px rgba(255, 255, 255, 0.6); }
+        @keyframes btnPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); } 50% { box-shadow: 0 0 0 12px rgba(255, 255, 255, 0); } }
+        .intro-footer-note { text-align: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); font-size: 11px; color: rgba(255,255,255,0.6); }
         
-        /* ==================== LOGIN MODERNO CORPORATIVO ==================== */
-        .login-modal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #0a1628 0%, #0d1f35 40%, #001f3f 100%);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 20000;
-            overflow-y: auto;
-            padding: 20px;
-        }
-        .login-wrapper {
-            position: relative;
-            z-index: 2;
-            width: 100%;
-            max-width: 440px;
-            animation: loginFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @keyframes loginFadeIn {
-            from { opacity: 0; transform: translateY(20px) scale(0.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .login-card {
-            background: rgba(13, 31, 53, 0.85);
-            backdrop-filter: blur(20px);
-            border-radius: 16px;
-            padding: 40px 36px;
-            border: 1px solid rgba(0, 204, 255, 0.12);
-            box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(0, 204, 255, 0.05) inset;
-        }
-        @media (max-width: 576px) {
-            .login-card { padding: 28px 22px; }
-        }
-        .login-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 32px;
-        }
-        .login-brand-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #00ccff, #005f99);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            box-shadow: 0 4px 15px rgba(0, 204, 255, 0.3);
-        }
-        .login-brand-text h1 {
-            font-size: 20px;
-            color: #ffffff;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            margin-bottom: 2px;
-        }
-        .login-brand-text p {
-            font-size: 11px;
-            color: #5a7a9a;
-            letter-spacing: 0.5px;
-        }
-        .login-header {
-            margin-bottom: 28px;
-        }
-        .login-header h2 {
-            font-size: 26px;
-            color: #ffffff;
-            font-weight: 700;
-            margin-bottom: 6px;
-            letter-spacing: 0.3px;
-        }
-        .login-header p {
-            font-size: 13px;
-            color: #5a7a9a;
-        }
-        .login-form-group {
-            margin-bottom: 18px;
-        }
-        .login-form-group label {
-            display: block;
-            font-size: 11px;
-            color: #6a8aaa;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-bottom: 8px;
-        }
-        .login-input-wrapper {
-            position: relative;
-        }
-        .login-input-wrapper input {
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(8, 20, 36, 0.7);
-            border: 1px solid rgba(0, 204, 255, 0.12);
-            border-radius: 10px;
-            color: #e0e8f0;
-            font-size: 14px;
-            transition: all 0.25s ease;
-            outline: none;
-        }
-        .login-input-wrapper input:focus {
-            border-color: rgba(0, 204, 255, 0.5);
-            box-shadow: 0 0 0 3px rgba(0, 204, 255, 0.1);
-            background: rgba(8, 20, 36, 0.9);
-        }
-        .login-input-wrapper input::placeholder {
-            color: #3d5570;
-        }
-        .login-btn {
-            width: 100%;
-            padding: 13px;
-            background: linear-gradient(135deg, #00ccff, #0088cc);
-            border: none;
-            border-radius: 10px;
-            color: #0a1628;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: all 0.25s ease;
-            letter-spacing: 0.5px;
-            position: relative;
-            overflow: hidden;
-        }
-        .login-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(0, 204, 255, 0.35);
-        }
-        .login-btn:active {
-            transform: translateY(0);
-        }
-        .login-error {
-            color: #ff5577;
-            font-size: 12px;
-            margin-top: 14px;
-            display: none;
-            text-align: center;
-            padding: 8px;
-            background: rgba(255, 85, 119, 0.1);
-            border-radius: 8px;
-            border: 1px solid rgba(255, 85, 119, 0.2);
-        }
-        .login-footer {
-            margin-top: 28px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(0, 204, 255, 0.08);
-            text-align: center;
-        }
-        .login-footer-brand {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .login-footer-brand .avatar-small {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 2px solid rgba(0, 204, 255, 0.3);
-            background: #005f99;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: 700;
-            color: #fff;
-        }
-        .login-footer-brand .avatar-small img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .login-footer-brand span {
-            font-size: 12px;
-            color: #6a8aaa;
-        }
-        .login-footer-brand span strong {
-            color: #b8c9e0;
-        }
-        .login-footer-legal {
-            font-size: 10px;
-            color: #3d5570;
-            line-height: 1.6;
-        }
-        .login-footer-legal a {
-            color: #00ccff;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        .login-footer-legal a:hover {
-            color: #66ddff;
-        }
-        .login-security {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            margin-top: 16px;
-            font-size: 10px;
-            color: #3d5570;
-        }
+        .login-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #001a2e, #00264d); display: none; justify-content: center; align-items: center; z-index: 20000; overflow-y: auto; padding: 20px; }
+        .login-dev-container { position: relative; z-index: 2; width: 100%; max-width: 500px; background: rgba(0, 38, 77, 0.9); backdrop-filter: blur(10px); border-radius: 20px; padding: 40px; text-align: center; border: 1px solid #ffffff; box-shadow: 0 0 30px rgba(255, 255, 255, 0.2); animation: fadeInScale 0.5s ease-out; }
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .login-dev-image { width: 150px; height: 150px; border-radius: 50%; margin: 0 auto 20px; overflow: hidden; border: 3px solid #ffffff; box-shadow: 0 0 30px rgba(255, 255, 255, 0.5); animation: borderGlow 2s ease-in-out infinite; display: flex; align-items: center; justify-content: center; background: #005f99; position: relative; }
+        @media (max-width: 768px) { .login-dev-image { width: 120px; height: 120px; } }
+        @keyframes borderGlow { 0%, 100% { border-color: #ffffff; box-shadow: 0 0 20px #ffffff; } 50% { border-color: #00ccff; box-shadow: 0 0 40px #00ccff; } }
+        .login-dev-image img { width: 100%; height: 100%; object-fit: cover; }
+        .login-dev-name { font-size: 24px; color: #ffffff; margin-bottom: 5px; font-weight: bold; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .login-dev-role { font-size: 12px; color: #ccccff; margin-bottom: 20px; }
+        .login-logo { font-size: 50px; margin-bottom: 15px; animation: logoFloat 3s ease-in-out infinite; }
+        @keyframes logoFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .login-title { font-size: 28px; color: #ffffff; margin-bottom: 10px; font-weight: bold; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .login-subtitle { color: #ccccff; font-size: 12px; margin-bottom: 25px; }
+        .login-input { width: 100%; padding: 12px; margin: 10px 0; background: rgba(0, 38, 77, 0.8); border: 1px solid #ffffff; border-radius: 8px; color: #fff; font-size: 14px; transition: all 0.3s ease; }
+        .login-input:focus { outline: none; border-color: #00ccff; box-shadow: 0 0 10px rgba(0, 204, 255, 0.5); transform: scale(1.02); }
+        .login-input::placeholder { color: #88aacc; }
+        .login-btn { width: 100%; padding: 12px; background: #ffffff; border: none; border-radius: 8px; color: #001a2e; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: all 0.3s; }
+        .login-btn:hover { background: #00ccff; color: #fff; transform: scale(1.02); box-shadow: 0 0 20px rgba(255, 255, 255, 0.5); }
+        .login-error { color: #ff6666; font-size: 12px; margin-top: 15px; display: none; }
+        .login-footer { margin-top: 25px; padding-top: 15px; border-top: 1px solid #ffffff; font-size: 11px; color: #ccccff; }
+        .login-footer a { color: #ffffff; text-decoration: none; transition: all 0.3s; }
+        .login-footer a:hover { text-shadow: 0 0 10px #ffffff; }
         
-        /* ==================== SPLASH ==================== */
-        .splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0a1628, #001f3f); display: flex; justify-content: center; align-items: center; z-index: 15000; animation: fadeOut 3s ease-in-out forwards; pointer-events: none; }
+        .splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #001a2e, #00264d); display: flex; justify-content: center; align-items: center; z-index: 15000; animation: fadeOut 3s ease-in-out forwards; pointer-events: none; }
         @keyframes fadeOut { 0% { opacity: 1; visibility: visible; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
         .splash-content { text-align: center; z-index: 2; animation: zoomIn 0.8s ease-out; }
         @keyframes zoomIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
         .splash-logo { font-size: 100px; margin-bottom: 20px; animation: splashPulse 1.5s ease-in-out infinite; }
-        @keyframes splashPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes splashPulse { 0%, 100% { transform: scale(1); text-shadow: 0 0 20px #ffffff; } 50% { transform: scale(1.05); text-shadow: 0 0 40px #ffffff; } }
         .splash-title { font-size: 48px; background: linear-gradient(45deg, #ffffff, #00ccff, #005f99); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 10px; }
-        .splash-subtitle { color: #5a7a9a; font-size: 16px; }
+        .splash-subtitle { color: #88aacc; font-size: 16px; }
         
-        /* ==================== DEV BADGE ==================== */
         .dev-badge { position: fixed; top: 10px; left: 10px; width: 45px; height: 45px; border-radius: 50%; background: var(--bg-tertiary); border: 2px solid var(--border-color); cursor: pointer; z-index: 1000; overflow: hidden; transition: all 0.3s ease; box-shadow: 0 0 10px var(--shadow); }
         .dev-badge:hover { width: 280px; border-radius: 25px; background: var(--bg-tertiary); }
         .dev-badge-img { width: 41px; height: 41px; border-radius: 50%; object-fit: cover; float: left; }
@@ -941,7 +638,6 @@ HTML_TEMPLATE = """
         .dev-badge:hover .dev-badge-info { display: block; }
         .dev-badge-name { color: var(--text-accent); font-weight: bold; }
         
-        /* ==================== TOOLBAR ==================== */
         .toolbar { background: var(--bg-secondary); padding: 8px 15px; display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 2px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.1); z-index: 100; position: relative; margin-left: 60px; }
         @media (max-width: 768px) { .toolbar { margin-left: 50px; padding: 5px 10px; gap: 5px; } }
         .btn { padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s ease; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
@@ -959,7 +655,6 @@ HTML_TEMPLATE = """
         @media (max-width: 576px) { .user-info { padding: 2px 8px; font-size: 10px; } }
         .user-role { background: var(--text-accent); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 10px; }
         
-        /* ==================== MAIN LAYOUT ==================== */
         .main-container { display: flex; height: calc(100vh - 52px); position: relative; overflow: hidden; }
         @media (max-width: 768px) { .main-container { height: calc(100vh - 48px); flex-direction: column; } }
         
@@ -1008,7 +703,6 @@ HTML_TEMPLATE = """
         .property-group label { display: block; font-size: 11px; margin-bottom: 4px; color: var(--text-accent); }
         .property-group input, .property-group select, .property-group textarea { width: 100%; padding: 6px; border-radius: 5px; border: none; background: var(--bg-card); color: var(--text-primary); font-size: 12px; border: 1px solid var(--border-color); }
         
-        /* ==================== MODALS ==================== */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 3000; padding: 20px; }
         .modal-content { background: var(--bg-secondary); padding: 25px; border-radius: 12px; width: 500px; max-width: 100%; max-height: 85%; overflow-y: auto; border: 1px solid var(--border-color); }
         @media (max-width: 576px) { .modal-content { padding: 15px; } }
@@ -1029,9 +723,11 @@ HTML_TEMPLATE = """
         .selection-info { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); background: var(--bg-secondary); color: var(--text-primary); padding: 4px 10px; border-radius: 20px; font-size: 11px; z-index: 1000; pointer-events: none; border: 1px solid var(--border-color); white-space: nowrap; }
         
         @keyframes signalWave { 0% { transform: scale(0.8); opacity: 0; } 50% { transform: scale(1.2); opacity: 0.8; } 100% { transform: scale(1.5); opacity: 0; } }
+        @keyframes radioWave { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.3); opacity: 0; } }
         @keyframes dataPacket { 0% { transform: translateX(-20px) scale(0.5); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translateX(20px) scale(1); opacity: 0; } }
         .connection-animation { position: absolute; pointer-events: none; z-index: 1000; }
         .connection-wave { position: absolute; border-radius: 50%; animation: signalWave 1.5s ease-out infinite; }
+        .radio-wave { position: absolute; border-radius: 50%; animation: radioWave 1.5s ease-out infinite; }
         .data-packet { position: absolute; width: 8px; height: 8px; border-radius: 2px; animation: dataPacket 1s linear infinite; }
         .reset-defaults-btn { margin-top: 10px; width: 100%; }
         .background-controls { background: var(--bg-secondary); padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); }
@@ -1065,9 +761,21 @@ HTML_TEMPLATE = """
             .btn { padding: 8px 12px; }
         }
 
+        /* Estilo do Fundo Dinâmico */
+        .dynamic-background {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1;
+            object-fit: cover;
+            pointer-events: none;
+            opacity: 0.3;
+            display: none;
+        }
+
+        /* Estilo do Loading Overlay */
         .loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 22, 40, 0.97);
+            background: rgba(0, 26, 46, 0.95);
             z-index: 30000;
             display: none;
             flex-direction: column;
@@ -1076,7 +784,7 @@ HTML_TEMPLATE = """
             color: white;
         }
         .loading-spinner {
-            border: 8px solid rgba(0, 204, 255, 0.1);
+            border: 8px solid #f3f3f3;
             border-top: 8px solid #00ccff;
             border-radius: 50%;
             width: 60px; height: 60px;
@@ -1084,38 +792,14 @@ HTML_TEMPLATE = """
             margin-bottom: 20px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .loading-text { font-size: 18px; font-weight: bold; animation: pulseText 1.5s infinite; color: #b8c9e0; }
+        .loading-text { font-size: 18px; font-weight: bold; animation: pulseText 1.5s infinite; }
         @keyframes pulseText { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
-        
-        /* ==================== CONNECTION CURVE EDITOR ==================== */
-        .curve-point {
-            position: absolute;
-            width: 14px;
-            height: 14px;
-            background: #ffaa00;
-            border: 2px solid white;
-            border-radius: 50%;
-            cursor: move;
-            z-index: 500;
-            box-shadow: 0 0 8px rgba(255, 170, 0, 0.6);
-            transform: translate(-50%, -50%);
-        }
-        .curve-point:hover {
-            transform: translate(-50%, -50%) scale(1.3);
-        }
-        .curve-point.selected {
-            background: #00ccff;
-            box-shadow: 0 0 12px rgba(0, 204, 255, 0.8);
-        }
     </style>
 </head>
 <body>
-    <!-- Background Dinâmico Global -->
-    <div class="dynamic-bg-container" id="dynamicBgContainer">
-        <video id="bgVideo" autoplay loop muted playsinline style="display:none;"></video>
-        <img id="bgImage" src="" alt="" style="display:none;">
-        <div class="dynamic-bg-overlay"></div>
-    </div>
+    <!-- Fundo Dinâmico -->
+    <video id="bgVideo" class="dynamic-background" autoplay loop muted playsinline></video>
+    <img id="bgGif" class="dynamic-background" src="" alt="">
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
@@ -1128,8 +812,8 @@ HTML_TEMPLATE = """
     <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobilePalette()"></div>
     <div class="rgb-line"></div>
     
-    <!-- Intro Screen -->
     <div class="intro-screen" id="introScreen">
+        <div class="matrix-bg" id="introMatrixBg"></div>
         <div class="intro-slider-container">
             <div class="intro-slide active" data-slide="0">
                 <div class="slide-icon">🎥🔒🌐</div>
@@ -1141,7 +825,6 @@ HTML_TEMPLATE = """
                         <li>✅ Importe plantas baixas como imagem de fundo</li>
                         <li>✅ Arraste e posicione equipamentos sobre a planta</li>
                         <li>✅ Crie conexões entre equipamentos (cabeadas e sem fio)</li>
-                        <li>✅ <strong>Curve as conexões cabeadas</strong> - simule passagem em dutos</li>
                         <li>✅ Desenhe formas, portas, janelas e textos no canvas</li>
                         <li>✅ Exporte projetos em PDF com lista de equipamentos</li>
                         <li>✅ Gere orçamento automático</li>
@@ -1155,15 +838,17 @@ HTML_TEMPLATE = """
                     <ul>
                         <li><strong>📁 Novo Projeto:</strong> Cria um projeto em branco</li>
                         <li><strong>💾 Salvar / 📂 Carregar:</strong> Salve e carregue seus projetos em arquivo .projetize</li>
-                        <li><strong>🖼️ Planta:</strong> Importe uma imagem para usar como planta baixa</li>
+                        <li><strong>🖼️ Planta:</strong> Importe uma imagem para usar como planta baixa (PNG, JPG)</li>
                         <li><strong>📦 Equipamentos:</strong> Arraste os ícones da barra lateral para o canvas</li>
                         <li><strong>🔌 Conexões:</strong> Shift + clique em dois equipamentos para conectá-los</li>
-                        <li><strong>📐 Curvar Cabos:</strong> Selecione uma conexão cabeada e arraste os pontos laranjas para curvar</li>
                         <li><strong>📐 Formas:</strong> Ative o modo de desenho para adicionar formas geométricas</li>
-                        <li><strong>🔍 Zoom:</strong> Use os botões de zoom para ampliar o canvas</li>
+                        <li><strong>🔍 Zoom:</strong> Use os botões de zoom para ampliar o canvas ou aumentar ícones</li>
                         <li><strong>✏️ Edição:</strong> Clique em qualquer equipamento para editar suas propriedades</li>
+                        <li><strong>🗑 Excluir:</strong> Selecione itens e use o botão "Excluir Selecionados"</li>
                         <li><strong>🔌 Editar Conexão:</strong> Clique no cabo para selecionar e editar</li>
-                        <li><strong>🎨 Ícones Personalizados:</strong> Clique com botão direito para alterar ícones</li>
+                        <li><strong>🖼️ Mover Planta:</strong> Selecione a planta e arraste para mover</li>
+                        <li><strong>📐 Formas:</strong> Clique na forma para mover, editar ou excluir</li>
+                        <li><strong>🎨 Ícones Personalizados:</strong> Clique com botão direito em qualquer item para alterar seu ícone permanentemente</li>
                     </ul>
                 </div>
             </div>
@@ -1194,12 +879,11 @@ HTML_TEMPLATE = """
                 <button class="access-btn" onclick="closeIntroAndShowLogin()">🔓 Acessar Sistema</button>
             </div>
             <div class="intro-footer-note">
-                <span>Versão 2.1 | Desenvolvido com 💙 por Thiago Souza</span>
+                <span>Versão 2.0 | Desenvolvido com 💙 por Thiago Souza</span>
             </div>
         </div>
     </div>
     
-    <!-- Splash -->
     <div class="splash-screen" id="splashScreen">
         <div class="splash-content">
             <div class="splash-logo">🎥🔒🌐</div>
@@ -1208,53 +892,26 @@ HTML_TEMPLATE = """
         </div>
     </div>
     
-    <!-- Login Modal Moderno -->
     <div class="login-modal" id="loginModal">
-        <div class="login-wrapper">
-            <div class="login-card">
-                <div class="login-brand">
-                    <div class="login-brand-icon">🎥</div>
-                    <div class="login-brand-text">
-                        <h1>PROJETIZE</h1>
-                        <p>Sistema Para CFTV, Redes e muito mais...</p>
-                    </div>
-                </div>
-                <div class="login-header">
-                    <h2>Bem-vindo de volta</h2>
-                    <p>Entre com suas credenciais para continuar</p>
-                </div>
-                <div class="login-form-group">
-                    <label>Usuário</label>
-                    <div class="login-input-wrapper">
-                        <input type="text" id="loginUsername" placeholder="Digite seu usuário" autocomplete="username">
-                    </div>
-                </div>
-                <div class="login-form-group">
-                    <label>Senha</label>
-                    <div class="login-input-wrapper">
-                        <input type="password" id="loginPassword" placeholder="Digite sua senha" autocomplete="current-password">
-                    </div>
-                </div>
-                <button class="login-btn" onclick="doLogin()">Entrar no Sistema</button>
-                <div class="login-error" id="loginError">Usuário ou senha inválidos</div>
-                <div class="login-footer">
-                    <div class="login-footer-brand">
-                        <div class="avatar-small" id="loginAvatar">
-                            <img id="loginDevImage" src="" alt="TS" style="display:none;">
-                            <span id="loginAvatarFallback">TS</span>
-                        </div>
-                        <span>Desenvolvido por <strong>Thiago Souza</strong></span>
-                    </div>
-                    <div class="login-footer-legal">
-                        Analista de Tecnologia | Unidade 2 - São José do Rio Preto<br>
-                        Todos os direitos reservados © 2026<br>
-                        📱 (17) 99600-9537
-                    </div>
-                </div>
-                <div class="login-security">
-                    🔒 Conexão segura · Autenticação criptografada
-                </div>
+        <div class="matrix-bg" id="matrixBg"></div>
+        <div class="login-dev-container">
+            <div class="login-dev-image" id="loginDevImageContainer">
+                <img id="loginDevImage" src="" alt="Thiago Souza" style="display:none;">
             </div>
+            <div class="login-dev-name">Thiago Souza</div>
+            <div class="login-dev-role">Analista de Tecnologia | Unidade 2 - São José do Rio Preto</div>
+            <div class="login-logo">🎥🔒</div>
+            <div class="login-title">PROJETIZE</div>
+            <div class="login-subtitle">Sistema Para CFTV, Redes e muito mais...</div>
+            <input type="text" id="loginUsername" class="login-input" placeholder="Usuário">
+            <input type="password" id="loginPassword" class="login-input" placeholder="Senha">
+            <button class="login-btn" onclick="doLogin()">Entrar</button>
+            <div class="login-footer">
+                Desenvolvido por <strong>Thiago Souza</strong><br>
+                Todos os direitos reservados © 2026<br>
+                <a href="https://wa.me/5517996009537" target="_blank">📱 Contato: (17) 99600-9537</a>
+            </div>
+            <div class="login-error" id="loginError">Usuário ou senha inválidos</div>
         </div>
     </div>
     
@@ -1271,7 +928,6 @@ HTML_TEMPLATE = """
     <div class="selection-rect" id="selectionRect"></div>
     <div class="context-menu" id="contextMenu"></div>
     
-    <!-- Toolbar -->
     <div class="toolbar" id="toolbar" style="display: none;">
         <button class="btn btn-primary" onclick="newProject()">📁 Novo</button>
         <button class="btn btn-secondary" onclick="saveProjectToFile()">💾 Salvar</button>
@@ -1289,8 +945,10 @@ HTML_TEMPLATE = """
         <button class="btn btn-info" onclick="toggleGrid()">🔲 Grade</button>
         <button class="btn btn-info" onclick="openBackgroundModal()">🖼️ Planta</button>
         
+        <!-- NOVOS BOTÕES (Restritos) -->
         <button id="adminDevBtn" class="btn btn-warning" onclick="openDevImageModal()" style="background:#e83e8c; color:white; display: none;">🖼️ Dev</button>
         <button id="adminBgBtn" class="btn btn-secondary" onclick="openDynamicBgModal()" style="background:#6f42c1; color:white; display: none;">🎬 Fundo</button>
+        <button class="btn btn-success" onclick="window.open('https://th-tech.souzathiagosantos03.workers.dev', '_blank')" style="background:#fd7e14; color:white; font-weight:bold;">🌐 TH-TEC</button>
         
         <button class="btn btn-danger" onclick="logout()">🚪 Sair</button>
         <span style="flex:1"></span>
@@ -1341,16 +999,15 @@ HTML_TEMPLATE = """
     <div id="deleteShapeBtn" class="delete-shape-btn" onclick="deleteSelectedShape()">🗑 Excluir Forma</div>
     
     <script>
-        // ==================== VARIÁVEIS GLOBAIS ====================
+        // ==================== CONFIGURAÇÕES INICIAIS & OTIMIZAÇÃO ====================
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         let components = [];
-        let connections = [];  // Cada conexão: {from, to, type, waypoints: [{x,y},...], curved: boolean}
+        let connections = [];
         let shapes = [];
         let selectedComponents = [];
         let selectedShapes = [];
         let selectedConnectionIndex = null;
-        let selectedWaypointIndex = null;
         let dragging = false;
         let dragOffset = {x:0, y:0};
         let zoom = 1;
@@ -1364,6 +1021,8 @@ HTML_TEMPLATE = """
         let contextMenuComponent = null;
         let contextMenuShape = null;
         let contextMenuConnection = null;
+        let contextMenuCategory = null;
+        let contextMenuConnectionType = null;
         let shapeMode = null;
         let shapeStart = null;
         let drawingPreview = null;
@@ -1384,16 +1043,10 @@ HTML_TEMPLATE = """
         let dragBackgroundStart = {x:0, y:0};
         let isResizingBackground = false;
         let resizeHandle = null;
-        let resizeStart = {x:0, y:0, width:0, height:0, bgX:0, bgY:0};
+        let resizeStart = {x:0, y:0, width:0, height:0, x:0, y:0};
         let selectedConnectionType = null;
-        let dynamicBgInfo = { url: null, type: null, opacity: 0.25 };
         
-        // ==================== WAYPOINT DRAGGING ====================
-        let draggingWaypoint = false;
-        let waypointConnectionIndex = null;
-        let waypointIndex = null;
-        
-        // ==================== DETECÇÃO DE DISPOSITIVO ====================
+        // Detecção de Dispositivo
         function getDeviceType() {
             const ua = navigator.userAgent;
             if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) return "Tablet";
@@ -1402,7 +1055,7 @@ HTML_TEMPLATE = """
         }
         document.getElementById('loadingDeviceType').innerText = "Dispositivo detectado: " + getDeviceType();
 
-        // ==================== CACHE DE IMAGENS ====================
+        // Cache de imagens para otimização do Canvas
         const imageCache = {};
         function getCachedImage(src) {
             if (!imageCache[src]) {
@@ -1436,9 +1089,8 @@ HTML_TEMPLATE = """
         let cableColors = JSON.parse(JSON.stringify(defaultCableColors));
         let customConnections = [];
         let connectionCategories = {};
-        let categories = {};
-        let customDevices = [];
-        let defaultCategories = {};
+        let customCategoryIcons = {};
+        let customConnectionIcons = {};
         
         const STORAGE_KEYS = {
             ICON_SIZE: 'projetize_icon_size',
@@ -1449,7 +1101,35 @@ HTML_TEMPLATE = """
             BACKGROUND: (user) => `projetize_${user}_background`
         };
         
-        // ==================== DEBOUNCE SAVE ====================
+        let categories = {};
+        let customDevices = [];
+        let defaultCategories = {};
+        
+        async function loadDefaultConfig() {
+            try {
+                const response = await fetch('/api/default_config');
+                const data = await response.json();
+                if (data.success) defaultCategories = data.config;
+            } catch(e) { console.error(e); }
+        }
+        
+        async function loadDefaultConnections() {
+            try {
+                const response = await fetch('/api/default_connections');
+                const data = await response.json();
+                if (data.success) {
+                    connectionCategories = data.config;
+                    for (const [catName, catData] of Object.entries(data.config)) {
+                        for (const conn of catData.connections) {
+                            const key = getConnectionKey(conn.name);
+                            cableColors[key] = { ...conn };
+                        }
+                    }
+                }
+            } catch(e) { console.error(e); }
+        }
+        
+        // Função de Debounce para salvar dados localmente sem travar o navegador
         let saveTimeout;
         function saveUserData() {
             clearTimeout(saveTimeout);
@@ -1465,9 +1145,9 @@ HTML_TEMPLATE = """
                         height: backgroundHeight, x: backgroundX, y: backgroundY
                     }));
                 }
-            }, 300);
+            }, 300); // Salva apenas após 300ms de inatividade
         }
-        
+
         async function loadUserData() {
             const savedIconSize = localStorage.getItem(STORAGE_KEYS.ICON_SIZE);
             if(savedIconSize) iconSize = parseInt(savedIconSize);
@@ -1476,6 +1156,7 @@ HTML_TEMPLATE = """
             
             categories = JSON.parse(JSON.stringify(defaultCategories));
             
+            // Carregamento em paralelo para ser mais rápido
             const promises = [
                 fetch('/api/load_custom_devices').then(r => r.json()).catch(() => ({success: false}))
             ];
@@ -1496,21 +1177,8 @@ HTML_TEMPLATE = """
                 const savedShapes = results[3];
                 const savedBackground = results[4];
                 
-                if(savedComponents) {
-                    components = JSON.parse(savedComponents);
-                    // Garantir que conexões antigas tenham waypoints
-                    components.forEach(c => {
-                        if(!c.waypoints) c.waypoints = [];
-                    });
-                }
-                if(savedConnectionsData) {
-                    connections = JSON.parse(savedConnectionsData);
-                    // Garantir que conexões antigas tenham waypoints e curved
-                    connections.forEach(conn => {
-                        if(!conn.waypoints) conn.waypoints = [];
-                        if(conn.curved === undefined) conn.curved = false;
-                    });
-                }
+                if(savedComponents) components = JSON.parse(savedComponents);
+                if(savedConnectionsData) connections = JSON.parse(savedConnectionsData);
                 if(savedShapes) shapes = JSON.parse(savedShapes);
                 if(savedBackground) {
                     const bgData = JSON.parse(savedBackground);
@@ -1545,31 +1213,126 @@ HTML_TEMPLATE = """
         function getIconUrl(filename) { if (!filename) return null; return `/uploads/icons/${filename}`; }
         function renderConnectionIcon(conn) { if (conn.iconFile) { return `<img src="/uploads/icons/${conn.iconFile}" style="width:24px;height:24px;object-fit:contain;">`; } return conn.icon || '🔌'; }
         
-        async function loadDefaultConfig() {
-            try {
-                const response = await fetch('/api/default_config');
-                const data = await response.json();
-                if (data.success) defaultCategories = data.config;
-            } catch(e) { console.error(e); }
+        function addCustomConnection(category, connData) {
+            if (!connectionCategories[category]) connectionCategories[category] = { icon: '🔌', connections: [] };
+            const key = getConnectionKey(connData.name);
+            connectionCategories[category].connections.push(connData);
+            cableColors[key] = { color: connData.color, name: connData.name, icon: connData.icon, type: connData.type || 'cable', speed: connData.speed || 'N/A', desc: connData.desc || '', animation: connData.animation || null, iconFile: connData.iconFile || null };
+            saveUserData(); saveGlobalLibrary(); renderConnectionsPalette();
+            showToast(`✅ Conexão "${connData.name}" adicionada!`);
         }
         
-        async function loadDefaultConnections() {
-            try {
-                const response = await fetch('/api/default_connections');
-                const data = await response.json();
-                if (data.success) {
-                    connectionCategories = data.config;
-                    for (const [catName, catData] of Object.entries(data.config)) {
-                        for (const conn of catData.connections) {
-                            const key = getConnectionKey(conn.name);
-                            cableColors[key] = { ...conn };
-                        }
-                    }
-                }
-            } catch(e) { console.error(e); }
+        function deleteCustomConnection(category, idx) {
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem excluir conexões'); return; }
+            if (confirm('Deseja excluir esta conexão?')) {
+                const conn = connectionCategories[category].connections[idx];
+                const key = getConnectionKey(conn.name);
+                delete cableColors[key];
+                connectionCategories[category].connections.splice(idx, 1);
+                if (connectionCategories[category].connections.length === 0) delete connectionCategories[category];
+                saveUserData(); saveGlobalLibrary(); renderConnectionsPalette(); showToast(`🗑 Conexão removida!`);
+            }
         }
         
-        // ==================== RENDER PALETTE ====================
+        function editCustomConnection(category, idx) {
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem editar conexões'); return; }
+            const conn = connectionCategories[category].connections[idx];
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3 style="color:var(--text-accent);">✏️ Editar Conexão</h3>
+                    <input type="text" id="connName" value="${conn.name}" placeholder="Nome da conexão">
+                    <input type="text" id="connIcon" value="${conn.icon || '🔌'}" placeholder="Ícone (emoji)">
+                    <div class="property-group"><label>OU Imagem personalizada (permanente)</label><input type="file" id="connIconImage" accept="image/*"><div class="image-preview" id="connIconPreview">${conn.iconFile ? `<img src="/uploads/icons/${conn.iconFile}" style="max-width:50px;max-height:50px;">` : ''}</div></div>
+                    <input type="color" id="connColor" value="${conn.color || '#005f99'}">
+                    <input type="text" id="connSpeed" value="${conn.speed || 'N/A'}" placeholder="Velocidade">
+                    <input type="text" id="connDesc" value="${conn.desc || ''}" placeholder="Descrição">
+                    <select id="connType"><option value="cable" ${conn.type === 'cable' ? 'selected' : ''}>Cabeado</option><option value="wireless" ${conn.type === 'wireless' ? 'selected' : ''}>Sem Fio</option></select>
+                    <select id="connAnimation"><option value="">Nenhuma</option><option value="wave" ${conn.animation === 'wave' ? 'selected' : ''}>Ondas</option><option value="packet" ${conn.animation === 'packet' ? 'selected' : ''}>Pacotes</option></select>
+                    <div class="modal-buttons"><button class="btn btn-primary" onclick="updateCustomConnection('${category.replace(/'/g, "\\'")}', ${idx})">Salvar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div>
+                </div>`;
+            document.body.appendChild(modal); window.currentModal = modal;
+            const imageInput = document.getElementById('connIconImage');
+            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('connIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;max-height:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'connection' }) }); const data = await response.json(); if (data.success) { window.tempConnectionIconFile = data.filename; showToast('✅ Ícone da conexão enviado com sucesso!'); } } }; }
+        }
+        
+        window.updateCustomConnection = async (category, idx) => {
+            const name = document.getElementById('connName').value; const icon = document.getElementById('connIcon').value; const color = document.getElementById('connColor').value; const speed = document.getElementById('connSpeed').value; const desc = document.getElementById('connDesc').value; const type = document.getElementById('connType').value; const animation = document.getElementById('connAnimation').value; const iconFile = window.tempConnectionIconFile || connectionCategories[category].connections[idx].iconFile;
+            if (!name) { showToast('Digite um nome para a conexão'); return; }
+            const oldKey = getConnectionKey(connectionCategories[category].connections[idx].name); delete cableColors[oldKey];
+            const connData = { name, icon: icon || '🔌', color, speed, desc, type, animation: animation || null, iconFile: iconFile };
+            connectionCategories[category].connections[idx] = connData;
+            const newKey = getConnectionKey(name);
+            cableColors[newKey] = { color: color, name: name, icon: icon || '🔌', type: type, speed: speed || 'N/A', desc: desc || '', animation: animation || null, iconFile: iconFile };
+            window.tempConnectionIconFile = null; saveUserData(); saveGlobalLibrary(); closeModal(); renderConnectionsPalette(); showToast(`✅ Conexão atualizada!`);
+        };
+        
+        function openCategoryIconModal(catName) {
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem alterar ícones de categorias'); return; }
+            const modal = document.createElement('div'); modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3 style="color:var(--text-accent);">🎨 Ícone da Categoria: ${catName}</h3>
+                    <p>Escolha um novo ícone para a categoria. Isso será visível para todos os usuários.</p>
+                    <div class="property-group"><label>Use um emoji</label><input type="text" id="catEmoji" placeholder="🎥" value="${categories[catName]?.icon || '📁'}" maxlength="2"></div>
+                    <div class="property-group"><label>OU faça upload de uma imagem</label><input type="file" id="catIconImage" accept="image/*"><div class="image-preview" id="catIconPreview">${categories[catName]?.iconFile ? `<img src="/uploads/icons/${categories[catName].iconFile}" style="max-width:50px;max-height:50px;">` : ''}</div></div>
+                    <div class="modal-buttons"><button class="btn btn-primary" onclick="applyCategoryIcon('${catName.replace(/'/g, "\\'")}')">✅ Aplicar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div>
+                </div>`;
+            document.body.appendChild(modal); window.currentModal = modal; window.currentCategory = catName;
+            const imageInput = document.getElementById('catIconImage');
+            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('catIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;max-height:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'category' }) }); const data = await response.json(); if (data.success) { window.tempCategoryIconFile = data.filename; showToast('✅ Ícone da categoria enviado com sucesso!'); } } }; }
+        }
+        
+        window.applyCategoryIcon = async (catName) => {
+            const emoji = document.getElementById('catEmoji').value; const iconFile = window.tempCategoryIconFile || categories[catName]?.iconFile || null;
+            if (emoji) { categories[catName].icon = emoji; categories[catName].iconFile = null; } else if (iconFile) { categories[catName].iconFile = iconFile; categories[catName].icon = null; }
+            window.tempCategoryIconFile = null; saveUserData(); await saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ Ícone da categoria "${catName}" atualizado!`);
+        };
+        
+        function openConnectionIconModal(category, idx) {
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem alterar ícones de conexões'); return; }
+            const conn = connectionCategories[category].connections[idx];
+            const modal = document.createElement('div'); modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3 style="color:var(--text-accent);">🎨 Ícone da Conexão: ${conn.name}</h3>
+                    <p>Escolha um novo ícone para a conexão. Isso será visível para todos os usuários.</p>
+                    <div class="property-group"><label>Use um emoji</label><input type="text" id="connEmoji" placeholder="🔌" value="${conn.icon || '🔌'}" maxlength="2"></div>
+                    <div class="property-group"><label>OU faça upload de uma imagem</label><input type="file" id="connIconImage" accept="image/*"><div class="image-preview" id="connIconPreview">${conn.iconFile ? `<img src="/uploads/icons/${conn.iconFile}" style="max-width:50px;max-height:50px;">` : ''}</div></div>
+                    <div class="modal-buttons"><button class="btn btn-primary" onclick="applyConnectionIcon('${category.replace(/'/g, "\\'")}', ${idx})">✅ Aplicar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div>
+                </div>`;
+            document.body.appendChild(modal); window.currentModal = modal; window.currentConnCategory = category; window.currentConnIdx = idx;
+            const imageInput = document.getElementById('connIconImage');
+            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('connIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;max-height:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'connection' }) }); const data = await response.json(); if (data.success) { window.tempConnectionIconFile = data.filename; showToast('✅ Ícone da conexão enviado com sucesso!'); } } }; }
+        }
+        
+        window.applyConnectionIcon = async (category, idx) => {
+            const emoji = document.getElementById('connEmoji').value; const iconFile = window.tempConnectionIconFile || connectionCategories[category].connections[idx].iconFile || null; const conn = connectionCategories[category].connections[idx];
+            if (emoji) { conn.icon = emoji; conn.iconFile = null; } else if (iconFile) { conn.iconFile = iconFile; conn.icon = null; }
+            const key = getConnectionKey(conn.name); if (cableColors[key]) { cableColors[key].icon = conn.icon || '🔌'; cableColors[key].iconFile = conn.iconFile; }
+            window.tempConnectionIconFile = null; saveUserData(); await saveGlobalLibrary(); closeModal(); renderConnectionsPalette(); showToast(`✅ Ícone da conexão "${conn.name}" atualizado!`);
+        };
+        
+        function renderConnectionsPalette() {
+            const container = document.getElementById('connections-container'); if (!container) return; container.innerHTML = '';
+            const allConnections = { ...connectionCategories };
+            customConnections.forEach(conn => { if (!allConnections['Personalizadas']) allConnections['Personalizadas'] = { icon: '🔌', connections: [] }; allConnections['Personalizadas'].connections.push(conn); });
+            for (const [catName, catData] of Object.entries(allConnections)) {
+                if (!catData.connections || catData.connections.length === 0) continue;
+                const categoryDiv = document.createElement('div'); categoryDiv.className = 'category';
+                categoryDiv.innerHTML = `<div class="category-header"><h3>${catData.icon || '🔌'} ${catName}</h3>${(userRole === 'admin' || userRole === 'master') ? `<div class="category-actions"><button onclick="addConnectionToCategory('${catName.replace(/'/g, "\\'")}')" title="Adicionar">➕</button></div>` : ''}</div><div id="conn-category-${catName.replace(/[^a-zA-Z0-9]/g, '_')}"></div>`;
+                container.appendChild(categoryDiv);
+                const connContainer = document.getElementById(`conn-category-${catName.replace(/[^a-zA-Z0-9]/g, '_')}`);
+                catData.connections.forEach((conn, idx) => {
+                    const connEl = document.createElement('div'); connEl.className = 'component'; connEl.style.cursor = 'pointer';
+                    connEl.onclick = () => { selectedConnectionType = getConnectionKey(conn.name); showToast(`✅ Tipo de conexão selecionado: ${conn.name}`); };
+                    connEl.innerHTML = `<div class="component-icon">${renderConnectionIcon(conn)}</div><div class="component-info"><div class="component-name">${conn.name}</div><div class="component-desc">${conn.desc || conn.speed || ''}</div></div>${(userRole === 'admin' || userRole === 'master') ? `<div class="component-actions"><button onclick="editCustomConnection('${catName.replace(/'/g, "\\'")}', ${idx})" title="Editar">✏️</button><button onclick="openConnectionIconModal('${catName.replace(/'/g, "\\'")}', ${idx})" title="Alterar Ícone">🎨</button><button onclick="deleteCustomConnection('${catName.replace(/'/g, "\\'")}', ${idx})" title="Excluir">🗑</button></div>` : ''}`;
+                    connContainer.appendChild(connEl);
+                });
+            }
+        }
+        
         function renderDeviceIcon(device) { if(device.iconFile) return `<img src="/uploads/icons/${device.iconFile}" style="width:24px;height:24px;object-fit:contain;">`; return device.icon || '📦'; }
         
         function renderPalette() {
@@ -1583,6 +1346,8 @@ HTML_TEMPLATE = """
                 if (catData.devices) {
                     catData.devices.forEach((device, idx) => {
                         const deviceEl = document.createElement('div'); deviceEl.className = 'component'; deviceEl.setAttribute('draggable', 'true');
+                        deviceEl.setAttribute('data-device-name', device.name); deviceEl.setAttribute('data-device-icon', device.icon); deviceEl.setAttribute('data-device-type', device.type); deviceEl.setAttribute('data-device-subtype', device.subtype || ''); deviceEl.setAttribute('data-device-color', device.color); deviceEl.setAttribute('data-device-iconfile', device.iconFile || '');
+                        if (!device.id) device.id = Date.now() + idx;
                         deviceEl.innerHTML = `<div class="component-icon">${renderDeviceIcon(device)}</div><div class="component-info"><div class="component-name">${device.name}</div><div class="component-desc">${device.desc || ''}</div></div>${(userRole === 'admin' || userRole === 'master') ? `<div class="component-actions"><button onclick="editDevice('${catName.replace(/'/g, "\\'")}', ${idx})" title="Editar">✏️</button><button onclick="openDeviceIconModal('${catName.replace(/'/g, "\\'")}', ${idx})" title="Alterar Ícone">🎨</button><button onclick="deleteDevice('${catName.replace(/'/g, "\\'")}', ${idx})" title="Excluir">🗑</button></div>` : ''}`;
                         deviceEl.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ name: device.name, icon: device.icon, type: device.type, subtype: device.subtype || '', color: device.color, iconFile: device.iconFile || null })); });
                         devicesContainer.appendChild(deviceEl);
@@ -1603,24 +1368,51 @@ HTML_TEMPLATE = """
             }
         }
         
-        function renderConnectionsPalette() {
-            const container = document.getElementById('connections-container'); if (!container) return; container.innerHTML = '';
-            const allConnections = { ...connectionCategories };
-            customConnections.forEach(conn => { if (!allConnections['Personalizadas']) allConnections['Personalizadas'] = { icon: '🔌', connections: [] }; allConnections['Personalizadas'].connections.push(conn); });
-            for (const [catName, catData] of Object.entries(allConnections)) {
-                if (!catData.connections || catData.connections.length === 0) continue;
-                const categoryDiv = document.createElement('div'); categoryDiv.className = 'category';
-                categoryDiv.innerHTML = `<div class="category-header"><h3>${catData.icon || '🔌'} ${catName}</h3>${(userRole === 'admin' || userRole === 'master') ? `<div class="category-actions"><button onclick="addConnectionToCategory('${catName.replace(/'/g, "\\'")}')" title="Adicionar">➕</button></div>` : ''}</div><div id="conn-category-${catName.replace(/[^a-zA-Z0-9]/g, '_')}"></div>`;
-                container.appendChild(categoryDiv);
-                const connContainer = document.getElementById(`conn-category-${catName.replace(/[^a-zA-Z0-9]/g, '_')}`);
-                catData.connections.forEach((conn, idx) => {
-                    const connEl = document.createElement('div'); connEl.className = 'component'; connEl.style.cursor = 'pointer';
-                    connEl.onclick = () => { selectedConnectionType = getConnectionKey(conn.name); showToast(`✅ Tipo de conexão selecionado: ${conn.name}`); };
-                    connEl.innerHTML = `<div class="component-icon">${renderConnectionIcon(conn)}</div><div class="component-info"><div class="component-name">${conn.name}</div><div class="component-desc">${conn.desc || conn.speed || ''}</div></div>`;
-                    connContainer.appendChild(connEl);
-                });
-            }
+        function openDeviceIconModal(catName, idx) {
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem alterar ícones de dispositivos'); return; }
+            const device = categories[catName].devices[idx];
+            const modal = document.createElement('div'); modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3 style="color:var(--text-accent);">🎨 Ícone do Dispositivo: ${device.name}</h3>
+                    <p>Escolha um novo ícone para o dispositivo. Isso será visível para todos os usuários.</p>
+                    <div class="property-group"><label>Use um emoji</label><input type="text" id="devEmoji" placeholder="📹" value="${device.icon || '📦'}" maxlength="2"></div>
+                    <div class="property-group"><label>OU faça upload de uma imagem</label><input type="file" id="devIconImage" accept="image/*"><div class="image-preview" id="devIconPreview">${device.iconFile ? `<img src="/uploads/icons/${device.iconFile}" style="max-width:50px;max-height:50px;">` : ''}</div></div>
+                    <div class="modal-buttons"><button class="btn btn-primary" onclick="applyDeviceIcon('${catName.replace(/'/g, "\\'")}', ${idx})">✅ Aplicar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div>
+                </div>`;
+            document.body.appendChild(modal); window.currentModal = modal; window.currentDeviceCat = catName; window.currentDeviceIdx = idx;
+            const imageInput = document.getElementById('devIconImage');
+            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('devIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;max-height:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'equipment' }) }); const data = await response.json(); if (data.success) { window.tempDeviceIconFile = data.filename; showToast('✅ Ícone do dispositivo enviado com sucesso!'); } } }; }
         }
+        
+        window.applyDeviceIcon = async (catName, idx) => {
+            const emoji = document.getElementById('devEmoji').value; const iconFile = window.tempDeviceIconFile || categories[catName].devices[idx].iconFile || null; const device = categories[catName].devices[idx];
+            if (emoji) { device.icon = emoji; device.iconFile = null; } else if (iconFile) { device.iconFile = iconFile; device.icon = null; }
+            window.tempDeviceIconFile = null; saveUserData(); await saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ Ícone do dispositivo "${device.name}" atualizado!`);
+        };
+        
+        function openCustomDeviceIconModal(idx) {
+            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem alterar ícones de dispositivos'); return; }
+            const device = customDevices[idx];
+            const modal = document.createElement('div'); modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3 style="color:var(--text-accent);">🎨 Ícone do Dispositivo: ${device.name}</h3>
+                    <p>Escolha um novo ícone para o dispositivo. Isso será visível para todos os usuários.</p>
+                    <div class="property-group"><label>Use um emoji</label><input type="text" id="devEmoji" placeholder="📹" value="${device.icon || '📦'}" maxlength="2"></div>
+                    <div class="property-group"><label>OU faça upload de uma imagem</label><input type="file" id="devIconImage" accept="image/*"><div class="image-preview" id="devIconPreview">${device.iconFile ? `<img src="/uploads/icons/${device.iconFile}" style="max-width:50px;max-height:50px;">` : ''}</div></div>
+                    <div class="modal-buttons"><button class="btn btn-primary" onclick="applyCustomDeviceIcon(${idx})">✅ Aplicar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div>
+                </div>`;
+            document.body.appendChild(modal); window.currentModal = modal; window.currentCustomDeviceIdx = idx;
+            const imageInput = document.getElementById('devIconImage');
+            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('devIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;max-height:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'equipment' }) }); const data = await response.json(); if (data.success) { window.tempDeviceIconFile = data.filename; showToast('✅ Ícone do dispositivo enviado com sucesso!'); } } }; }
+        }
+        
+        window.applyCustomDeviceIcon = async (idx) => {
+            const emoji = document.getElementById('devEmoji').value; const iconFile = window.tempDeviceIconFile || customDevices[idx].iconFile || null; const device = customDevices[idx];
+            if (emoji) { device.icon = emoji; device.iconFile = null; } else if (iconFile) { device.iconFile = iconFile; device.icon = null; }
+            window.tempDeviceIconFile = null; saveUserData(); await saveGlobalLibrary(); closeModal(); renderPalette(); showToast(`✅ Ícone do dispositivo "${device.name}" atualizado!`);
+        };
         
         function applyZoomToCanvas() { canvas.style.transform = `scale(${zoom})`; canvas.style.transformOrigin = '0 0'; }
         function iconZoomIn() { iconSize = Math.min(iconSize + 4, 80); saveUserData(); showToast(`🔍 Tamanho do ícone: ${iconSize}px`); }
@@ -1633,7 +1425,6 @@ HTML_TEMPLATE = """
         function showToast(message) { const toast = document.createElement('div'); toast.className = 'toast'; toast.textContent = message; document.body.appendChild(toast); setTimeout(() => toast.remove(), 3000); }
         function closeModal() { if(window.currentModal) { document.body.removeChild(window.currentModal); window.currentModal = null; } }
         
-        // ==================== BACKGROUND ====================
         function drawGrid() {
             if(!showGrid) return;
             const step = 50; ctx.save(); ctx.strokeStyle = '#e0e0e0'; ctx.lineWidth = 0.5;
@@ -1688,210 +1479,29 @@ HTML_TEMPLATE = """
             ctx.shadowBlur = 0; ctx.restore();
         }
         
-        // ==================== CONEXÕES COM CURVAS (WAYPOINTS) ====================
-        function getConnectionPath(conn) {
-            const fromComp = components.find(c => c.id === conn.from);
-            const toComp = components.find(c => c.id === conn.to);
-            if(!fromComp || !toComp) return null;
-            
-            const points = [{x: fromComp.x, y: fromComp.y}];
-            if (conn.waypoints && conn.waypoints.length > 0) {
-                conn.waypoints.forEach(wp => points.push({x: wp.x, y: wp.y}));
-            }
-            points.push({x: toComp.x, y: toComp.y});
-            return points;
-        }
-        
-        function getPointOnPath(points, t) {
-            // Calcula ponto em uma polyline com curvas suaves (Catmull-Rom convertido para Bezier)
-            if (points.length === 2) {
-                return {
-                    x: points[0].x + (points[1].x - points[0].x) * t,
-                    y: points[0].y + (points[1].y - points[0].y) * t
-                };
-            }
-            
-            // Para múltiplos pontos, usa interpolação ao longo do comprimento
-            let totalLength = 0;
-            const segments = [];
-            for (let i = 0; i < points.length - 1; i++) {
-                const dx = points[i+1].x - points[i].x;
-                const dy = points[i+1].y - points[i].y;
-                const len = Math.sqrt(dx*dx + dy*dy);
-                segments.push({len, start: totalLength});
-                totalLength += len;
-            }
-            
-            const targetLen = t * totalLength;
-            for (let i = 0; i < segments.length; i++) {
-                if (targetLen <= segments[i].start + segments[i].len) {
-                    const localT = (targetLen - segments[i].start) / segments[i].len;
-                    return {
-                        x: points[i].x + (points[i+1].x - points[i].x) * localT,
-                        y: points[i].y + (points[i+1].y - points[i].y) * localT
-                    };
-                }
-            }
-            return points[points.length - 1];
-        }
-        
-        function drawSmoothPath(points, color, lineWidth, dashPattern) {
-            ctx.save();
-            if (dashPattern) ctx.setLineDash(dashPattern);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = lineWidth;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            
-            if (points.length === 2) {
-                // Linha reta simples
-                ctx.beginPath();
-                ctx.moveTo(points[0].x, points[0].y);
-                ctx.lineTo(points[1].x, points[1].y);
-                ctx.stroke();
-            } else {
-                // Curva suave passando por todos os waypoints (Catmull-Rom -> Bezier)
-                ctx.beginPath();
-                ctx.moveTo(points[0].x, points[0].y);
-                
-                for (let i = 0; i < points.length - 1; i++) {
-                    const p0 = points[i === 0 ? 0 : i - 1];
-                    const p1 = points[i];
-                    const p2 = points[i + 1];
-                    const p3 = points[i + 2 >= points.length ? points.length - 1 : i + 2];
-                    
-                    // Catmull-Rom to Bezier conversion
-                    const cp1x = p1.x + (p2.x - p0.x) / 6;
-                    const cp1y = p1.y + (p2.y - p0.y) / 6;
-                    const cp2x = p2.x - (p3.x - p1.x) / 6;
-                    const cp2y = p2.y - (p3.y - p1.y) / 6;
-                    
-                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
-                }
-                ctx.stroke();
-            }
-            ctx.restore();
-        }
-        
-        function drawWaypointHandles(connIdx) {
-            const conn = connections[connIdx];
-            if (!conn || !conn.waypoints) return;
-            
-            conn.waypoints.forEach((wp, wpIdx) => {
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(wp.x, wp.y, 7, 0, 2 * Math.PI);
-                ctx.fillStyle = (selectedWaypointIndex === wpIdx) ? '#00ccff' : '#ffaa00';
-                ctx.fill();
-                ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-                ctx.restore();
-            });
-        }
-        
         function drawConnections() {
             connections.forEach((conn, idx) => {
                 const fromComp = components.find(c => c.id === conn.from); const toComp = components.find(c => c.id === conn.to);
                 if(!fromComp || !toComp) return;
                 const cableInfo = cableColors[conn.type] || cableColors['cat6']; if (!cableInfo) return;
                 const isWireless = cableInfo.type === 'wireless'; const isSelected = (selectedConnectionIndex === idx);
-                
-                const pathPoints = getConnectionPath(conn);
-                if (!pathPoints) return;
-                
                 ctx.save();
-                
                 if(isWireless) {
-                    // Conexões wireless sempre retas (sem waypoints)
-                    ctx.setLineDash([10, 8]);
-                    ctx.strokeStyle = cableInfo.color;
-                    ctx.lineWidth = isSelected ? 4 : 2;
-                    ctx.beginPath();
-                    ctx.moveTo(fromComp.x, fromComp.y);
-                    ctx.lineTo(toComp.x, toComp.y);
-                    ctx.stroke();
-                    
+                    ctx.setLineDash(cableInfo.dashPattern || [10, 8]); ctx.strokeStyle = cableInfo.color; ctx.lineWidth = isSelected ? 4 : 2;
+                    ctx.beginPath(); ctx.moveTo(fromComp.x, fromComp.y); ctx.lineTo(toComp.x, toComp.y); ctx.stroke();
                     if (cableInfo.animation === 'wave') {
-                        for(let i = 0; i < 2; i++) { 
-                            const t = (trafficAnimation + i * 0.4) % 1; 
-                            drawWirelessAnimationOnLine(fromComp.x, fromComp.y, toComp.x, toComp.y, conn.type, t); 
-                        }
+                        for(let i = 0; i < 2; i++) { const t = (trafficAnimation + i * 0.4) % 1; drawWirelessAnimationOnLine(fromComp.x, fromComp.y, toComp.x, toComp.y, conn.type, t); }
                     } else {
-                        for(let i = 0; i < 3; i++) { 
-                            const t = (trafficAnimation + i * 0.25) % 1; 
-                            drawWirelessAnimationOnLine(fromComp.x, fromComp.y, toComp.x, toComp.y, conn.type, t); 
-                        }
+                        for(let i = 0; i < 3; i++) { const t = (trafficAnimation + i * 0.25) % 1; drawWirelessAnimationOnLine(fromComp.x, fromComp.y, toComp.x, toComp.y, conn.type, t); }
                     }
                 } else {
-                    // Conexões cabeadas: suportam waypoints (curvas)
-                    const hasWaypoints = conn.waypoints && conn.waypoints.length > 0;
-                    
-                    if (hasWaypoints) {
-                        // Desenha com curvas suaves
-                        drawSmoothPath(pathPoints, cableInfo.color, isSelected ? 4 : 3, null);
-                    } else {
-                        // Linha reta
-                        ctx.setLineDash([]);
-                        ctx.beginPath();
-                        ctx.moveTo(fromComp.x, fromComp.y);
-                        ctx.lineTo(toComp.x, toComp.y);
-                        ctx.strokeStyle = cableInfo.color;
-                        ctx.lineWidth = isSelected ? 4 : 2;
-                        ctx.stroke();
-                    }
-                    
-                    // Animação de tráfego ao longo da curva
-                    const t = trafficAnimation;
-                    const point = getPointOnPath(pathPoints, t);
-                    ctx.beginPath();
-                    ctx.arc(point.x, point.y, 4, 0, 2*Math.PI);
-                    ctx.fillStyle = cableInfo.color;
-                    ctx.shadowBlur = 6;
-                    ctx.shadowColor = cableInfo.color;
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-                    
-                    // Indicador visual de que pode ser curvado (pequenos círculos no meio)
-                    if (!hasWaypoints && isSelected) {
-                        const midPoint = getPointOnPath(pathPoints, 0.5);
-                        ctx.beginPath();
-                        ctx.arc(midPoint.x, midPoint.y, 6, 0, 2 * Math.PI);
-                        ctx.fillStyle = 'rgba(255, 170, 0, 0.7)';
-                        ctx.fill();
-                        ctx.strokeStyle = '#ffffff';
-                        ctx.lineWidth = 1.5;
-                        ctx.stroke();
-                    }
-                    
-                    // Desenha handles dos waypoints se selecionado
-                    if (isSelected && hasWaypoints) {
-                        drawWaypointHandles(idx);
-                    }
+                    ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(fromComp.x, fromComp.y); ctx.lineTo(toComp.x, toComp.y); ctx.strokeStyle = cableInfo.color; ctx.lineWidth = isSelected ? 4 : 2; ctx.stroke();
+                    const t = trafficAnimation; const x = fromComp.x + (toComp.x - fromComp.x) * t; const y = fromComp.y + (toComp.y - fromComp.y) * t;
+                    ctx.beginPath(); ctx.arc(x, y, 4, 0, 2*Math.PI); ctx.fillStyle = cableInfo.color; ctx.fill();
                 }
-                
-                // Label da conexão
-                ctx.fillStyle = '#6c757d'; 
-                ctx.font = `${9}px Arial`; 
-                const iconDisplay = cableInfo.iconFile ? '🖼️' : cableInfo.icon;
-                const labelPoint = hasWaypoints ? getPointOnPath(pathPoints, 0.5) : {x: (fromComp.x+toComp.x)/2, y: (fromComp.y+toComp.y)/2};
-                ctx.fillText(`${iconDisplay} ${cableInfo.name}`, labelPoint.x - 20, labelPoint.y - 8);
-                
-                if(isSelected) { 
-                    ctx.strokeStyle = '#005f99'; 
-                    ctx.lineWidth = 1.5; 
-                    ctx.setLineDash([5, 5]); 
-                    if (hasWaypoints) {
-                        drawSmoothPath(pathPoints, '#005f99', 1.5, [5, 5]);
-                    } else {
-                        ctx.beginPath();
-                        ctx.moveTo(fromComp.x, fromComp.y);
-                        ctx.lineTo(toComp.x, toComp.y);
-                        ctx.stroke();
-                    }
-                    ctx.setLineDash([]); 
-                }
-                
+                ctx.fillStyle = '#6c757d'; ctx.font = `${9}px Arial`; const iconDisplay = cableInfo.iconFile ? '🖼️' : cableInfo.icon;
+                ctx.fillText(`${iconDisplay} ${cableInfo.name}`, (fromComp.x+toComp.x)/2 - 20, (fromComp.y+toComp.y)/2 - 5);
+                if(isSelected) { ctx.strokeStyle = '#005f99'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.moveTo(fromComp.x, fromComp.y); ctx.lineTo(toComp.x, toComp.y); ctx.stroke(); ctx.setLineDash([]); }
                 ctx.restore();
             });
             trafficAnimation = (trafficAnimation + 0.015) % 1;
@@ -2014,30 +1624,7 @@ HTML_TEMPLATE = """
             const dx = px - xx; const dy = py - yy; return Math.sqrt(dx * dx + dy * dy);
         }
         
-        function distanceToPolyline(px, py, points) {
-            let minDist = Infinity;
-            for (let i = 0; i < points.length - 1; i++) {
-                const dist = pointToLineDistance(px, py, points[i].x, points[i].y, points[i+1].x, points[i+1].y);
-                if (dist < minDist) minDist = dist;
-            }
-            return minDist;
-        }
-        
-        function isPointNearConnection(x, y, conn) {
-            const pathPoints = getConnectionPath(conn);
-            if (!pathPoints) return false;
-            return distanceToPolyline(x, y, pathPoints) < 12;
-        }
-        
-        function findWaypointAtPosition(x, y, connIdx) {
-            const conn = connections[connIdx];
-            if (!conn || !conn.waypoints) return -1;
-            for (let i = 0; i < conn.waypoints.length; i++) {
-                const wp = conn.waypoints[i];
-                if (Math.hypot(x - wp.x, y - wp.y) < 12) return i;
-            }
-            return -1;
-        }
+        function isPointNearConnection(x, y, fromComp, toComp) { const dist = pointToLineDistance(x, y, fromComp.x, fromComp.y, toComp.x, toComp.y); return dist < 12; }
         
         function isPointOnShape(x, y, shape) {
             if(shape.type === 'line') { return pointToLineDistance(x, y, shape.x1, shape.y1, shape.x2, shape.y2) < 8; }
@@ -2050,29 +1637,6 @@ HTML_TEMPLATE = """
         function handleStart(e) {
             e.preventDefault(); const {x, y} = getMousePos(e); lastMousePos = {x, y};
             if(shapeMode) { shapeStart = {x, y}; drawingPreview = true; return; }
-            
-            // Primeiro: verifica se clicou em um waypoint de conexão selecionada
-            if (selectedConnectionIndex !== null) {
-                const wpIdx = findWaypointAtPosition(x, y, selectedConnectionIndex);
-                if (wpIdx !== -1) {
-                    draggingWaypoint = true;
-                    waypointConnectionIndex = selectedConnectionIndex;
-                    waypointIndex = wpIdx;
-                    return;
-                }
-                
-                // Verifica se clicou no meio do cabo selecionado para adicionar waypoint
-                const conn = connections[selectedConnectionIndex];
-                if (conn && isPointNearConnection(x, y, conn)) {
-                    if (!conn.waypoints) conn.waypoints = [];
-                    conn.waypoints.push({x, y});
-                    conn.curved = true;
-                    saveUserData();
-                    showToast('✅ Ponto de curva adicionado! Arraste para curvar o cabo.');
-                    return;
-                }
-            }
-            
             let clickedComp = null;
             for(let i=components.length-1; i>=0; i--) { const comp = components[i]; if(Math.hypot(x - comp.x, y - comp.y) < iconSize/2) { clickedComp = comp; break; } }
             if(clickedComp) {
@@ -2080,7 +1644,6 @@ HTML_TEMPLATE = """
                 else { selectedComponents = [clickedComp]; dragging = true; dragOffset = {x: clickedComp.x - x, y: clickedComp.y - y}; isBackgroundSelected = false; selectedShapes = []; selectedConnectionIndex = null; document.getElementById('deleteShapeBtn').style.display = 'none'; }
                 showProperties(clickedComp); openProperties(); e.preventDefault(); return;
             }
-            
             let clickedShape = null;
             for(let i=shapes.length-1; i>=0; i--) { const shape = shapes[i]; if(isPointOnShape(x, y, shape)) { clickedShape = shape; break; } }
             if(clickedShape) {
@@ -2088,33 +1651,14 @@ HTML_TEMPLATE = """
                 else { selectedShapes = [clickedShape]; dragging = true; if(clickedShape.type === 'line') { dragOffset = {x: clickedShape.x1 - x, y: clickedShape.y1 - y}; } else { dragOffset = {x: clickedShape.x - x, y: clickedShape.y - y}; } selectedComponents = []; selectedConnectionIndex = null; }
                 showShapeProperties(clickedShape); openProperties(); e.preventDefault(); return;
             }
-            
             let clickedConnection = null;
-            for(let i = 0; i < connections.length; i++) { 
-                const conn = connections[i]; 
-                if(isPointNearConnection(x, y, conn)) { 
-                    clickedConnection = { index: i, conn: conn }; 
-                    break; 
-                } 
-            }
+            for(let i = 0; i < connections.length; i++) { const conn = connections[i]; const fromComp = components.find(c => c.id === conn.from); const toComp = components.find(c => c.id === conn.to); if(fromComp && toComp) { if(isPointNearConnection(x, y, fromComp, toComp)) { clickedConnection = { index: i, conn: conn }; break; } } }
             if(clickedConnection) {
-                if(e.ctrlKey || e.metaKey || (e.touches && e.touches.length > 1)) { 
-                    if(selectedConnectionIndex === clickedConnection.index) { selectedConnectionIndex = null; } 
-                    else { selectedConnectionIndex = clickedConnection.index; } 
-                    selectedComponents = []; selectedShapes = []; 
-                }
-                else { 
-                    selectedConnectionIndex = clickedConnection.index; 
-                    selectedComponents = []; selectedShapes = []; 
-                }
-                if(selectedConnectionIndex !== null) { 
-                    showConnectionProperties(selectedConnectionIndex); openProperties(); 
-                } else { 
-                    showProperties(null); closeProperties(); 
-                }
+                if(e.ctrlKey || e.metaKey || (e.touches && e.touches.length > 1)) { if(selectedConnectionIndex === clickedConnection.index) { selectedConnectionIndex = null; } else { selectedConnectionIndex = clickedConnection.index; } selectedComponents = []; selectedShapes = []; }
+                else { selectedConnectionIndex = clickedConnection.index; selectedComponents = []; selectedShapes = []; }
+                if(selectedConnectionIndex !== null) { showConnectionProperties(selectedConnectionIndex); openProperties(); } else { showProperties(null); closeProperties(); }
                 e.preventDefault(); return;
             }
-            
             if(backgroundWidth > 0 && backgroundHeight > 0) {
                 const handleSize = 12;
                 const isOnNW = (x >= backgroundX - handleSize && x <= backgroundX + handleSize && y >= backgroundY - handleSize && y <= backgroundY + handleSize);
@@ -2141,18 +1685,6 @@ HTML_TEMPLATE = """
             let clientX, clientY;
             if (e.touches) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; } else { clientX = e.clientX; clientY = e.clientY; }
             const {x, y} = getMousePos(e); lastMousePos = {x, y};
-            
-            // Arrastar waypoint
-            if (draggingWaypoint && waypointConnectionIndex !== null && waypointIndex !== null) {
-                const conn = connections[waypointConnectionIndex];
-                if (conn && conn.waypoints && conn.waypoints[waypointIndex]) {
-                    conn.waypoints[waypointIndex].x = x;
-                    conn.waypoints[waypointIndex].y = y;
-                    saveUserData();
-                }
-                return;
-            }
-            
             if(isResizingBackground && resizeHandle) {
                 const dx = (clientX - resizeStart.x); const dy = (clientY - resizeStart.y);
                 let newWidth = resizeStart.width; let newHeight = resizeStart.height; let newX = resizeStart.bgX; let newY = resizeStart.bgY;
@@ -2179,7 +1711,6 @@ HTML_TEMPLATE = """
         function handleEnd(e) {
             if(shapeMode && shapeStart) { const {x, y} = getMousePos(e); endShape(shapeStart, {x, y}, shapeMode); shapeStart = null; drawingPreview = false; return; }
             currentAngleHandle = null; dragging = false; isDraggingBackgroundImage = false; isResizingBackground = false; resizeHandle = null;
-            draggingWaypoint = false; waypointConnectionIndex = null; waypointIndex = null;
             if(isSelecting) endSelection();
             if(isDrawingConnection && connectionStart) { showToast('Clique em um equipamento para conectar'); }
             isDrawingConnection = false; connectionStart = null;
@@ -2200,7 +1731,7 @@ HTML_TEMPLATE = """
             }
             for(let comp of components) { if(Math.hypot(x - comp.x, y - comp.y) < iconSize/2) { showContextMenu(e, comp); return; } }
             for(let shape of shapes) { if(isPointOnShape(x, y, shape)) { showShapeContextMenu(e, shape); return; } }
-            for(let i = 0; i < connections.length; i++) { const conn = connections[i]; if(isPointNearConnection(x, y, conn)) { showConnectionContextMenu(e, conn, i); return; } }
+            for(let i = 0; i < connections.length; i++) { const conn = connections[i]; const fromComp = components.find(c => c.id === conn.from); const toComp = components.find(c => c.id === conn.to); if(fromComp && toComp) { if(isPointNearConnection(x, y, fromComp, toComp)) { showConnectionContextMenu(e, conn, i); return; } } }
         }
         
         function showContextMenu(e, comp) {
@@ -2211,6 +1742,7 @@ HTML_TEMPLATE = """
             setTimeout(() => document.addEventListener('click', () => menu.style.display = 'none', {once: true}), 100);
         }
         
+        window.openPermanentIconModalFromMenu = () => { if(contextMenuComponent) openPermanentIconModal(contextMenuComponent); document.getElementById('contextMenu').style.display = 'none'; };
         window.accessDeviceFromMenu = () => { if(contextMenuComponent) accessDevice(contextMenuComponent); document.getElementById('contextMenu').style.display = 'none'; };
         window.copyIpFromMenu = () => { if(contextMenuComponent && contextMenuComponent.ip) { navigator.clipboard.writeText(contextMenuComponent.ip); showToast(`📋 IP ${contextMenuComponent.ip} copiado!`); } else { showToast('Nenhum IP configurado'); } document.getElementById('contextMenu').style.display = 'none'; };
         window.rotateLeftFromMenu = () => { if(contextMenuComponent) rotateComponent(contextMenuComponent, -15); document.getElementById('contextMenu').style.display = 'none'; };
@@ -2218,7 +1750,6 @@ HTML_TEMPLATE = """
         window.flipComponentFromMenu = () => { if(contextMenuComponent) flipComponent(contextMenuComponent); document.getElementById('contextMenu').style.display = 'none'; };
         window.deleteComponentFromMenu = () => { if(contextMenuComponent) { connections = connections.filter(c => c.from !== contextMenuComponent.id && c.to !== contextMenuComponent.id); components = components.filter(c => c.id !== contextMenuComponent.id); selectedComponents = selectedComponents.filter(c => c.id !== contextMenuComponent.id); showProperties(null); if(selectedComponents.length === 0 && selectedShapes.length === 0 && selectedConnectionIndex === null) closeProperties(); showToast(`🗑 ${contextMenuComponent.name} removido!`); saveUserData(); } document.getElementById('contextMenu').style.display = 'none'; };
         window.duplicateComponentFromMenu = () => { if(contextMenuComponent) { const newComp = JSON.parse(JSON.stringify(contextMenuComponent)); newComp.id = Date.now(); newComp.x += 30; newComp.y += 30; if(newComp.type === 'camera') { newComp.angle = newComp.angle || 0; newComp.fov = newComp.fov || 80; } components.push(newComp); showToast(`📋 ${contextMenuComponent.name} duplicado!`); saveUserData(); } document.getElementById('contextMenu').style.display = 'none'; };
-        window.openPermanentIconModalFromMenu = () => { if(contextMenuComponent) openPermanentIconModal(contextMenuComponent); document.getElementById('contextMenu').style.display = 'none'; };
         
         function showShapeContextMenu(e, shape) {
             e.preventDefault(); contextMenuShape = shape;
@@ -2238,37 +1769,12 @@ HTML_TEMPLATE = """
         function showConnectionContextMenu(e, conn, idx) {
             e.preventDefault(); contextMenuConnection = { conn, idx };
             const menu = document.getElementById('contextMenu');
-            menu.innerHTML = `<div class="context-menu-item" onclick="editConnectionFromMenu()">✏️ Editar Conexão</div><div class="context-menu-item" onclick="addWaypointFromMenu()">📐 Curvar Cabo (Adicionar Ponto)</div><div class="context-menu-item" onclick="resetConnectionCurveFromMenu()">📏 Endireitar Cabo</div><div class="context-menu-item" onclick="deleteConnectionFromMenu()">🗑 Excluir Conexão</div>`;
+            menu.innerHTML = `<div class="context-menu-item" onclick="editConnectionFromMenu()">✏️ Editar Conexão</div><div class="context-menu-item" onclick="deleteConnectionFromMenu()">🗑 Excluir Conexão</div>`;
             menu.style.display = 'block'; menu.style.left = e.pageX + 'px'; menu.style.top = e.pageY + 'px';
             setTimeout(() => document.addEventListener('click', () => menu.style.display = 'none', {once: true}), 100);
         }
         
         window.editConnectionFromMenu = () => { if(contextMenuConnection) { selectedConnectionIndex = contextMenuConnection.idx; showConnectionProperties(selectedConnectionIndex); openProperties(); } document.getElementById('contextMenu').style.display = 'none'; };
-        window.addWaypointFromMenu = () => { 
-            if(contextMenuConnection) {
-                const conn = contextMenuConnection.conn;
-                const pathPoints = getConnectionPath(conn);
-                if (pathPoints) {
-                    const mid = getPointOnPath(pathPoints, 0.5);
-                    if (!conn.waypoints) conn.waypoints = [];
-                    conn.waypoints.push({x: mid.x, y: mid.y});
-                    conn.curved = true;
-                    selectedConnectionIndex = contextMenuConnection.idx;
-                    saveUserData();
-                    showToast('✅ Ponto de curva adicionado! Arraste o ponto laranja para ajustar.');
-                }
-            }
-            document.getElementById('contextMenu').style.display = 'none'; 
-        };
-        window.resetConnectionCurveFromMenu = () => {
-            if(contextMenuConnection) {
-                contextMenuConnection.conn.waypoints = [];
-                contextMenuConnection.conn.curved = false;
-                saveUserData();
-                showToast('📏 Cabo endireitado!');
-            }
-            document.getElementById('contextMenu').style.display = 'none';
-        };
         window.deleteConnectionFromMenu = () => { if(contextMenuConnection) { connections.splice(contextMenuConnection.idx, 1); selectedConnectionIndex = null; showToast('✅ Conexão removida!'); saveUserData(); } document.getElementById('contextMenu').style.display = 'none'; };
         
         function startSelection(e) { isSelecting = true; const {x, y} = getMousePos(e); selectionStart = {x, y}; selectionEnd = {x, y}; document.getElementById('selectionRect').style.display = 'block'; }
@@ -2300,14 +1806,15 @@ HTML_TEMPLATE = """
                 <div class="property-group"><label>Posição X</label><input type="number" id="prop-x" value="${Math.round(comp.x)}"></div>
                 <div class="property-group"><label>Posição Y</label><input type="number" id="prop-y" value="${Math.round(comp.y)}"></div>
                 <div class="property-group"><label>🔄 Rotação</label><input type="range" id="prop-rotation" min="0" max="360" value="${comp.rotation || 0}"><span id="rotation-val">${Math.round(comp.rotation || 0)}°</span></div>
+                <div class="property-group"><label>🔁 Inverter Posição</label><button class="btn btn-secondary" onclick="flipComponentById(${comp.id})" style="width:100%;">🔄 Inverter (180°)</button></div>
                 <div class="property-group"><label>🌐 Endereço IP</label><input type="text" id="prop-ip" value="${comp.ip || ''}" placeholder="192.168.1.100"></div>
                 <div class="property-group"><label>🔌 Porta</label><input type="number" id="prop-port" value="${comp.port || 80}" placeholder="80"></div>
                 <div class="property-group"><label>👤 Usuário</label><input type="text" id="prop-user" value="${comp.username || ''}" placeholder="admin"></div>
                 <div class="property-group"><label>🔑 Senha</label><input type="password" id="prop-pass" value="${comp.password || ''}"></div>
                 ${comp.type === 'camera' ? `<div class="property-group"><label>Ângulo (graus)</label><input type="range" id="prop-angle" min="0" max="360" value="${comp.angle || 0}"><span id="angle-val">${Math.round(comp.angle || 0)}°</span></div><div class="property-group"><label>Campo Visão (graus)</label><input type="range" id="prop-fov" min="20" max="120" value="${comp.fov || 80}"><span id="fov-val">${Math.round(comp.fov || 80)}°</span></div>` : ''}
-                <div class="property-group"><label>🖼️ Ícone Personalizado (Permanente)</label><input type="file" id="prop-image" accept="image/*"><div class="image-preview" id="prop-image-preview">${comp.iconFile ? `<img src="/uploads/icons/${comp.iconFile}" style="max-width:50px;max-height:50px;">` : ''}</div></div>
+                <div class="property-group"><label>🖼️ Ícone Personalizado (Permanente - visível para todos)</label><input type="file" id="prop-image" accept="image/*"><div class="image-preview" id="prop-image-preview">${comp.iconFile ? `<img src="/uploads/icons/${comp.iconFile}" style="max-width:50px;max-height:50px;">` : ''}</div></div>
                 <div class="property-group"><label>🔌 Conectar a</label><select id="prop-connect"><option value="">-- Selecione --</option>${components.filter(c => c.id !== comp.id).map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select><select id="prop-cable-type">${Object.entries(cableColors).map(([key, value]) => `<option value="${key}">${value.icon} ${value.name} - ${value.speed}</option>`).join('')}</select><button class="btn btn-primary" style="margin-top:5px;" onclick="addConnection(${comp.id})">➕ Conectar</button></div>
-                <div class="modal-buttons"><button class="btn btn-info" onclick="accessDeviceById(${comp.id})">🌐 Acessar</button><button class="btn btn-warning" onclick="rotateLeft(${comp.id})">🔄 Girar Esquerda</button><button class="btn btn-warning" onclick="rotateRight(${comp.id})">🔄 Girar Direita</button><button class="btn btn-danger" onclick="deleteComponent(${comp.id})">🗑 Remover</button><button class="btn btn-secondary" onclick="openPermanentIconModalById(${comp.id})">🎨 Ícone Permanente</button></div>
+                <div class="modal-buttons"><button class="btn btn-info" onclick="accessDeviceById(${comp.id})">🌐 Acessar</button><button class="btn btn-warning" onclick="rotateLeft(${comp.id})">🔄 Girar Esquerda</button><button class="btn btn-warning" onclick="rotateRight(${comp.id})">🔄 Girar Direita</button><button class="btn btn-secondary" onclick="flipComponentById(${comp.id})">🔁 Inverter Posição</button><button class="btn btn-danger" onclick="deleteComponent(${comp.id})">🗑 Remover</button><button class="btn btn-secondary" onclick="openPermanentIconModalById(${comp.id})">🎨 Ícone Permanente</button></div>
             `;
             const rotationSlider = document.getElementById('prop-rotation'); if(rotationSlider) { rotationSlider.oninput = (e) => { comp.rotation = parseInt(e.target.value); document.getElementById('rotation-val').innerText = comp.rotation + '°'; saveUserData(); }; }
             if(comp.type === 'camera') { const angleSlider = document.getElementById('prop-angle'); const fovSlider = document.getElementById('prop-fov'); if(angleSlider) { angleSlider.oninput = (e) => { comp.angle = parseInt(e.target.value); document.getElementById('angle-val').innerText = comp.angle + '°'; saveUserData(); }; } if(fovSlider) { fovSlider.oninput = (e) => { comp.fov = parseInt(e.target.value); document.getElementById('fov-val').innerText = comp.fov + '°'; saveUserData(); }; } }
@@ -2329,7 +1836,7 @@ HTML_TEMPLATE = """
                 <div class="property-group"><label>Tipo</label><input type="text" value="${getShapeName(shape.type)}" disabled></div>
                 <div class="property-group"><label>Cor da Linha</label><input type="color" id="shape-stroke" value="${shape.strokeColor || '#005f99'}"></div>
                 <div class="property-group"><label>Espessura da Linha</label><input type="range" id="shape-linewidth" min="1" max="10" value="${shape.lineWidth || 2}"></div>
-                ${shape.type === 'text' ? `<div class="property-group"><label>Texto</label><input type="text" id="shape-text" value="${shape.text || ''}"></div><div class="property-group"><label>Tamanho da Fonte</label><input type="number" id="shape-fontsize" value="${shape.fontSize || 14}"></div><div class="property-group"><label>Cor do Texto</label><input type="color" id="shape-textcolor" value="${shape.textColor || '#212529'}"></div>` : `<div class="property-group"><label>🔄 Rotação</label><input type="range" id="shape-rotation" min="0" max="360" value="${shape.rotation || 0}"><span id="rotation-val">${Math.round(shape.rotation || 0)}°</span></div>`}
+                ${shape.type === 'text' ? `<div class="property-group"><label>Texto</label><input type="text" id="shape-text" value="${shape.text || ''}"></div><div class="property-group"><label>Tamanho da Fonte</label><input type="number" id="shape-fontsize" value="${shape.fontSize || 14}"></div><div class="property-group"><label>Cor do Texto</label><input type="color" id="shape-textcolor" value="${shape.textColor || '#212529'}"></div>` : `<div class="property-group"><label>🔄 Rotação</label><input type="range" id="shape-rotation" min="0" max="360" value="${shape.rotation || 0}"><span id="rotation-val">${Math.round(shape.rotation || 0)}°</span></div><div class="property-group"><label>🔁 Inverter Posição</label><button class="btn btn-secondary" onclick="flipShape(${shape.id})" style="width:100%;">🔄 Inverter (180°)</button></div>`}
                 <div class="property-group"><label>Posição X</label><input type="number" id="shape-x" value="${Math.round(shape.x || shape.x1 || 0)}"></div>
                 <div class="property-group"><label>Posição Y</label><input type="number" id="shape-y" value="${Math.round(shape.y || shape.y1 || 0)}"></div>
                 <div class="modal-buttons"><button class="btn btn-danger" onclick="deleteShape(${shape.id})">🗑 Excluir Forma</button><button class="btn btn-secondary" onclick="duplicateShape(${shape.id})">📋 Duplicar Forma</button></div>
@@ -2346,57 +1853,8 @@ HTML_TEMPLATE = """
             const div = document.getElementById('props-content'); const conn = connections[connIdx];
             if(!conn) { div.innerHTML = '<p style="color:#6c757d;">Clique em uma conexão para editar</p>'; return; }
             const fromComp = components.find(c => c.id === conn.from); const toComp = components.find(c => c.id === conn.to); if(!fromComp || !toComp) return;
-            const cableInfo = cableColors[conn.type] || cableColors['cat6'];
-            const isCable = cableInfo && cableInfo.type === 'cable';
-            const wpCount = conn.waypoints ? conn.waypoints.length : 0;
-            
-            div.innerHTML = `
-                <div class="property-group"><label>Conexão</label><input type="text" value="${fromComp.name} → ${toComp.name}" disabled></div>
-                <div class="property-group"><label>Tipo de Cabo</label><select id="conn-cable-type" style="width:100%; padding:8px; background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:5px;">${Object.entries(cableColors).map(([key, value]) => `<option value="${key}" ${conn.type === key ? 'selected' : ''}>${value.icon} ${value.name} - ${value.speed}</option>`).join('')}</select></div>
-                
-                ${isCable ? `
-                <div class="property-group" style="background: rgba(255,170,0,0.1); padding: 10px; border-radius: 8px; border-left: 3px solid #ffaa00;">
-                    <label style="color: #cc8800;">📐 Curvar Cabo</label>
-                    <p style="font-size: 10px; color: #6c757d; margin-bottom: 8px;">Pontos de curva: <strong>${wpCount}</strong></p>
-                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                        <button class="btn btn-warning" onclick="addWaypointToConnection(${connIdx})" style="flex:1; font-size: 11px;">➕ Adicionar Ponto</button>
-                        <button class="btn btn-secondary" onclick="resetConnectionCurve(${connIdx})" style="flex:1; font-size: 11px;">📏 Endireitar</button>
-                    </div>
-                    <p style="font-size: 10px; color: #6c757d; margin-top: 8px;">💡 Clique no meio do cabo selecionado para adicionar pontos, depois arraste os pontos laranjas para curvar.</p>
-                </div>
-                ` : ''}
-                
-                <div class="modal-buttons">
-                    <button class="btn btn-primary" onclick="updateSelectedConnection(${connIdx})">✅ Atualizar</button>
-                    <button class="btn btn-danger" onclick="deleteSelectedConnection(${connIdx})">🗑 Excluir Conexão</button>
-                </div>
-            `;
+            div.innerHTML = `<div class="property-group"><label>Conexão</label><input type="text" value="${fromComp.name} → ${toComp.name}" disabled></div><div class="property-group"><label>Tipo de Cabo</label><select id="conn-cable-type" style="width:100%; padding:8px; background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:5px;">${Object.entries(cableColors).map(([key, value]) => `<option value="${key}" ${conn.type === key ? 'selected' : ''}>${value.icon} ${value.name} - ${value.speed}</option>`).join('')}</select></div><div class="modal-buttons"><button class="btn btn-primary" onclick="updateSelectedConnection(${connIdx})">✅ Atualizar</button><button class="btn btn-danger" onclick="deleteSelectedConnection(${connIdx})">🗑 Excluir Conexão</button></div>`;
         }
-        
-        window.addWaypointToConnection = (connIdx) => {
-            const conn = connections[connIdx];
-            if (!conn) return;
-            const pathPoints = getConnectionPath(conn);
-            if (pathPoints) {
-                const mid = getPointOnPath(pathPoints, 0.5);
-                if (!conn.waypoints) conn.waypoints = [];
-                conn.waypoints.push({x: mid.x, y: mid.y});
-                conn.curved = true;
-                showConnectionProperties(connIdx);
-                saveUserData();
-                showToast('✅ Ponto de curva adicionado! Arraste o ponto laranja no canvas.');
-            }
-        };
-        
-        window.resetConnectionCurve = (connIdx) => {
-            const conn = connections[connIdx];
-            if (!conn) return;
-            conn.waypoints = [];
-            conn.curved = false;
-            showConnectionProperties(connIdx);
-            saveUserData();
-            showToast('📏 Cabo endireitado!');
-        };
         
         window.updateSelectedConnection = (connIdx) => { const cableType = document.getElementById('conn-cable-type').value; connections[connIdx].type = cableType; selectedConnectionIndex = null; showProperties(null); closeProperties(); showToast(`✅ Conexão atualizada para ${cableType.toUpperCase()}!`); saveUserData(); };
         window.deleteSelectedConnection = (connIdx) => { if(confirm('Deseja excluir esta conexão?')) { connections.splice(connIdx, 1); selectedConnectionIndex = null; showProperties(null); closeProperties(); showToast(`✅ Conexão removida!`); saveUserData(); } };
@@ -2419,7 +1877,7 @@ HTML_TEMPLATE = """
         window.rotateRight = (id) => { const comp = components.find(c => c.id === id); if(comp) { rotateComponent(comp, 15); saveUserData(); } };
         window.accessDeviceById = (id) => { const comp = components.find(c => c.id === id); accessDevice(comp); };
         window.deleteComponent = (id) => { if(confirm('Deseja remover este equipamento?')) { connections = connections.filter(c => c.from !== id && c.to !== id); components = components.filter(c => c.id !== id); selectedComponents = selectedComponents.filter(c => c.id !== id); showProperties(null); if(selectedComponents.length === 0 && selectedShapes.length === 0 && selectedConnectionIndex === null) closeProperties(); showToast(`🗑 Equipamento removido!`); saveUserData(); } };
-        window.addConnection = (fromId) => { const toId = document.getElementById('prop-connect').value; const cableType = document.getElementById('prop-cable-type').value; if(toId) { connections.push({from: fromId, to: parseInt(toId), type: cableType, waypoints: [], curved: false}); const cableInfo = cableColors[cableType]; if(cableInfo && cableInfo.type === 'wireless') { const fromComp = components.find(c => c.id === fromId); const toComp = components.find(c => c.id === parseInt(toId)); if(fromComp && toComp) { showWirelessAnimation(fromComp.x, fromComp.y, cableType); setTimeout(() => showWirelessAnimation(toComp.x, toComp.y, cableType), 500); } } showToast(`✅ Conexão ${cableInfo ? cableInfo.name : cableType.toUpperCase()} adicionada!`); saveUserData(); } else { showToast('⚠️ Selecione um equipamento para conectar'); } };
+        window.addConnection = (fromId) => { const toId = document.getElementById('prop-connect').value; const cableType = document.getElementById('prop-cable-type').value; if(toId) { connections.push({from: fromId, to: parseInt(toId), type: cableType}); const cableInfo = cableColors[cableType]; if(cableInfo && cableInfo.type === 'wireless') { const fromComp = components.find(c => c.id === fromId); const toComp = components.find(c => c.id === parseInt(toId)); if(fromComp && toComp) { showWirelessAnimation(fromComp.x, fromComp.y, cableType); setTimeout(() => showWirelessAnimation(toComp.x, toComp.y, cableType), 500); } } showToast(`✅ Conexão ${cableInfo ? cableInfo.name : cableType.toUpperCase()} adicionada!`); saveUserData(); } else { showToast('⚠️ Selecione um equipamento para conectar'); } };
         
         function showWirelessAnimation(x, y, type) {
             const canvasRect = canvas.getBoundingClientRect(); const container = document.querySelector('.canvas-area');
@@ -2438,69 +1896,29 @@ HTML_TEMPLATE = """
         }
         
         window.confirmConnection = (fromId, toId) => {
-            const cableType = document.getElementById('cableSelect').value; connections.push({from: fromId, to: toId, type: cableType, waypoints: [], curved: false});
+            const cableType = document.getElementById('cableSelect').value; connections.push({from: fromId, to: toId, type: cableType});
             if(window.currentModal) { document.body.removeChild(window.currentModal); window.currentModal = null; }
             const cableInfo = cableColors[cableType]; if(cableInfo && cableInfo.type === 'wireless') { const fromComp = components.find(c => c.id === fromId); const toComp = components.find(c => c.id === toId); if(fromComp && toComp) { showWirelessAnimation(fromComp.x, fromComp.y, cableType); setTimeout(() => showWirelessAnimation(toComp.x, toComp.y, cableType), 500); } }
             showToast(`✅ Conexão ${cableInfo ? cableInfo.name : cableType.toUpperCase()} adicionada!`); saveUserData();
         };
         
-        // ==================== GERENCIAMENTO DE CONEXÕES PERSONALIZADAS ====================
-        function addCustomConnection(category, connData) {
-            if (!connectionCategories[category]) connectionCategories[category] = { icon: '🔌', connections: [] };
-            const key = getConnectionKey(connData.name);
-            connectionCategories[category].connections.push(connData);
-            cableColors[key] = { color: connData.color, name: connData.name, icon: connData.icon, type: connData.type || 'cable', speed: connData.speed || 'N/A', desc: connData.desc || '', animation: connData.animation || null, iconFile: connData.iconFile || null };
-            saveUserData(); saveGlobalLibrary(); renderConnectionsPalette();
-            showToast(`✅ Conexão "${connData.name}" adicionada!`);
+        function openPermanentIconModal(comp) {
+            const modal = document.createElement('div'); modal.className = 'modal';
+            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🎨 Alterar Ícone (Permanente)</h3><p>Equipamento: <strong>${comp.name}</strong></p><p style="font-size:12px;color:#6c757d;">Este ícone será salvo no servidor e visível para todos os usuários.</p><div class="property-group"><label>Escolha uma imagem</label><input type="file" id="permIconImage" accept="image/*"><div class="image-preview" id="permIconPreview"></div></div><div class="modal-buttons"><button class="btn btn-primary" onclick="applyPermanentIcon(${comp.id})">✅ Aplicar (Permanente)</button><button class="btn btn-danger" onclick="closeModal()">❌ Cancelar</button></div></div>`;
+            document.body.appendChild(modal); window.currentModal = modal; window.permIconTargetComp = comp;
+            const imageInput = document.getElementById('permIconImage');
+            if(imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if(file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('permIconPreview'); if(preview) preview.innerHTML = '<img src="' + base64 + '" style="max-width:50px;max-height:50px;">'; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'equipment' }) }); const data = await response.json(); if(data.success) { window.permIconFilename = data.filename; showToast('✅ Ícone enviado com sucesso!'); } } }; }
         }
         
-        function deleteCustomConnection(category, idx) {
-            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem excluir conexões'); return; }
-            if (confirm('Deseja excluir esta conexão?')) {
-                const conn = connectionCategories[category].connections[idx];
-                const key = getConnectionKey(conn.name);
-                delete cableColors[key];
-                connectionCategories[category].connections.splice(idx, 1);
-                if (connectionCategories[category].connections.length === 0) delete connectionCategories[category];
-                saveUserData(); saveGlobalLibrary(); renderConnectionsPalette(); showToast(`🗑 Conexão removida!`);
-            }
-        }
-        
-        function editCustomConnection(category, idx) {
-            if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem editar conexões'); return; }
-            const conn = connectionCategories[category].connections[idx];
-            const modal = document.createElement('div');
-            modal.className = 'modal';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <h3 style="color:var(--text-accent);">✏️ Editar Conexão</h3>
-                    <input type="text" id="connName" value="${conn.name}" placeholder="Nome da conexão">
-                    <input type="text" id="connIcon" value="${conn.icon || '🔌'}" placeholder="Ícone (emoji)">
-                    <div class="property-group"><label>OU Imagem personalizada</label><input type="file" id="connIconImage" accept="image/*"><div class="image-preview" id="connIconPreview">${conn.iconFile ? `<img src="/uploads/icons/${conn.iconFile}" style="max-width:50px;max-height:50px;">` : ''}</div></div>
-                    <input type="color" id="connColor" value="${conn.color || '#005f99'}">
-                    <input type="text" id="connSpeed" value="${conn.speed || 'N/A'}" placeholder="Velocidade">
-                    <input type="text" id="connDesc" value="${conn.desc || ''}" placeholder="Descrição">
-                    <select id="connType"><option value="cable" ${conn.type === 'cable' ? 'selected' : ''}>Cabeado</option><option value="wireless" ${conn.type === 'wireless' ? 'selected' : ''}>Sem Fio</option></select>
-                    <select id="connAnimation"><option value="">Nenhuma</option><option value="wave" ${conn.animation === 'wave' ? 'selected' : ''}>Ondas</option><option value="packet" ${conn.animation === 'packet' ? 'selected' : ''}>Pacotes</option></select>
-                    <div class="modal-buttons"><button class="btn btn-primary" onclick="updateCustomConnection('${category.replace(/'/g, "\\'")}', ${idx})">Salvar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div>
-                </div>`;
-            document.body.appendChild(modal); window.currentModal = modal;
-            const imageInput = document.getElementById('connIconImage');
-            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('connIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;max-height:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'connection' }) }); const data = await response.json(); if (data.success) { window.tempConnectionIconFile = data.filename; showToast('✅ Ícone da conexão enviado com sucesso!'); } } }; }
-        }
-        
-        window.updateCustomConnection = async (category, idx) => {
-            const name = document.getElementById('connName').value; const icon = document.getElementById('connIcon').value; const color = document.getElementById('connColor').value; const speed = document.getElementById('connSpeed').value; const desc = document.getElementById('connDesc').value; const type = document.getElementById('connType').value; const animation = document.getElementById('connAnimation').value; const iconFile = window.tempConnectionIconFile || connectionCategories[category].connections[idx].iconFile;
-            if (!name) { showToast('Digite um nome para a conexão'); return; }
-            const oldKey = getConnectionKey(connectionCategories[category].connections[idx].name); delete cableColors[oldKey];
-            const connData = { name, icon: icon || '🔌', color, speed, desc, type, animation: animation || null, iconFile: iconFile };
-            connectionCategories[category].connections[idx] = connData;
-            const newKey = getConnectionKey(name);
-            cableColors[newKey] = { color: color, name: name, icon: icon || '🔌', type: type, speed: speed || 'N/A', desc: desc || '', animation: animation || null, iconFile: iconFile };
-            window.tempConnectionIconFile = null; saveUserData(); saveGlobalLibrary(); closeModal(); renderConnectionsPalette(); showToast(`✅ Conexão atualizada!`);
+        window.applyPermanentIcon = (compId) => {
+            const comp = components.find(c => c.id === compId);
+            if(comp && window.permIconFilename) { comp.iconFile = window.permIconFilename; comp.customImage = null; comp.customImageTemp = null; comp.customIconTemp = null; showToast(`✅ Ícone permanente aplicado a ${comp.name} (visível para todos)`); closeModal(); saveUserData(); }
+            else if(comp) { showToast('⚠️ Nenhuma imagem selecionada'); }
+            window.permIconFilename = null;
         };
         
-        // ==================== GERENCIAMENTO DE CATEGORIAS E DISPOSITIVOS ====================
+        window.openPermanentIconModalById = (id) => { const comp = components.find(c => c.id === id); if(comp) openPermanentIconModal(comp); };
+        
         function openAddCategoryModal() {
             if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem adicionar categorias'); return; }
             const modal = document.createElement('div'); modal.className = 'modal';
@@ -2538,7 +1956,7 @@ HTML_TEMPLATE = """
         window.addDeviceToCategory = (catName) => {
             if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem adicionar dispositivos'); return; }
             const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">➕ Novo Dispositivo em ${catName}</h3><input type="text" id="devName" placeholder="Nome"><input type="text" id="devIcon" placeholder="Ícone (emoji)" value="📦"><div class="property-group"><label>OU Imagem do dispositivo</label><input type="file" id="devImage" accept="image/*"><div class="image-preview" id="devImagePreview"></div></div><input type="text" id="devDesc" placeholder="Descrição"><input type="color" id="devColor" value="#005f99"><input type="text" id="devType" placeholder="Tipo (ex: camera, switch)"><div class="modal-buttons"><button class="btn btn-primary" onclick="addDevice('${catName.replace(/'/g, "\\'")}')">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
+            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">➕ Novo Dispositivo em ${catName}</h3><input type="text" id="devName" placeholder="Nome"><input type="text" id="devIcon" placeholder="Ícone (emoji)" value="📦"><div class="property-group"><label>OU Imagem do dispositivo (permanente)</label><input type="file" id="devImage" accept="image/*"><div class="image-preview" id="devImagePreview"></div></div><input type="text" id="devDesc" placeholder="Descrição"><input type="color" id="devColor" value="#005f99"><input type="text" id="devType" placeholder="Tipo (ex: camera, switch)"><div class="modal-buttons"><button class="btn btn-primary" onclick="addDevice('${catName.replace(/'/g, "\\'")}')">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
             document.body.appendChild(modal); window.currentModal = modal;
             const imageInput = document.getElementById('devImage');
             if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('devImagePreview'); if (preview) preview.innerHTML = '<img src="' + base64 + '" style="max-width:50px;max-height:50px;">'; window.tempImageData = base64; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'equipment' }) }); const data = await response.json(); if (data.success) { window.tempImageFile = data.filename; } } }; }
@@ -2576,7 +1994,7 @@ HTML_TEMPLATE = """
         function openAddDeviceModal() {
             if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem adicionar equipamentos personalizados'); return; }
             const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🔧 Novo Equipamento Personalizado</h3><input type="text" id="devName" placeholder="Nome"><input type="text" id="devIcon" placeholder="Ícone (emoji)" value="📦"><div class="property-group"><label>OU Imagem do equipamento</label><input type="file" id="devImage" accept="image/*"><div class="image-preview" id="devImagePreview"></div></div><input type="text" id="devDesc" placeholder="Descrição"><input type="color" id="devColor" value="#005f99"><input type="text" id="devType" placeholder="Tipo (opcional)"><div class="modal-buttons"><button class="btn btn-primary" onclick="addCustomDevice()">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
+            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🔧 Novo Equipamento Personalizado</h3><input type="text" id="devName" placeholder="Nome"><input type="text" id="devIcon" placeholder="Ícone (emoji)" value="📦"><div class="property-group"><label>OU Imagem do equipamento (permanente)</label><input type="file" id="devImage" accept="image/*"><div class="image-preview" id="devImagePreview"></div></div><input type="text" id="devDesc" placeholder="Descrição"><input type="color" id="devColor" value="#005f99"><input type="text" id="devType" placeholder="Tipo (opcional)"><div class="modal-buttons"><button class="btn btn-primary" onclick="addCustomDevice()">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
             document.body.appendChild(modal); window.currentModal = modal;
             const imageInput = document.getElementById('devImage');
             if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('devImagePreview'); if (preview) preview.innerHTML = '<img src="' + base64 + '" style="max-width:50px;max-height:50px;">'; window.tempImageData = base64; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'equipment' }) }); const data = await response.json(); if (data.success) { window.tempImageFile = data.filename; } } }; }
@@ -2614,7 +2032,7 @@ HTML_TEMPLATE = """
         function openAddConnectionModal() {
             if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem adicionar conexões'); return; }
             const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🔌 Nova Conexão</h3><input type="text" id="connName" placeholder="Nome da conexão (ex: Fibra Óptica)"><input type="text" id="connIcon" placeholder="Ícone (ex: 🔷)" value="🔌"><div class="property-group"><label>OU Imagem personalizada</label><input type="file" id="connIconImage" accept="image/*"><div class="image-preview" id="connIconPreview"></div></div><input type="color" id="connColor" value="#005f99"><input type="text" id="connSpeed" placeholder="Velocidade (ex: 10 Gbps)" value="N/A"><input type="text" id="connDesc" placeholder="Descrição"><select id="connType"><option value="cable">Cabeado</option><option value="wireless">Sem Fio</option></select><select id="connAnimation"><option value="">Nenhuma</option><option value="wave">Ondas</option><option value="packet">Pacotes</option></select><select id="connCategory"><option value="Cabeadas">Cabeadas</option><option value="Sem Fio">Sem Fio</option><option value="Personalizadas">Personalizadas</option></select><div class="modal-buttons"><button class="btn btn-primary" onclick="addConnectionFromModal()">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
+            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🔌 Nova Conexão</h3><input type="text" id="connName" placeholder="Nome da conexão (ex: Fibra Óptica)"><input type="text" id="connIcon" placeholder="Ícone (ex: 🔷)" value="🔌"><div class="property-group"><label>OU Imagem personalizada (permanente)</label><input type="file" id="connIconImage" accept="image/*"><div class="image-preview" id="connIconPreview"></div></div><input type="color" id="connColor" value="#005f99"><input type="text" id="connSpeed" placeholder="Velocidade (ex: 10 Gbps)" value="N/A"><input type="text" id="connDesc" placeholder="Descrição"><select id="connType"><option value="cable">Cabeado</option><option value="wireless">Sem Fio</option></select><select id="connAnimation"><option value="">Nenhuma</option><option value="wave">Ondas</option><option value="packet">Pacotes</option></select><select id="connCategory"><option value="Cabeadas">Cabeadas</option><option value="Sem Fio">Sem Fio</option><option value="Personalizadas">Personalizadas</option></select><div class="modal-buttons"><button class="btn btn-primary" onclick="addConnectionFromModal()">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
             document.body.appendChild(modal); window.currentModal = modal;
             const imageInput = document.getElementById('connIconImage');
             if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('connIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;max-height:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'connection' }) }); const data = await response.json(); if (data.success) { window.tempConnIconFile = data.filename; showToast('✅ Ícone da conexão enviado com sucesso!'); } } }; }
@@ -2632,7 +2050,7 @@ HTML_TEMPLATE = """
         window.addConnectionToCategory = (category) => {
             if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem adicionar conexões'); return; }
             const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🔌 Nova Conexão em ${category}</h3><input type="text" id="connName" placeholder="Nome da conexão"><input type="text" id="connIcon" placeholder="Ícone (ex: 🔷)" value="🔌"><div class="property-group"><label>OU Imagem personalizada</label><input type="file" id="connIconImage" accept="image/*"><div class="image-preview" id="connIconPreview"></div></div><input type="color" id="connColor" value="#005f99"><input type="text" id="connSpeed" placeholder="Velocidade" value="N/A"><input type="text" id="connDesc" placeholder="Descrição"><select id="connType"><option value="cable">Cabeado</option><option value="wireless">Sem Fio</option></select><select id="connAnimation"><option value="">Nenhuma</option><option value="wave">Ondas</option><option value="packet">Pacotes</option></select><div class="modal-buttons"><button class="btn btn-primary" onclick="addConnectionToCategoryConfirm('${category.replace(/'/g, "\\'")}')">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
+            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🔌 Nova Conexão em ${category}</h3><input type="text" id="connName" placeholder="Nome da conexão"><input type="text" id="connIcon" placeholder="Ícone (ex: 🔷)" value="🔌"><div class="property-group"><label>OU Imagem personalizada (permanente)</label><input type="file" id="connIconImage" accept="image/*"><div class="image-preview" id="connIconPreview"></div></div><input type="color" id="connColor" value="#005f99"><input type="text" id="connSpeed" placeholder="Velocidade" value="N/A"><input type="text" id="connDesc" placeholder="Descrição"><select id="connType"><option value="cable">Cabeado</option><option value="wireless">Sem Fio</option></select><select id="connAnimation"><option value="">Nenhuma</option><option value="wave">Ondas</option><option value="packet">Pacotes</option></select><div class="modal-buttons"><button class="btn btn-primary" onclick="addConnectionToCategoryConfirm('${category.replace(/'/g, "\\'")}')">Adicionar</button><button class="btn btn-danger" onclick="closeModal()">Cancelar</button></div></div>`;
             document.body.appendChild(modal); window.currentModal = modal;
             const imageInput = document.getElementById('connIconImage');
             if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('connIconPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:50px;max-height:50px;">`; const response = await fetch('/api/upload_icon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, type: 'connection' }) }); const data = await response.json(); if (data.success) { window.tempConnIconFile = data.filename; showToast('✅ Ícone da conexão enviado com sucesso!'); } } }; }
@@ -2650,7 +2068,6 @@ HTML_TEMPLATE = """
             } catch (error) { console.error('Erro ao adicionar conexão:', error); showToast('❌ Erro ao adicionar conexão. Verifique o console.'); closeModal(); }
         };
         
-        // ==================== BACKGROUND ====================
         function openBackgroundModal() {
             const modal = document.createElement('div'); modal.className = 'modal';
             modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🖼️ Planta Baixa / Imagem de Fundo</h3><div class="background-controls"><label><strong>📁 Importar Imagem Local</strong></label><input type="file" id="bgImageUpload" accept="image/*"><div class="image-preview" id="bgPreview"></div><button class="btn btn-primary" style="margin-top:8px;" onclick="importLocalImage()">📤 Importar e Adicionar à Tela</button></div><div class="background-controls"><label><strong>🎨 Opacidade da Imagem</strong></label><input type="range" id="bgOpacity" min="0.1" max="1" step="0.01" value="${backgroundOpacity}" onchange="updateBackgroundOpacity(this.value)"><span id="opacityValue">${Math.round(backgroundOpacity * 100)}%</span></div>${backgroundImage ? `<div class="background-controls"><label><strong>🖼️ Imagem Atual</strong></label><div class="action-buttons"><button class="btn btn-secondary" onclick="selectBackgroundImage()">🔍 Selecionar Imagem na Tela</button><button class="btn btn-danger" onclick="removeBackground()">🗑 Remover Imagem de Fundo</button></div><div style="margin-top: 8px; font-size: 12px; color: #005f99;">✨ Dica: Selecione a imagem e depois arraste para mover ou redimensione pelos cantos!</div></div>` : ''}<div class="modal-buttons"><button class="btn btn-danger" onclick="closeModal()">❌ Fechar</button></div></div>`;
@@ -2672,11 +2089,10 @@ HTML_TEMPLATE = """
             } catch(e) { showToast('Erro ao enviar imagem'); }
         }
         
-        // ==================== PROJETO ====================
         function newProject() { if (confirm('Novo projeto? Todos os dados não salvos serão perdidos.')) { components = []; connections = []; shapes = []; selectedComponents = []; selectedShapes = []; selectedConnectionIndex = null; backgroundImage = null; backgroundImageObj = null; backgroundOpacity = 0.8; backgroundWidth = 0; backgroundHeight = 0; backgroundX = 0; backgroundY = 0; isBackgroundSelected = false; closeProperties(); saveUserData(); showToast('📁 Novo projeto criado!'); } }
         
         function saveProjectToFile() {
-            const projectData = { components: components, connections: connections, shapes: shapes, background: backgroundImage, backgroundOpacity: backgroundOpacity, backgroundWidth: backgroundWidth, backgroundHeight: backgroundHeight, backgroundX: backgroundX, backgroundY: backgroundY, version: '2.1', date: new Date().toISOString() };
+            const projectData = { components: components.map(c => ({ ...c, customImage: c.customImage || null, imageData: c.imageData || null, iconFile: c.iconFile || null, customIconTemp: c.customIconTemp || null, customImageTemp: c.customImageTemp || null })), connections: connections, shapes: shapes, background: backgroundImage, backgroundOpacity: backgroundOpacity, backgroundWidth: backgroundWidth, backgroundHeight: backgroundHeight, backgroundX: backgroundX, backgroundY: backgroundY, version: '2.0', date: new Date().toISOString() };
             const dataStr = JSON.stringify(projectData, null, 2); const blob = new Blob([dataStr], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `projeto_${Date.now()}.projetize`; a.click(); URL.revokeObjectURL(url); showToast('✅ Projeto salvo com sucesso!');
         }
         
@@ -2688,11 +2104,6 @@ HTML_TEMPLATE = """
                 reader.onload = (ev) => {
                     try {
                         const data = JSON.parse(ev.target.result); components = data.components || []; connections = data.connections || []; shapes = data.shapes || [];
-                        // Garantir waypoints em conexões antigas
-                        connections.forEach(conn => {
-                            if(!conn.waypoints) conn.waypoints = [];
-                            if(conn.curved === undefined) conn.curved = false;
-                        });
                         if (data.background) { backgroundImage = data.background; backgroundOpacity = data.backgroundOpacity || 0.8; backgroundWidth = data.backgroundWidth || 0; backgroundHeight = data.backgroundHeight || 0; backgroundX = data.backgroundX || 0; backgroundY = data.backgroundY || 0; backgroundImageObj = new Image(); backgroundImageObj.src = backgroundImage; }
                         selectedComponents = []; selectedShapes = []; selectedConnectionIndex = null; closeProperties(); saveUserData(); showToast('✅ Projeto carregado com sucesso!');
                     } catch(err) { showToast('Erro ao carregar projeto: ' + err.message); }
@@ -2714,8 +2125,8 @@ HTML_TEMPLATE = """
                 listHTML += '</table>';
             }
             if (connections.length > 0) {
-                listHTML += `<h2>🔌 CONEXÕES</h2><table style="width:100%;border-collapse:collapse;"><tr style="background:#005f99;color:white;"><th style="padding:8px;text-align:left;">Origem</th><th style="padding:8px;text-align:left;">Destino</th><th style="padding:8px;text-align:left;">Tipo</th><th style="padding:8px;text-align:left;">Curvas</th></tr>`;
-                connections.forEach(conn => { const fromComp = components.find(c => c.id === conn.from); const toComp = components.find(c => c.id === conn.to); const cableInfo = cableColors[conn.type] || cableColors['cat6']; if (fromComp && toComp) { const wpCount = conn.waypoints ? conn.waypoints.length : 0; listHTML += `<tr><td style="padding:8px;">${fromComp.name}</td><td style="padding:8px;">${toComp.name}</td><td style="padding:8px;">${cableInfo.name}</td><td style="padding:8px;">${wpCount > 0 ? '✅ ' + wpCount + ' ponto(s)' : '-'}</td></tr>`; } });
+                listHTML += `<h2>🔌 CONEXÕES</h2><table style="width:100%;border-collapse:collapse;"><tr style="background:#005f99;color:white;"><th style="padding:8px;text-align:left;">Origem</th><th style="padding:8px;text-align:left;">Destino</th><th style="padding:8px;text-align:left;">Tipo</th></tr>`;
+                connections.forEach(conn => { const fromComp = components.find(c => c.id === conn.from); const toComp = components.find(c => c.id === conn.to); const cableInfo = cableColors[conn.type] || cableColors['cat6']; if (fromComp && toComp) { listHTML += `<tr><td style="padding:8px;">${fromComp.name}</td><td style="padding:8px;">${toComp.name}</td><td style="padding:8px;">${cableInfo.name}</td></tr>`; } });
                 listHTML += '</table>';
             }
             listHTML += `<br><hr><p><strong>Total de Equipamentos:</strong> ${components.length}</p><p><strong>Total de Conexões:</strong> ${connections.length}</p><p><strong>Total de Formas:</strong> ${shapes.length}</p><br><p style="text-align:center;font-size:11px;color:#888;">Desenvolvido por Thiago Souza - Analista de Tecnologia | Unidade 2 - São José do Rio Preto</p></div>`;
@@ -2746,62 +2157,85 @@ HTML_TEMPLATE = """
         function closeProperties() { document.getElementById('propertiesPanel').classList.remove('open'); }
         function readImageAsBase64(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.readAsDataURL(file); }); }
         
-        // ==================== DEV IMAGE ====================
+        // NOVO: Função para editar a imagem do desenvolvedor
         function openDevImageModal() {
             if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem alterar a foto do desenvolvedor'); return; }
             const modal = document.createElement('div'); modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><h3 style="color:var(--text-accent);">🖼️ Alterar Foto do Desenvolvedor</h3><p>Envie uma nova imagem para substituir a foto do desenvolvedor.</p><div class="property-group"><label>Escolha uma imagem</label><input type="file" id="newDevImage" accept="image/*"><div class="image-preview" id="newDevPreview"></div></div><div class="modal-buttons"><button class="btn btn-primary" onclick="uploadNewDevImage()">✅ Salvar Foto</button><button class="btn btn-danger" onclick="closeModal()">❌ Cancelar</button></div></div>`;
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3 style="color:var(--text-accent);">🖼️ Alterar Foto do Desenvolvedor</h3>
+                    <p>Envie uma nova imagem para substituir a foto do desenvolvedor.</p>
+                    <div class="property-group">
+                        <label>Escolha uma imagem</label>
+                        <input type="file" id="newDevImage" accept="image/*">
+                        <div class="image-preview" id="newDevPreview"></div>
+                    </div>
+                    <div class="modal-buttons">
+                        <button class="btn btn-primary" onclick="uploadNewDevImage()">✅ Salvar Foto</button>
+                        <button class="btn btn-danger" onclick="closeModal()">❌ Cancelar</button>
+                    </div>
+                </div>`;
             document.body.appendChild(modal); window.currentModal = modal;
             const imageInput = document.getElementById('newDevImage');
-            if (imageInput) { imageInput.onchange = async (e) => { const file = e.target.files[0]; if (file) { const base64 = await readImageAsBase64(file); const preview = document.getElementById('newDevPreview'); if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:100px;max-height:100px;">`; window.tempDevImage = base64; } }; }
+            if (imageInput) { 
+                imageInput.onchange = async (e) => { 
+                    const file = e.target.files[0]; 
+                    if (file) { 
+                        const base64 = await readImageAsBase64(file); 
+                        const preview = document.getElementById('newDevPreview'); 
+                        if (preview) preview.innerHTML = `<img src="${base64}" style="max-width:100px;max-height:100px;">`; 
+                        window.tempDevImage = base64;
+                    } 
+                }; 
+            }
         }
 
         window.uploadNewDevImage = async () => {
             if (!window.tempDevImage) { showToast('Selecione uma imagem primeiro'); return; }
             try {
-                const response = await fetch('/api/upload_dev_image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: window.tempDevImage }) });
+                const response = await fetch('/api/upload_dev_image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: window.tempDevImage })
+                });
                 const data = await response.json();
-                if (data.success) { showToast('✅ Foto do desenvolvedor atualizada com sucesso!'); setTimeout(() => location.reload(), 1000); }
-                else { showToast('❌ Erro ao salvar imagem: ' + data.error); }
-            } catch(e) { showToast('❌ Erro de conexão ao salvar imagem'); }
-            window.tempDevImage = null; closeModal();
+                if (data.success) {
+                    showToast('✅ Foto do desenvolvedor atualizada com sucesso!');
+                    setTimeout(() => location.reload(), 1000); 
+                } else {
+                    showToast('❌ Erro ao salvar imagem: ' + data.error);
+                }
+            } catch(e) {
+                showToast('❌ Erro de conexão ao salvar imagem');
+            }
+            window.tempDevImage = null;
+            closeModal();
         };
 
-        // ==================== BACKGROUND DINÂMICO ====================
+        // NOVO: Função para editar o Fundo Dinâmico
         function openDynamicBgModal() {
             if (userRole !== 'admin' && userRole !== 'master') { showToast('Apenas administradores podem alterar o fundo'); return; }
             const modal = document.createElement('div'); modal.className = 'modal';
             modal.innerHTML = `
                 <div class="modal-content">
-                    <h3 style="color:var(--text-accent);">🎬 Fundo Dinâmico do Sistema</h3>
-                    <p>Selecione um arquivo GIF, Vídeo (MP4) ou Imagem para usar como plano de fundo do sistema.</p>
+                    <h3 style="color:var(--text-accent);">🎬 Fundo Dinâmico (GIF ou Vídeo)</h3>
+                    <p>Selecione um arquivo GIF ou Vídeo (MP4) para usar como plano de fundo.</p>
                     <div class="property-group">
                         <label>Escolha um arquivo</label>
-                        <input type="file" id="newBgFile" accept="image/gif, image/png, image/jpeg, video/mp4">
+                        <input type="file" id="newBgFile" accept="image/gif, video/mp4">
                         <div class="image-preview" id="newBgPreview"></div>
                     </div>
                     <div class="property-group">
-                        <label>Opacidade do Fundo (<span id="bgOpacityVal">${Math.round(dynamicBgInfo.opacity * 100)}</span>%)</label>
-                        <input type="range" id="dynamicBgOpacity" min="0.05" max="0.8" step="0.05" value="${dynamicBgInfo.opacity}">
+                        <label>Opacidade do Fundo</label>
+                        <input type="range" id="dynamicBgOpacity" min="0.05" max="1" step="0.05" value="0.3" oninput="document.getElementById('bgVideo').style.opacity = this.value; document.getElementById('bgGif').style.opacity = this.value;">
                     </div>
                     <div class="modal-buttons">
                         <button class="btn btn-primary" onclick="applyDynamicBg()">✅ Aplicar</button>
-                        <button class="btn btn-warning" onclick="removeDynamicBg()">🗑 Remover Fundo</button>
                         <button class="btn btn-danger" onclick="closeModal()">❌ Cancelar</button>
                     </div>
                 </div>`;
             document.body.appendChild(modal); window.currentModal = modal;
             const fileInput = document.getElementById('newBgFile');
-            const opacityInput = document.getElementById('dynamicBgOpacity');
-            if (opacityInput) {
-                opacityInput.oninput = (e) => {
-                    document.getElementById('bgOpacityVal').innerText = Math.round(e.target.value * 100);
-                    const video = document.getElementById('bgVideo');
-                    const img = document.getElementById('bgImage');
-                    if (video) video.style.opacity = e.target.value;
-                    if (img) img.style.opacity = e.target.value;
-                };
-            }
             if (fileInput) { 
                 fileInput.onchange = (e) => { 
                     const file = e.target.files[0]; 
@@ -2809,9 +2243,9 @@ HTML_TEMPLATE = """
                         const preview = document.getElementById('newBgPreview'); 
                         const url = URL.createObjectURL(file);
                         if (file.type.startsWith('image')) {
-                            preview.innerHTML = `<img src="${url}" style="max-width:150px;max-height:100px;">`;
+                            preview.innerHTML = `<img src="${url}" style="max-width:100px;max-height:100px;">`;
                         } else {
-                            preview.innerHTML = `<video src="${url}" style="max-width:150px;max-height:100px;" autoplay loop muted></video>`;
+                            preview.innerHTML = `<video src="${url}" style="max-width:100px;max-height:100px;" autoplay loop muted></video>`;
                         }
                         window.tempBgFile = file;
                     } 
@@ -2819,105 +2253,23 @@ HTML_TEMPLATE = """
             }
         }
 
-        window.applyDynamicBg = async () => {
+        window.applyDynamicBg = () => {
             if (!window.tempBgFile) { showToast('Selecione um arquivo primeiro'); return; }
-            const opacity = parseFloat(document.getElementById('dynamicBgOpacity').value) || 0.25;
-            const file = window.tempBgFile;
-            const isVideo = file.type.startsWith('video');
+            const url = URL.createObjectURL(window.tempBgFile);
             
-            try {
-                // Converte para base64
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    const base64 = e.target.result;
-                    const response = await fetch('/api/upload_dynamic_bg', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            file: base64, 
-                            type: isVideo ? 'video' : 'image',
-                            opacity: opacity,
-                            mimeType: file.type
-                        })
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        // Aplica imediatamente
-                        applyDynamicBgToPage(data.url, data.type, data.opacity);
-                        showToast('✅ Fundo dinâmico aplicado com sucesso!');
-                        closeModal();
-                    } else {
-                        showToast('❌ Erro ao salvar fundo: ' + data.error);
-                    }
-                };
-                reader.readAsDataURL(file);
-            } catch(e) {
-                showToast('❌ Erro ao processar arquivo');
-            }
-        };
-
-        window.removeDynamicBg = async () => {
-            try {
-                const response = await fetch('/api/remove_dynamic_bg', { method: 'POST' });
-                const data = await response.json();
-                if (data.success) {
-                    const container = document.getElementById('dynamicBgContainer');
-                    container.classList.remove('active');
-                    document.getElementById('bgVideo').src = '';
-                    document.getElementById('bgImage').src = '';
-                    document.getElementById('bgVideo').style.display = 'none';
-                    document.getElementById('bgImage').style.display = 'none';
-                    dynamicBgInfo = { url: null, type: null, opacity: 0.25 };
-                    showToast('✅ Fundo dinâmico removido!');
-                    closeModal();
-                }
-            } catch(e) {
-                showToast('❌ Erro ao remover fundo');
-            }
-        };
-
-        function applyDynamicBgToPage(url, type, opacity) {
-            const container = document.getElementById('dynamicBgContainer');
-            const video = document.getElementById('bgVideo');
-            const img = document.getElementById('bgImage');
-            
-            if (!url) {
-                container.classList.remove('active');
-                return;
-            }
-            
-            container.classList.add('active');
-            
-            if (type === 'video') {
-                video.src = url;
-                video.style.display = 'block';
-                video.style.opacity = opacity;
-                img.style.display = 'none';
-                video.play().catch(() => {});
+            if (window.tempBgFile.type.startsWith('image')) {
+                document.getElementById('bgVideo').style.display = 'none';
+                document.getElementById('bgGif').src = url;
+                document.getElementById('bgGif').style.display = 'block';
             } else {
-                img.src = url;
-                img.style.display = 'block';
-                img.style.opacity = opacity;
-                video.style.display = 'none';
-                video.pause();
+                document.getElementById('bgGif').style.display = 'none';
+                document.getElementById('bgVideo').src = url;
+                document.getElementById('bgVideo').style.display = 'block';
             }
-            
-            dynamicBgInfo = { url, type, opacity };
-        }
+            showToast('✅ Fundo dinâmico aplicado com sucesso!');
+            closeModal();
+        };
 
-        async function loadDynamicBg() {
-            try {
-                const response = await fetch('/api/get_dynamic_bg');
-                const data = await response.json();
-                if (data.success && data.url) {
-                    applyDynamicBgToPage(data.url, data.type, data.opacity);
-                }
-            } catch(e) {
-                console.log('Nenhum fundo dinâmico configurado');
-            }
-        }
-
-        // ==================== LOGIN ====================
         async function doLogin() {
             const username = document.getElementById('loginUsername').value;
             const password = document.getElementById('loginPassword').value;
@@ -2927,6 +2279,8 @@ HTML_TEMPLATE = """
             if (data.success) {
                 currentUser = username; userRole = data.role;
                 document.getElementById('loginModal').style.display = 'none';
+                
+                // Mostra overlay de carregamento
                 document.getElementById('loadingOverlay').style.display = 'flex';
 
                 document.getElementById('toolbar').style.display = 'flex';
@@ -2943,9 +2297,13 @@ HTML_TEMPLATE = """
                     document.getElementById('adminBgBtn').style.display = 'inline-block';
                 }
                 
-                await Promise.all([loadDefaultConfig(), loadDefaultConnections()]);
+                await Promise.all([
+                    loadDefaultConfig(),
+                    loadDefaultConnections()
+                ]);
                 await loadUserData();
                 
+                // Esconde overlay de carregamento
                 document.getElementById('loadingOverlay').style.display = 'none';
                 showToast(`Bem-vindo, ${username}!`);
             } else {
@@ -2984,7 +2342,12 @@ HTML_TEMPLATE = """
             if (confirm('⚠️ Isso irá restaurar todas as categorias e dispositivos para a configuração padrão. Continuar?')) { try { const response = await fetch('/api/reset_default_config', { method: 'POST' }); const data = await response.json(); if (data.success) { await loadDefaultConfig(); categories = JSON.parse(JSON.stringify(defaultCategories)); customDevices = []; saveUserData(); saveGlobalLibrary(); renderPalette(); showToast('✅ Configurações restauradas para o padrão!'); } } catch(e) { showToast('Erro ao restaurar configurações'); } }
         }
         
-        // ==================== INTRO SLIDES ====================
+        function createMatrixAnimation(containerId, isLogin = false) {
+            const container = document.getElementById(containerId); if (!container) return; container.innerHTML = '';
+            const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン'; const columns = Math.floor(window.innerWidth / 20);
+            for (let i = 0; i < columns; i++) { const column = document.createElement('div'); column.className = 'matrix-column'; column.style.left = (i * 20) + 'px'; column.style.animationDuration = (Math.random() * 5 + 5) + 's'; column.style.animationDelay = (Math.random() * 5) + 's'; let text = ''; for (let j = 0; j < 40; j++) text += chars[Math.floor(Math.random() * chars.length)] + '\\n'; column.textContent = text; container.appendChild(column); }
+        }
+        
         let slideIndex = 0;
         const slides = document.querySelectorAll('.intro-slide'); const dots = document.querySelectorAll('.dot');
         function showSlide(index) {
@@ -2993,39 +2356,39 @@ HTML_TEMPLATE = """
         }
         
         window.nextSlide = () => showSlide(slideIndex + 1); window.prevSlide = () => showSlide(slideIndex - 1); window.currentSlide = (index) => showSlide(index);
-        function closeIntroAndShowLogin() { document.getElementById('introScreen').style.display = 'none'; document.getElementById('loginModal').style.display = 'flex'; }
+        function closeIntroAndShowLogin() { document.getElementById('introScreen').style.display = 'none'; document.getElementById('loginModal').style.display = 'flex'; createMatrixAnimation('matrixBg', true); }
         
         function loadDevImages() {
-            const loginImg = document.getElementById('loginDevImage'); 
-            const loginFallback = document.getElementById('loginAvatarFallback');
-            const badgeImg = document.getElementById('badgeDevImage'); 
-            const devSlideImg = document.getElementById('devSlideImg'); 
-            const devSlideContainer = document.getElementById('devSlideImage');
-            
+            const loginContainer = document.getElementById('loginDevImageContainer'); const loginImg = document.getElementById('loginDevImage'); const badgeImg = document.getElementById('badgeDevImage'); const devSlideImg = document.getElementById('devSlideImg'); const devSlideContainer = document.getElementById('devSlideImage');
             const img = new Image();
             img.onload = function() { 
-                if (loginImg) { loginImg.src = img.src; loginImg.style.display = 'block'; if(loginFallback) loginFallback.style.display = 'none'; } 
+                if (loginImg) { loginImg.src = img.src; loginImg.style.display = 'block'; } 
                 if (badgeImg) badgeImg.src = img.src; 
                 if (devSlideImg) { devSlideImg.src = img.src; devSlideImg.style.display = 'block'; } 
                 if (devSlideContainer) devSlideContainer.style.background = 'transparent'; 
+                if (loginContainer) loginContainer.style.background = 'transparent'; 
             };
             img.onerror = function() {
                 if (devImageBase64) { 
                     const dataUrl = 'data:image/png;base64,' + devImageBase64; 
-                    if (loginImg) { loginImg.src = dataUrl; loginImg.style.display = 'block'; if(loginFallback) loginFallback.style.display = 'none'; } 
+                    if (loginImg) { loginImg.src = dataUrl; loginImg.style.display = 'block'; } 
                     if (badgeImg) badgeImg.src = dataUrl; 
                     if (devSlideImg) { devSlideImg.src = dataUrl; devSlideImg.style.display = 'block'; } 
+                    if (devSlideContainer) devSlideContainer.style.background = 'transparent'; 
+                    if (loginContainer) loginContainer.style.background = 'transparent'; 
                 }
                 else { 
-                    if (loginFallback) loginFallback.style.display = 'block';
-                    if (badgeImg) { badgeImg.style.display = 'none'; } 
-                    if (devSlideContainer) { devSlideContainer.style.background = '#005f99'; } 
+                    if (loginImg) loginImg.style.display = 'none'; 
+                    if (devSlideImg) devSlideImg.style.display = 'none'; 
+                    if (loginContainer) { loginContainer.style.background = '#005f99'; loginContainer.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:40px;font-weight:bold;">TS</div>'; } 
+                    if (devSlideContainer) { devSlideContainer.style.background = '#005f99'; devSlideContainer.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:40px;font-weight:bold;">TS</div>'; } 
+                    if (badgeImg) { badgeImg.style.display = 'none'; badgeImg.parentElement.style.background = '#005f99'; badgeImg.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:16px;font-weight:bold;">TS</div>'; } 
                 }
             };
+            // CORREÇÃO: Aponta para a URL base64 para evitar problemas de cache ou rotas estáticas bloqueadas
             img.src = devImageBase64 ? 'data:image/png;base64,' + devImageBase64 : '/static/dev.png?v=2';
         }
         
-        // ==================== CANVAS EVENTS ====================
         canvas.addEventListener('dragover', (e) => e.preventDefault());
         canvas.addEventListener('drop', (e) => {
             e.preventDefault(); const {x, y} = getMousePos(e); const data = JSON.parse(e.dataTransfer.getData('text/plain'));
@@ -3036,106 +2399,36 @@ HTML_TEMPLATE = """
         canvas.addEventListener('touchstart', handleStart, { passive: false }); canvas.addEventListener('touchmove', handleMove, { passive: false }); canvas.addEventListener('touchend', handleEnd); canvas.addEventListener('touchcancel', handleEnd);
         canvas.addEventListener('mousedown', handleStart); canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mouseup', handleEnd); canvas.addEventListener('click', handleClick); canvas.addEventListener('contextmenu', handleContextMenu);
         
-        // ==================== INIT ====================
+        // CARREGAMENTO INICIAL (Antes do login, para a paleta já aparecer preenchida)
         (async function init() {
             await loadDefaultConfig();
             await loadDefaultConnections();
             categories = JSON.parse(JSON.stringify(defaultCategories));
             renderPalette();
             renderConnectionsPalette();
-            await loadDynamicBg();
         })();
 
-        loadDevImages(); closeProperties();
+        loadDevImages(); createMatrixAnimation('introMatrixBg'); closeProperties();
         setTimeout(() => { const splash = document.getElementById('splashScreen'); if (splash) splash.style.display = 'none'; }, 3000);
         
-        // ==================== EXPOR FUNÇÕES GLOBAIS ====================
-        window.newProject = newProject; 
-        window.saveProjectToFile = saveProjectToFile; 
-        window.loadProjectFromFile = loadProjectFromFile; 
-        window.exportPDF = exportPDF; 
-        window.exportPDFWithList = exportPDFWithList; 
-        window.generateBudget = generateBudget;
-        window.zoomIn = zoomIn; 
-        window.zoomOut = zoomOut; 
-        window.resetZoom = resetZoom; 
-        window.iconZoomIn = iconZoomIn; 
-        window.iconZoomOut = iconZoomOut; 
-        window.resetIconSize = resetIconSize;
-        window.togglePalette = togglePalette; 
-        window.closeModal = closeModal; 
-        window.openAddCategoryModal = openAddCategoryModal; 
-        window.openAddDeviceModal = openAddDeviceModal; 
-        window.openAddConnectionModal = openAddConnectionModal;
-        window.addDeviceToCategory = addDeviceToCategory; 
-        window.addCategory = addCategory; 
-        window.addDevice = addDevice; 
-        window.editCategory = editCategory; 
-        window.editDevice = editDevice; 
-        window.deleteCategory = deleteCategory; 
-        window.deleteDevice = deleteDevice; 
-        window.updateCategory = updateCategory; 
-        window.updateDevice = updateDevice; 
-        window.editCustomDevice = editCustomDevice; 
-        window.deleteCustomDevice = deleteCustomDevice; 
-        window.addCustomDevice = addCustomDevice;
-        window.doLogin = doLogin; 
-        window.logout = logout; 
-        window.openUserManagement = openUserManagement; 
-        window.addUser = addUser; 
-        window.deleteUser = deleteUser;
-        window.setShapeMode = setShapeMode; 
-        window.cancelShapeMode = cancelShapeMode; 
-        window.toggleShapesToolbar = toggleShapesToolbar; 
-        window.deleteShape = deleteShape; 
-        window.toggleGrid = toggleGrid; 
-        window.resetToDefaultConfig = resetToDefaultConfig;
-        window.openBackgroundModal = openBackgroundModal; 
-        window.updateBackgroundOpacity = updateBackgroundOpacity; 
-        window.removeBackground = removeBackground; 
-        window.importLocalImage = importLocalImage; 
-        window.selectBackgroundImage = selectBackgroundImage;
-        window.closeIntroAndShowLogin = closeIntroAndShowLogin; 
-        window.closePropertiesPanel = closePropertiesPanel; 
-        window.toggleMobilePalette = toggleMobilePalette; 
-        window.closeMobilePalette = closeMobilePalette; 
-        window.deleteSelectedShape = deleteSelectedShape;
-        window.flipComponent = flipComponent; 
-        window.flipComponentById = flipComponentById; 
-        window.nextSlide = nextSlide; 
-        window.prevSlide = prevSlide; 
-        window.currentSlide = currentSlide; 
-        window.deleteSelectedItems = deleteSelectedItems; 
-        window.updateSelectedConnection = updateSelectedConnection; 
-        window.deleteSelectedConnection = deleteSelectedConnection; 
-        window.flipShape = flipShape; 
-        window.duplicateShape = duplicateShape;
-        window.openPermanentIconModal = openPermanentIconModal; 
-        window.applyPermanentIcon = applyPermanentIcon; 
-        window.openPermanentIconModalFromMenu = openPermanentIconModalFromMenu;
-        window.addCustomConnection = addCustomConnection; 
-        window.deleteCustomConnection = deleteCustomConnection; 
-        window.editCustomConnection = editCustomConnection; 
-        window.addConnectionToCategory = addConnectionToCategory; 
-        window.addConnectionToCategoryConfirm = addConnectionToCategoryConfirm;
-        window.openCategoryIconModal = openCategoryIconModal; 
-        window.applyCategoryIcon = applyCategoryIcon; 
-        window.openConnectionIconModal = openConnectionIconModal; 
-        window.applyConnectionIcon = applyConnectionIcon; 
-        window.openDeviceIconModal = openDeviceIconModal; 
-        window.applyDeviceIcon = applyDeviceIcon; 
-        window.openCustomDeviceIconModal = openCustomDeviceIconModal; 
-        window.applyCustomDeviceIcon = applyCustomDeviceIcon; 
-        window.addConnectionFromModal = addConnectionFromModal; 
-        window.renderConnectionsPalette = renderConnectionsPalette; 
-        window.renderPalette = renderPalette;
+        window.newProject = newProject; window.saveProjectToFile = saveProjectToFile; window.loadProjectFromFile = loadProjectFromFile; window.exportPDF = exportPDF; window.exportPDFWithList = exportPDFWithList; window.generateBudget = generateBudget;
+        window.zoomIn = zoomIn; window.zoomOut = zoomOut; window.resetZoom = resetZoom; window.iconZoomIn = iconZoomIn; window.iconZoomOut = iconZoomOut; window.resetIconSize = resetIconSize;
+        window.togglePalette = togglePalette; window.closeModal = closeModal; window.openAddCategoryModal = openAddCategoryModal; window.openAddDeviceModal = openAddDeviceModal; window.openAddConnectionModal = openAddConnectionModal;
+        window.addDeviceToCategory = addDeviceToCategory; window.addCategory = addCategory; window.addDevice = addDevice; window.editCategory = editCategory; window.editDevice = editDevice; window.deleteCategory = deleteCategory; window.deleteDevice = deleteDevice; window.updateCategory = updateCategory; window.updateDevice = updateDevice; window.editCustomDevice = editCustomDevice; window.deleteCustomDevice = deleteCustomDevice; window.addCustomDevice = addCustomDevice;
+        window.doLogin = doLogin; window.logout = logout; window.openUserManagement = openUserManagement; window.addUser = addUser; window.deleteUser = deleteUser;
+        window.setShapeMode = setShapeMode; window.cancelShapeMode = cancelShapeMode; window.toggleShapesToolbar = toggleShapesToolbar; window.deleteShape = deleteShape; window.toggleGrid = toggleGrid; window.resetToDefaultConfig = resetToDefaultConfig;
+        window.openBackgroundModal = openBackgroundModal; window.updateBackgroundOpacity = updateBackgroundOpacity; window.removeBackground = removeBackground; window.importLocalImage = importLocalImage; window.selectBackgroundImage = selectBackgroundImage;
+        window.closeIntroAndShowLogin = closeIntroAndShowLogin; window.closePropertiesPanel = closePropertiesPanel; window.toggleMobilePalette = toggleMobilePalette; window.closeMobilePalette = closeMobilePalette; window.deleteSelectedShape = deleteSelectedShape;
+        window.flipComponent = flipComponent; window.flipComponentById = flipComponentById; window.nextSlide = nextSlide; window.prevSlide = prevSlide; window.currentSlide = currentSlide; window.deleteSelectedItems = deleteSelectedItems; window.updateSelectedConnection = updateSelectedConnection; window.deleteSelectedConnection = deleteSelectedConnection; window.flipShape = flipShape; window.duplicateShape = duplicateShape;
+        window.openPermanentIconModal = openPermanentIconModal; window.applyPermanentIcon = applyPermanentIcon; window.openPermanentIconModalFromMenu = openPermanentIconModalFromMenu;
+        window.addCustomConnection = addCustomConnection; window.deleteCustomConnection = deleteCustomConnection; window.editCustomConnection = editCustomConnection; window.addConnectionToCategory = addConnectionToCategory; window.addConnectionToCategoryConfirm = addConnectionToCategoryConfirm;
+        window.openCategoryIconModal = openCategoryIconModal; window.applyCategoryIcon = applyCategoryIcon; window.openConnectionIconModal = openConnectionIconModal; window.applyConnectionIcon = applyConnectionIcon; window.openDeviceIconModal = openDeviceIconModal; window.applyDeviceIcon = applyDeviceIcon; window.openCustomDeviceIconModal = openCustomDeviceIconModal; window.applyCustomDeviceIcon = applyCustomDeviceIcon; window.addConnectionFromModal = addConnectionFromModal; window.renderConnectionsPalette = renderConnectionsPalette; window.renderPalette = renderPalette;
+        
+        // Expor as novas funções
         window.openDevImageModal = openDevImageModal;
         window.uploadNewDevImage = uploadNewDevImage;
         window.openDynamicBgModal = openDynamicBgModal;
         window.applyDynamicBg = applyDynamicBg;
-        window.removeDynamicBg = removeDynamicBg;
-        window.addWaypointToConnection = addWaypointToConnection;
-        window.resetConnectionCurve = resetConnectionCurve;
     </script>
 </body>
 </html>
