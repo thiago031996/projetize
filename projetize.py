@@ -932,6 +932,7 @@ HTML_TEMPLATE = """
         <button class="btn btn-primary" onclick="newProject()">📁 Novo</button>
         <button class="btn btn-secondary" onclick="saveProjectToFile()">💾 Salvar</button>
         <button class="btn btn-secondary" onclick="loadProjectFromFile()">📂 Carregar</button>
+                <button class="btn" onclick="window.open('/static/principal_projetize 3D.html', '_blank')" style="background:#17a2b8; color:white; font-weight:bold;">🧊 3D</button>
         <button class="btn btn-primary" onclick="exportPDFWithList()">📄 PDF</button>
         <button class="btn btn-primary" onclick="exportPDF()">📄 Mapa</button>
         <button class="btn btn-warning" onclick="generateBudget()">💰 Orçamento</button>
